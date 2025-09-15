@@ -1,0 +1,1 @@
+This file is a marker for files to be removed. All test, mock, and sample files in the frontend will be deleted to ensure only real API consumption remains.
