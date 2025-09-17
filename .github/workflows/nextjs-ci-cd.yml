@@ -46,8 +46,19 @@ jobs:
     - name: Install dependencies
       run: pnpm install
     
+    - name: Setup ESLint config
+      run: |
+        if [ ! -f .eslintrc.json ]; then
+          echo '{
+            "extends": "next/core-web-vitals"
+          }' > .eslintrc.json
+          echo "Created .eslintrc.json with Next.js recommended config"
+        else
+          echo "ESLint config already exists"
+        fi
+    
     - name: Lint
-      run: pnpm lint
+      run: pnpm lint -- --no-interactive
     
     - name: Build
       run: pnpm build
