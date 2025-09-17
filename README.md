@@ -27,18 +27,6 @@
 - **Speaker Management**: Coordinate speakers and sessions
 - **Analytics Dashboard**: Monitor event performance and feedback
 
-## 🛠️ Tech Stack
-
-- **Framework**: Next.js 15.2.4 with App Router
-- **Language**: TypeScript 5
-- **Styling**: Tailwind CSS 3.4.17
-- **UI Components**: Radix UI primitives with custom components
-- **Forms**: React Hook Form with Zod validation
-- **Charts**: Recharts for data visualization
-- **Authentication**: JWT-based authentication with role-based access
-- **State Management**: React Context API
-- **Package Manager**: pnpm
-- **Development**: ESLint for code quality
 
 ## 📦 Project Structure
 
@@ -192,18 +180,7 @@ pnpm build
 pnpm start
 ```
 
-### Docker Deployment
 
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-COPY . .
-RUN npm run build
-EXPOSE 3000
-CMD ["npm", "start"]
-```
 
 ### Environment Configuration
 
