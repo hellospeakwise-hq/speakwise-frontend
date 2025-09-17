@@ -66,12 +66,11 @@ jobs:
       env:
         NEXT_PUBLIC_API_URL: http://127.0.0.1:8000/api
     
-    # Uncomment this if you have tests set up
+    # Tests set up
     # - name: Test
     #   run: pnpm test
 
   # Deployment job - this is set up for Vercel
-  # Uncomment and modify as needed for your hosting platform
   deploy:
     needs: build-and-test
     if: github.ref == 'refs/heads/main' # Only deploy from main branch
