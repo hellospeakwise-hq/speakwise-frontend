@@ -46,7 +46,7 @@ jobs:
     - name: Install dependencies
       run: pnpm install
     
-    - name: Setup ESLint config
+    - name: Setup ESLint config (if not exists)
       run: |
         if [ ! -f .eslintrc.json ]; then
           echo '{
@@ -58,7 +58,8 @@ jobs:
         fi
     
     - name: Lint
-      run: pnpm lint:ci
+      # Since we've already created the ESLint config file, we can run lint normally
+      run: pnpm lint
     
     - name: Build
       run: pnpm build
