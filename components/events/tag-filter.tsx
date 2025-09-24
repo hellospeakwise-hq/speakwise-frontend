@@ -4,35 +4,15 @@ import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Loader2, Tag as TagIcon } from "lucide-react"
-import { eventsAPI, type Tag } from "@/lib/api/eventsApi"
+import { useEvents } from "@/hooks/use-events"
 
 interface TagFilterProps {
     onTagChange: (tagId: number | null) => void
 }
 
 export function TagFilter({ onTagChange }: TagFilterProps) {
-    const [tags, setTags] = useState<Tag[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
+    const { tags, loading, error } = useEvents()
     const [selectedTagId, setSelectedTagId] = useState<number | null>(null)
-
-    useEffect(() => {
-        const loadTags = async () => {
-            try {
-                setLoading(true)
-                setError(null)
-                const data = await eventsAPI.getTags()
-                setTags(data)
-            } catch (err) {
-                console.error('Error fetching tags:', err)
-                setError('Failed to load tags')
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        loadTags()
-    }, [])
 
     const handleTagClick = (tagId: number) => {
         const newSelectedId = selectedTagId === tagId ? null : tagId

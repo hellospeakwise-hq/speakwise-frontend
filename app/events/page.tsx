@@ -1,13 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { RegionFilter } from "@/components/events/region-filter"
+import { CountryFilter } from "@/components/events/country-filter"
 import { TagFilter } from "@/components/events/tag-filter"
 import { EventsList } from "@/components/events/events-list"
 
 export default function EventsPage() {
-  const [selectedRegion, setSelectedRegion] = useState<number | null>(null)
-  const [selectedCountry, setSelectedCountry] = useState<number | null>(null)
+  const [selectedCountries, setSelectedCountries] = useState<number[]>([])
   const [selectedTag, setSelectedTag] = useState<number | null>(null)
 
   return (
@@ -19,17 +18,16 @@ export default function EventsPage() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-[250px_1fr] gap-6">
           <div className="space-y-6">
-            <RegionFilter
-              onRegionChange={setSelectedRegion}
-              onCountryChange={setSelectedCountry}
+            <CountryFilter
+              selectedCountries={selectedCountries}
+              onCountryChange={setSelectedCountries}
             />
             <TagFilter
               onTagChange={setSelectedTag}
             />
           </div>
           <EventsList
-            regionFilter={selectedRegion}
-            countryFilter={selectedCountry}
+            countryFilter={selectedCountries}
             tagFilter={selectedTag}
           />
         </div>
