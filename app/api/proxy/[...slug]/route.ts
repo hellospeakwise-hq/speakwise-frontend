@@ -4,11 +4,13 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/a
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { slug: string[] } }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
+  const resolvedParams = await params
+  const apiPath = resolvedParams.slug.join('/')
+  
   try {
     // Build the API path from the slug array
-    const apiPath = params.slug.join('/')
     const url = new URL(request.url)
     const searchParams = url.searchParams.toString()
     
@@ -30,9 +32,9 @@ export async function GET(
     const data = await response.json()
     return NextResponse.json(data)
   } catch (error) {
-    console.error(`Error proxying request to /${params.slug.join('/')}:`, error)
+    console.error(`Error proxying request to /${apiPath}:`, error)
     return NextResponse.json(
-      { error: `Failed to fetch ${params.slug.join('/')}` },
+      { error: `Failed to fetch ${apiPath}` },
       { status: 500 }
     )
   }
@@ -40,10 +42,12 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { slug: string[] } }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
+  const resolvedParams = await params
+  const apiPath = resolvedParams.slug.join('/')
+  
   try {
-    const apiPath = params.slug.join('/')
     const body = await request.json()
     
     const apiUrl = `${API_BASE_URL}/${apiPath}/`
@@ -65,9 +69,9 @@ export async function POST(
     const data = await response.json()
     return NextResponse.json(data)
   } catch (error) {
-    console.error(`Error proxying POST request to /${params.slug.join('/')}:`, error)
+    console.error(`Error proxying POST request to /${apiPath}:`, error)
     return NextResponse.json(
-      { error: `Failed to post to ${params.slug.join('/')}` },
+      { error: `Failed to post to ${apiPath}` },
       { status: 500 }
     )
   }
@@ -75,10 +79,12 @@ export async function POST(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { slug: string[] } }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
+  const resolvedParams = await params
+  const apiPath = resolvedParams.slug.join('/')
+  
   try {
-    const apiPath = params.slug.join('/')
     const body = await request.json()
     
     const apiUrl = `${API_BASE_URL}/${apiPath}/`
@@ -100,9 +106,9 @@ export async function PUT(
     const data = await response.json()
     return NextResponse.json(data)
   } catch (error) {
-    console.error(`Error proxying PUT request to /${params.slug.join('/')}:`, error)
+    console.error(`Error proxying PUT request to /${apiPath}:`, error)
     return NextResponse.json(
-      { error: `Failed to update ${params.slug.join('/')}` },
+      { error: `Failed to update ${apiPath}` },
       { status: 500 }
     )
   }
@@ -110,10 +116,12 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { slug: string[] } }
+  { params }: { params: Promise<{ slug: string[] }> }
 ) {
+  const resolvedParams = await params
+  const apiPath = resolvedParams.slug.join('/')
+  
   try {
-    const apiPath = params.slug.join('/')
     
     const apiUrl = `${API_BASE_URL}/${apiPath}/`
     
@@ -139,9 +147,9 @@ export async function DELETE(
       return new NextResponse(null, { status: 204 })
     }
   } catch (error) {
-    console.error(`Error proxying DELETE request to /${params.slug.join('/')}:`, error)
+    console.error(`Error proxying DELETE request to /${apiPath}:`, error)
     return NextResponse.json(
-      { error: `Failed to delete ${params.slug.join('/')}` },
+      { error: `Failed to delete ${apiPath}` },
       { status: 500 }
     )
   }

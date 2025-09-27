@@ -7,36 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Star, Search, MapPin, Briefcase, Loader2 } from "lucide-react"
-import { authenticatedAPI } from "@/lib/api/authenticatedAPI"
+import { speakersAPI, type Speaker } from "@/lib/api/speakersApi"
 
-// API configuration
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-
-// Type definitions
-interface SpeakerProfile {
-  id: number
-  full_name: string
-  organization: string
-  short_bio: string
-  long_bio: string
-  country: string
-  avatar: string | null
-  skill_tags: Array<{
-    id: number
-    name: string
-  }>
-  social_links: Array<{
-    id: number
-    social_name: string
-    social_url: string
-    is_active: boolean
-    display_order: number
-  }>
-}
+// Type definitions will use Speaker from speakersApi
 
 export function SpeakersDirectory() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [speakers, setSpeakers] = useState<SpeakerProfile[]>([])
+  const [speakers, setSpeakers] = useState<Speaker[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -44,8 +21,7 @@ export function SpeakersDirectory() {
     const fetchSpeakers = async () => {
       try {
         setLoading(true)
-        // Now requires authentication
-        const data = await authenticatedAPI.get('/api/speakers/', true)
+        const data = await speakersAPI.getSpeakers()
         setSpeakers(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch speakers')
@@ -58,21 +34,16 @@ export function SpeakersDirectory() {
     fetchSpeakers()
   }, [])
 
-  // Helper function to get avatar URL
+    // Helper function to get avatar URL (already full URLs from API)
   const getAvatarUrl = (avatarPath: string | null) => {
-    if (!avatarPath) return '/placeholder.svg?height=200&width=200'
-    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-      return avatarPath
-    }
-    return `${API_BASE_URL}${avatarPath.startsWith('/') ? '' : '/'}${avatarPath}`
+    return avatarPath || "/placeholder.svg"
   }
 
   // Filter speakers based on search query
   const filteredSpeakers = speakers.filter((speaker) =>
-    speaker.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    speaker.skill_tags.some((skill) => skill.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    speaker.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    speaker.organization.toLowerCase().includes(searchQuery.toLowerCase())
+    (speaker.speaker_name || `Speaker ${speaker.id}`).toLowerCase().includes(searchQuery.toLowerCase()) ||
+    speaker.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    speaker.country.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
@@ -124,7 +95,7 @@ export function SpeakersDirectory() {
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-orange-100 border-2 border-orange-200">
                   <img
                     src={getAvatarUrl(speaker.avatar)}
-                    alt={speaker.full_name}
+                    alt={speaker.speaker_name || `Speaker ${speaker.id}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.currentTarget.src = '/placeholder.svg?height=200&width=200'
@@ -132,7 +103,7 @@ export function SpeakersDirectory() {
                   />
                 </div>
                 <div className="space-y-1 flex-1">
-                  <CardTitle className="text-lg">{speaker.full_name}</CardTitle>
+                  <CardTitle className="text-lg">{speaker.speaker_name || `Speaker ${speaker.id}`}</CardTitle>
                   <CardDescription className="text-sm">
                     {speaker.organization || 'Independent Speaker'}
                   </CardDescription>
@@ -153,11 +124,11 @@ export function SpeakersDirectory() {
                     </p>
                   )}
 
-                  {speaker.skill_tags && speaker.skill_tags.length > 0 && (
+                  {speaker.skill_tag && speaker.skill_tag.length > 0 && (
                     <div>
                       <h4 className="text-sm font-medium mb-2">Expertise</h4>
                       <div className="flex flex-wrap gap-2">
-                        {speaker.skill_tags.slice(0, 4).map((skill) => (
+                        {speaker.skill_tag.slice(0, 4).map((skill) => (
                           <Badge
                             key={skill.id}
                             variant="outline"
@@ -166,12 +137,12 @@ export function SpeakersDirectory() {
                             {skill.name}
                           </Badge>
                         ))}
-                        {speaker.skill_tags.length > 4 && (
+                        {speaker.skill_tag.length > 4 && (
                           <Badge
                             variant="outline"
                             className="bg-gray-50 text-gray-600 border-gray-200 text-xs"
                           >
-                            +{speaker.skill_tags.length - 4} more
+                            +{speaker.skill_tag.length - 4} more
                           </Badge>
                         )}
                       </div>

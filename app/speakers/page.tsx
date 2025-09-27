@@ -1,11 +1,10 @@
 "use client"
 
 import { SpeakersDirectory } from "@/components/speakers/speakers-directory"
-import { ProtectedRoute } from "@/components/auth/protected-route"
+// import { ProtectedRoute } from "@/components/auth/protected-route"
 
 export default function SpeakersPage() {
   return (
-    <ProtectedRoute>
       <div className="container py-10">
         <div className="flex flex-col space-y-6">
           <div className="space-y-2">
@@ -15,6 +14,5 @@ export default function SpeakersPage() {
           <SpeakersDirectory />
         </div>
       </div>
-    </ProtectedRoute>
   )
 }
