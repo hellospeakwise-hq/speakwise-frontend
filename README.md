@@ -103,8 +103,6 @@ speakwise-frontend/
    pnpm dev
    ```
 
-   # FOR BACKEND SERVER NGROK LINK USE : https://e28ac64ff003.ngrok-free.app/
-
 5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
 
