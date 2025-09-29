@@ -13,7 +13,7 @@ importers:
         version: 3.9.1(react-hook-form@7.54.1(react@19.0.0))
       '@next/swc-wasm-nodejs':
         specifier: ^15.4.0
-        version: 15.5.4
+        version: 15.5.3
       '@radix-ui/react-accordion':
         specifier: 1.2.2
         version: 1.2.2(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -377,8 +377,8 @@ packages:
     cpu: [x64]
     os: [linux]
 
-  '@next/swc-wasm-nodejs@15.5.4':
-    resolution: {integrity: sha512-0G6et7PjYlTFlLoHjZIBntL3xyTF4yHjCtMwJNp27fJmL1FLm6okGuJz3Vx9PDlgashQFMGUBlWE8uXZb4jOvA==}
+  '@next/swc-wasm-nodejs@15.5.3':
+    resolution: {integrity: sha512-u4CbgpkpOSEHKdxEbJ+yt1cvvCuIZO0fjwYO+AlaNmzUAh1CW8MQs6v/mg+7IW7VTaycMTPQErV7rIqxYU7gdg==}
 
   '@next/swc-win32-arm64-msvc@15.2.4':
     resolution: {integrity: sha512-dW0i7eukvDxtIhCYkMrZNQfNicPDExt2jPb9AZPpL7cfyUo7QSNl1DjsHjmmKp6qNAqUESyT8YFl/Aw91cNJJg==}
@@ -2055,7 +2055,7 @@ snapshots:
   '@next/swc-linux-x64-musl@15.2.4':
     optional: true
 
-  '@next/swc-wasm-nodejs@15.5.4': {}
+  '@next/swc-wasm-nodejs@15.5.3': {}
 
   '@next/swc-win32-arm64-msvc@15.2.4':
     optional: true
