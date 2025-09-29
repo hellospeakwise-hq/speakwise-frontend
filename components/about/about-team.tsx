@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Github, Linkedin, Twitter, Instagram } from "lucide-react"
-import { teamApi, TeamMember } from "@/lib/api/teamApi"
+import { fetchTeamMembers, TeamMember } from "@/lib/api/teamApi"
 
 export function AboutTeam() {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
@@ -11,10 +11,10 @@ export function AboutTeam() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchTeamMembers = async () => {
+    const loadTeamMembers = async () => {
       try {
         setIsLoading(true)
-        const members = await teamApi.getTeamMembers()
+        const members = await fetchTeamMembers()
         setTeamMembers(members)
       } catch (err) {
         console.error('Failed to fetch team members:', err)
@@ -24,7 +24,7 @@ export function AboutTeam() {
       }
     }
 
-    fetchTeamMembers()
+    loadTeamMembers()
   }, [])
 
   if (isLoading) {
@@ -80,50 +80,48 @@ export function AboutTeam() {
                   <p className="text-muted-foreground mt-2">{member.short_bio}</p>
                 </div>
                 <div className="flex space-x-3">
-                  {member.twitter_url && (
-                    <a
-                      href={member.twitter_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-orange-500"
-                    >
-                      <Twitter className="h-5 w-5" />
-                      <span className="sr-only">Twitter</span>
-                    </a>
-                  )}
-                  {member.linkedin_url && (
-                    <a
-                      href={member.linkedin_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-orange-500"
-                    >
-                      <Linkedin className="h-5 w-5" />
-                      <span className="sr-only">LinkedIn</span>
-                    </a>
-                  )}
-                  {member.github_url && (
-                    <a
-                      href={member.github_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-orange-500"
-                    >
-                      <Github className="h-5 w-5" />
-                      <span className="sr-only">GitHub</span>
-                    </a>
-                  )}
-                  {member.instagram_url && (
-                    <a
-                      href={member.instagram_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-muted-foreground hover:text-orange-500"
-                    >
-                      <Instagram className="h-5 w-5" />
-                      <span className="sr-only">Instagram</span>
-                    </a>
-                  )}
+                  {member.social_links?.map((link, index) => {
+                    // Add safety checks for link and link.name
+                    if (!link || !link.name || !link.link) return null
+                    
+                    const platform = link.name.toLowerCase()
+                    let Icon = null
+                    let label = link.name
+
+                    switch (platform) {
+                      case 'twitter':
+                        Icon = Twitter
+                        label = 'Twitter'
+                        break
+                      case 'linkedin':
+                        Icon = Linkedin
+                        label = 'LinkedIn'
+                        break
+                      case 'github':
+                        Icon = Github
+                        label = 'GitHub'
+                        break
+                      case 'instagram':
+                        Icon = Instagram
+                        label = 'Instagram'
+                        break
+                      default:
+                        return null
+                    }
+
+                    return Icon ? (
+                      <a
+                        key={index}
+                        href={link.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted-foreground hover:text-orange-500"
+                      >
+                        <Icon className="h-5 w-5" />
+                        <span className="sr-only">{label}</span>
+                      </a>
+                    ) : null
+                  })}
                 </div>
               </CardContent>
             </Card>

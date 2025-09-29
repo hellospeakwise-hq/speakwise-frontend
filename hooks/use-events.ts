@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { fetchEvents, fetchEventById, type Event } from '@/lib/api/events'
+import { useState, useEffect, useCallback } from 'react'
+import { fetchEvents, fetchEventById, extractCountriesFromEvents, extractTagsFromEvents, type Event } from '@/lib/api/events'
 
 interface UseEventsReturn {
     events: Event[]
+    countries: Array<{id: number; name: string; code: string}>
+    tags: Array<{id: number; name: string; color?: string}>
     loading: boolean
     error: string | null
     refetch: () => void
@@ -12,33 +14,48 @@ interface UseEventsReturn {
 
 export function useEvents(): UseEventsReturn {
     const [events, setEvents] = useState<Event[]>([])
+    const [countries, setCountries] = useState<Array<{id: number; name: string; code: string}>>([])
+    const [tags, setTags] = useState<Array<{id: number; name: string; color?: string}>>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
-    const fetchEventsData = async () => {
+    const fetchAllData = useCallback(async () => {
         setLoading(true)
         setError(null)
 
         try {
-            const data = await fetchEvents()
-            setEvents(data)
+            // Fetch events only - countries and tags will be extracted from events data
+            const eventsData = await fetchEvents()
+            
+            // Set events data
+            setEvents(eventsData)
+            
+            // Extract countries and tags from the events data
+            const extractedCountries = extractCountriesFromEvents(eventsData)
+            const extractedTags = extractTagsFromEvents(eventsData)
+            
+            setCountries(extractedCountries)
+            setTags(extractedTags)
+
         } catch (err) {
-            console.error('Error fetching events:', err)
-            setError('Failed to load events. Please check if the backend is running.')
+            console.error('Error fetching data:', err)
+            setError(err instanceof Error ? err.message : 'Failed to load events. Please check if the backend is running.')
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
     useEffect(() => {
-        fetchEventsData()
-    }, [])
+        fetchAllData()
+    }, [fetchAllData])
 
     return {
         events,
+        countries,
+        tags,
         loading,
         error,
-        refetch: () => { fetchEventsData() }
+        refetch: fetchAllData
     }
 }
 
