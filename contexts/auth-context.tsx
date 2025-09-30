@@ -21,7 +21,7 @@ interface AuthContextType {
     setUser: (user: User | null) => void;
     loading: boolean;
     login: (email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer') => Promise<string>;
-    register: (firstName: string, lastName: string, nationality: string, email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer') => Promise<string>;
+    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer') => Promise<string>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -84,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setLoading(true);
         try {
             const response = await authApi.login({ email, password }, userType);
+            console.log('Login API Response:', response);
             setIsAuthenticated(true);
             
             // Use the response data directly as it matches our User type
@@ -92,8 +93,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 first_name: response.first_name,
                 last_name: response.last_name,
                 email: response.email,
-                role: response.role,
-                userType: response.role.role
+                role: response.role || { id: 1, role: userType },
+                userType: response.role?.role || userType
             };
             
             setUser(userData);
@@ -131,17 +132,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         firstName: string,
         lastName: string,
         nationality: string,
+        username: string,
         email: string,
         password: string,
         userType: 'attendee' | 'speaker' | 'organizer'
     ) => {
         setLoading(true);
         try {
-            console.log("Attempting registration with:", { firstName, lastName, nationality, email, userType });
+            console.log("Attempting registration with:", { firstName, lastName, nationality, username, email, userType });
             const response = await authApi.register({
                 firstName,
                 lastName,
                 nationality,
+                username,
                 email,
                 password,
                 userType

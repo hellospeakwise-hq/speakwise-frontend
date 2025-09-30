@@ -9,6 +9,7 @@ export interface RegisterRequest {
   firstName: string;
   lastName: string;
   nationality: string;
+  username: string;
   userType: UserRole;
 }
 
@@ -43,13 +44,15 @@ export const authApi = {
    */
   async register(data: RegisterRequest): Promise<AuthResponse> {
     const payload = {
-      email: data.email,
-      password: data.password,
-      username: data.email.split('@')[0], // Generate username from email
       first_name: data.firstName,
       last_name: data.lastName,
+      email: data.email,
+      role: {
+        role: data.userType
+      },
       nationality: data.nationality,
-      role: data.userType,
+      username: data.username,
+      password: data.password
     };
 
     console.log('Registration request:', { ...payload, password: '[HIDDEN]' });
@@ -62,9 +65,9 @@ export const authApi = {
    * Login user
    */
   async login(data: LoginRequest, userType: UserRole): Promise<LoginResponse> {
-    console.log(`Login request for ${userType}:`, { ...data, password: '[HIDDEN]' });
+    console.log(`Login request:`, { ...data, password: '[HIDDEN]' });
     
-    const response = await apiClient.post<LoginResponse>(`/auth/${userType}/`, data);
+    const response = await apiClient.post<LoginResponse>(`/users/auth/login/`, data);
 
     // Store tokens if provided
     if (response.data.access_token || response.data.token) {
