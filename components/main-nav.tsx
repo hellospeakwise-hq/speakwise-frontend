@@ -45,6 +45,11 @@ export function MainNav() {
         label: "About",
         active: pathname === "/about",
       },
+      {
+        href: "/contact",
+        label: "Contact",
+        active: pathname === "/contact",
+      },
     ];
 
     // Add dashboard link based on user role
