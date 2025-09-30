@@ -12,7 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Upload, Users, FileText, Download, Search, AlertCircle, CheckCircle, Clock, X } from "lucide-react"
 import { toast } from "sonner"
-import { type Event } from "@/lib/api/eventsApi"
+import { type Event } from "@/lib/types/api"
 import { useAttendeeManagement } from "@/hooks/use-attendee-management"
 import type { AttendeeUpload } from "@/lib/api/attendeeApi"
 

@@ -15,7 +15,7 @@ export function TestEvents() {
             {events.map(event => (
                 <div key={event.id}>
                     <h3>{event.title}</h3>
-                    <p>{event.location}</p>
+                    <p>{typeof event.location === 'string' ? event.location : event.location?.venue || 'Location TBD'}</p>
                 </div>
             ))}
         </div>

@@ -1,239 +1,145 @@
+import { apiClient } from './base';
+import { Event } from '../types/api';
 
-// Speaker interface for talks
-export interface TalkSpeaker {
-  id: number;
-  full_name: string;
-  organization?: string;
-  avatar?: string;
-}
-
-// Event Talk/Session interface
-export interface EventTalk {
-  id: number;
-  speaker_name: string;
+export interface CreateEventRequest {
   title: string;
-  description: string;
-  duration: number; // in hours/minutes
-  category: string;
-  presentation_files: string | null;
-  speaker: number; // speaker ID
-  event: number; // event ID
-}
-
-// Updated Event interface to match new API structure
-export interface Event {
-  id: number;
-  event_image: string | null;
-  tags: Array<{id: number; name: string; color?: string}>;
-  website: string;
-  short_description: string;
-  location: {
-    id: number;
-    country: {
-      id: number;
-      name: string;
-      code: string;
-    };
-    venue: string;
-    address: string;
-    city: string;
-    state: string;
-    postal_code: string;
-    latitude: string;
-    longitude: string;
-    description: string;
-  };
-  name: string;
-  date: string;
-  date_range: {
-    start: { date: string; time: string; datetime: string };
-    end: { date: string; time: string; datetime: string };
-    same_day: boolean;
-  };
-  title: string;
-  event_nickname: string;
-  description: string;
+  event_nickname?: string;
+  short_description?: string;
+  description?: string;
+  website?: string;
+  location?: string;
   start_date_time: string;
   end_date_time: string;
-  is_active: boolean;
-  organizer: any | null;
+  is_active?: boolean;
+  country?: number;
+  tags?: number[];
+  event_image?: string;
 }
 
-/**
- * Fetch all events from the API (via Next.js API route to avoid CORS)
- */
-export async function fetchEvents(): Promise<Event[]> {
-  try {
-    console.log('Fetching events from Next.js API proxy route: /api/proxy/events');
-    const response = await fetch(`/api/proxy/events`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('Response data:', data);
-
-    // Handle both direct array response and paginated response
-    if (Array.isArray(data)) {
-      return data as Event[];
-    } else if (data && data.results && Array.isArray(data.results)) {
-      return data.results as Event[];
-    } else {
-      console.error('Unexpected response format:', data);
-      throw new Error('Invalid response format');
-    }
-  } catch (error) {
-    console.error('Error fetching events:', error);
-    throw error;
-  }
+export interface EventsResponse {
+  results: Event[];
+  count: number;
+  next: string | null;
+  previous: string | null;
 }
 
-/**
- * Fetch a single event by ID (via Next.js API route to avoid CORS)
- */
-export async function fetchEventById(id: number): Promise<Event> {
-  try {
-    console.log('Fetching event by ID:', id);
-    const response = await fetch(`/api/proxy/events/detail/${id}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+// Support both direct array and paginated response
+export type EventsApiResponse = Event[] | EventsResponse;
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('Event fetched successfully:', data);
-    return data;
-  } catch (error) {
-    console.error('Error fetching event:', error);
-    throw error;
-  }
+export interface EventsParams {
+  country?: string;
+  region?: string;
+  tags?: string[];
+  search?: string;
+  page?: number;
+  limit?: number;
 }
 
-/**
- * Extract unique countries from events data
- */
-export function extractCountriesFromEvents(events: Event[]): Array<{id: number; name: string; code: string}> {
-  const countriesMap = new Map();
-  
-  events.forEach(event => {
-    if (event.location?.country) {
-      const country = event.location.country;
-      if (!countriesMap.has(country.id)) {
-        countriesMap.set(country.id, {
-          id: country.id,
-          name: country.name,
-          code: country.code
-        });
-      }
-    }
-  });
-  
-  return Array.from(countriesMap.values());
-}
+// Events API service
+export const eventsApi = {
+  /**
+   * Get all events
+   */
+  async getEvents(params?: EventsParams): Promise<EventsApiResponse> {
+    const response = await apiClient.get<EventsApiResponse>('/events/', { params });
+    return response.data;
+  },
 
-/**
- * Extract unique tags from events data
- */
-export function extractTagsFromEvents(events: Event[]): Array<{id: number; name: string; color?: string}> {
-  const tagsMap = new Map();
-  
-  events.forEach(event => {
-    if (event.tags && Array.isArray(event.tags)) {
-      event.tags.forEach(tag => {
-        if (!tagsMap.has(tag.id)) {
-          tagsMap.set(tag.id, {
-            id: tag.id,
-            name: tag.name,
-            color: tag.color
+  /**
+   * Get single event
+   */
+  async getEvent(id: string): Promise<Event> {
+    const response = await apiClient.get<Event>(`/events/${id}/`);
+    return response.data;
+  },
+
+  /**
+   * Create new event
+   */
+  async createEvent(data: CreateEventRequest): Promise<Event> {
+    const response = await apiClient.post<Event>('/events/', data);
+    return response.data;
+  },
+
+  /**
+   * Update event
+   */
+  async updateEvent(id: string, data: Partial<CreateEventRequest>): Promise<Event> {
+    const response = await apiClient.patch<Event>(`/events/${id}/`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete event
+   */
+  async deleteEvent(id: string): Promise<void> {
+    await apiClient.delete(`/events/${id}/`);
+  },
+
+  /**
+   * Get countries (extracted from events data)
+   */
+  async getCountries(): Promise<any[]> {
+    try {
+      const eventsResponse = await this.getEvents();
+      const events = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || []);
+      
+      // Extract unique countries from events
+      const countryMap = new Map<number, any>();
+      events.forEach(event => {
+        if (event.location && typeof event.location === 'object' && event.location.country) {
+          const country = event.location.country;
+          countryMap.set(country.id, {
+            id: country.id,
+            name: country.name,
+            code: country.code
           });
         }
       });
+      
+      return Array.from(countryMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error) {
+      console.error('Error extracting countries from events:', error);
+      throw error;
     }
-  });
-  
-  return Array.from(tagsMap.values());
-}
+  },
 
-/**
- * Fetch speaker details by ID using the proxy
- */
-export async function fetchSpeakerById(speakerId: number): Promise<TalkSpeaker> {
-  try {
-    console.log(`Fetching speaker details for ID: ${speakerId}`);
-    const response = await fetch(`/api/proxy/speakers/${speakerId}/`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  /**
+   * Get tags (extracted from events data)
+   */
+  async getTags(): Promise<any[]> {
+    try {
+      const eventsResponse = await this.getEvents();
+      const events = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || []);
+      
+      // Extract unique tags from events
+      const tagMap = new Map<number, any>();
+      events.forEach(event => {
+        if (event.tags && Array.isArray(event.tags)) {
+          event.tags.forEach(tag => {
+            tagMap.set(tag.id, {
+              id: tag.id,
+              name: tag.name,
+              color: tag.color
+            });
+          });
+        }
+      });
+      
+      return Array.from(tagMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+    } catch (error) {
+      console.error('Error extracting tags from events:', error);
+      throw error;
     }
+  },
 
-    const data = await response.json();
-    return {
-      id: data.id,
-      full_name: data.full_name,
-      organization: data.organization,
-      avatar: data.avatar
-    };
-  } catch (error) {
-    console.error('Error fetching speaker:', error);
-    throw error;
-  }
-}
+  /**
+   * Create tag
+   */
+  async createTag(name: string, color?: string): Promise<any> {
+    const response = await apiClient.post<any>('/events/tags/', { name, color });
+    return response.data;
+  },
+};
 
-/**
- * Fetch talks/sessions for a specific event
- */
-export async function fetchEventTalks(eventId: string): Promise<EventTalk[]> {
-  try {
-    console.log(`Fetching talks for event ID: ${eventId}`);
-    const response = await fetch(`/api/proxy/talks/`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('Event talks response data:', data);
-    
-    // Handle both direct array response and paginated response
-    let allTalks: EventTalk[] = [];
-    if (Array.isArray(data)) {
-      allTalks = data as EventTalk[];
-    } else if (data && data.results && Array.isArray(data.results)) {
-      allTalks = data.results as EventTalk[];
-    } else {
-      console.error('Unexpected response format:', data);
-      return [];
-    }
-    
-    // Filter talks by eventId
-    const eventIdNumber = parseInt(eventId);
-    const filteredTalks = allTalks.filter(talk => talk.event === eventIdNumber);
-    console.log(`Filtered ${filteredTalks.length} talks for event ${eventId}`);
-    
-    return filteredTalks;
-  } catch (error) {
-    console.error('Error fetching event talks:', error);
-    throw error;
-  }
-}
+export default eventsApi;

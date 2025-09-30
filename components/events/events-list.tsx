@@ -5,7 +5,7 @@ import { Calendar, MapPin, Users, ImageIcon, Loader2 } from "lucide-react"
 import { useMemo } from "react"
 import { useEvents } from "@/hooks/use-events"
 import { useAuth } from "@/contexts/auth-context"
-import type { Event } from "@/lib/api/events"
+import type { Event } from "@/lib/types/api"
 
 interface EventsListProps {
     countryFilter?: number[]
@@ -26,7 +26,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
             let matchesTag = true;
 
             // Apply country filter
-            if (countryFilter && countryFilter.length > 0 && event.location?.country) {
+            if (countryFilter && countryFilter.length > 0 && typeof event.location === 'object' && event.location?.country) {
                 matchesCountry = countryFilter.includes(event.location.country.id);
             }
 

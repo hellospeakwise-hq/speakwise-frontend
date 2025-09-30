@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from "react"
-import { eventsAPI, type Tag } from "@/lib/api/eventsApi"
+import { eventsApi } from "@/lib/api/events"
+import { type Tag } from "@/lib/types/api"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,24 +38,8 @@ export function TagCreator({ onTagCreated }: TagCreatorProps) {
             setIsCreating(true)
             setError(null)
 
-            // Make an API call to create a new tag
-            const response = await fetch(`http://127.0.0.1:8000/api/events/tags/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    name: tagName.trim(),
-                    color: tagColor,
-                }),
-            })
-
-            if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.detail || 'Failed to create tag')
-            }
-
-            const newTag = await response.json()
+            // Make an API call to create a new tag using our clean API
+            const newTag = await eventsApi.createTag(tagName.trim(), tagColor)
 
             // Clear form and close dialog
             setTagName('')

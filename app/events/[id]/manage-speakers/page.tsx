@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import { SpeakerManager } from "@/components/events/speaker-manager";
-import { eventsAPI } from "@/lib/api/eventsApi";
+import { eventsApi } from "@/lib/api/events";
 import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 
@@ -25,7 +25,7 @@ export default function ManageEventSpeakers({ params }: { params: Promise<{ id: 
     useState(() => {
         const loadEventTitle = async () => {
             try {
-                const event = await eventsAPI.getEventById(parseInt(id));
+                const event = await eventsApi.getEvent(id);
                 setEventTitle(event.title);
             } catch (error) {
                 console.error("Error loading event:", error);

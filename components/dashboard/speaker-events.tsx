@@ -17,6 +17,8 @@ export function SpeakerEvents({ type }: SpeakerEventsProps) {
       session: "The Future of Generative AI",
       time: "June 15, 10:00 AM - 11:30 AM",
       attendees: 1200,
+      rating: 4.8,
+      reviews: 45,
     },
     {
       id: "2",
@@ -26,6 +28,8 @@ export function SpeakerEvents({ type }: SpeakerEventsProps) {
       session: "Ethical Considerations in AI Development",
       time: "July 9, 2:00 PM - 3:30 PM",
       attendees: 800,
+      rating: 4.6,
+      reviews: 32,
     },
   ]
 
