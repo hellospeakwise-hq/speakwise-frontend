@@ -26,8 +26,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
       try {
         setLoading(true);
         setError(null);
-        // For now, return null since getSpeakerById doesn't exist
-        const data: Speaker | null = null;
+        const data = await speakerApi.getSpeakerById(id);
         setSpeaker(data);
       } catch (err) {
         console.error('Error fetching speaker:', err);
@@ -74,11 +73,11 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
   }
 
   // Extract social media links
-    const getSocialLinks = (speaker: any) => ({
-    twitter: speaker.social_links?.find((link: any) => link.name.toLowerCase().includes('twitter'))?.link,
-    linkedin: speaker.social_links?.find((link: any) => link.name.toLowerCase().includes('linkedin'))?.link,
-    github: speaker.social_links?.find((link: any) => link.name.toLowerCase().includes('github'))?.link,
-    website: speaker.social_links?.find((link: any) =>
+  const getSocialLinks = (speaker: Speaker) => ({
+    twitter: speaker.social_links?.find((link) => link.name.toLowerCase().includes('twitter'))?.link,
+    linkedin: speaker.social_links?.find((link) => link.name.toLowerCase().includes('linkedin'))?.link,
+    github: speaker.social_links?.find((link) => link.name.toLowerCase().includes('github'))?.link,
+    website: speaker.social_links?.find((link) =>
       !link.name.toLowerCase().includes('twitter') &&
       !link.name.toLowerCase().includes('linkedin') &&
       !link.name.toLowerCase().includes('github')

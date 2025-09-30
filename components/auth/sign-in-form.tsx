@@ -61,12 +61,13 @@ export function SignInForm() {
         userType as 'attendee' | 'speaker' | 'organizer'
       )
 
-      toast.success("Signed in successfully!")
+      toast.success("Welcome back! You've been signed in successfully.")
       router.push(redirectPath)
     } catch (error: any) {
       console.error("Login error:", error)
-      setError(error.message || "Invalid credentials. Please try again.")
-      toast.error(error.message || "Login failed")
+      const errorMessage = error.message || "Invalid credentials. Please check your email and password."
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setIsLoading(false)
     }

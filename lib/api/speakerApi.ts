@@ -17,16 +17,27 @@ export interface SpeakerProfile {
 export interface SkillTag {
     id: number;
     name: string;
+    description?: string;
+    duration?: number;
+}
+
+export interface SocialLink {
+    id: number;
+    name: string;
+    link: string;
 }
 
 export interface Speaker {
     id: number;
+    social_links: SocialLink[];
+    skill_tag: SkillTag[];
     speaker_name: string;
     organization: string;
-    country: string;
     short_bio: string;
-    avatar?: string;
-    skill_tag: SkillTag[];
+    long_bio: string;
+    country: string;
+    avatar: string;
+    user_account: string;
 }
 
 export interface UpdateSpeakerProfileData {
@@ -42,6 +53,17 @@ export const speakerApi = {
     async getSpeakers(): Promise<Speaker[]> {
         const response = await apiClient.get<Speaker[]>('/speakers/');
         return response.data;
+    },
+
+    // Get speaker by ID
+    async getSpeakerById(id: string): Promise<Speaker> {
+        const response = await apiClient.get<Speaker[]>('/speakers/');
+        const speakers = response.data;
+        const speaker = speakers.find(s => s.id.toString() === id);
+        if (!speaker) {
+            throw new Error('Speaker not found');
+        }
+        return speaker;
     },
 
     // Get speaker profile
