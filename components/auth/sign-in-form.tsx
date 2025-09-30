@@ -109,35 +109,6 @@ export function SignInForm() {
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label>I am signing in as:</Label>
-            <div className="flex gap-4">
-              <Button
-                type="button"
-                variant={userType === "attendee" ? "default" : "outline"}
-                onClick={() => setUserType("attendee")}
-                className="flex-1"
-              >
-                Attendee
-              </Button>
-              <Button
-                type="button"
-                variant={userType === "speaker" ? "default" : "outline"}
-                onClick={() => setUserType("speaker")}
-                className="flex-1"
-              >
-                Speaker
-              </Button>
-              <Button
-                type="button"
-                variant={userType === "organizer" ? "default" : "outline"}
-                onClick={() => setUserType("organizer")}
-                className="flex-1"
-              >
-                Organizer
-              </Button>
-            </div>
-          </div>
           {error && <div className="text-sm font-medium text-red-500">{error}</div>}
         </CardContent>
         <CardFooter>
