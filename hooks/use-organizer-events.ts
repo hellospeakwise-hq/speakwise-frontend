@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { eventsAPI, type Event } from '@/lib/api/eventsApi'
+import { eventsApi } from '@/lib/api/events'
+import { type Event } from '@/lib/types/api'
 import { attendeeAPI } from '@/lib/api/attendeeApi'
 
 interface UseOrganizerEventsReturn {
@@ -34,7 +35,8 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
         try {
             setLoading(true)
             setError(null)
-            const data = await eventsAPI.getEvents()
+            const response = await eventsApi.getEvents()
+            const data = response.results || []
             setEvents(data)
             
             // Calculate total attendees across all events
@@ -73,7 +75,7 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
 
     const createEvent = async (data: any): Promise<Event> => {
         try {
-            const newEvent = await eventsAPI.createEvent(data)
+            const newEvent = await eventsApi.createEvent(data)
             setEvents(prevEvents => [...prevEvents, newEvent])
             return newEvent
         } catch (error) {
@@ -84,7 +86,7 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
 
     const updateEvent = async (id: number, data: any): Promise<Event> => {
         try {
-            const updatedEvent = await eventsAPI.updateEvent(id, data)
+            const updatedEvent = await eventsApi.updateEvent(id.toString(), data)
             setEvents(prevEvents => 
                 prevEvents.map(event => 
                     event.id === id ? updatedEvent : event
@@ -99,7 +101,7 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
 
     const deleteEvent = async (id: number): Promise<void> => {
         try {
-            await eventsAPI.deleteEvent(id)
+            await eventsApi.deleteEvent(id.toString())
             setEvents(prevEvents => prevEvents.filter(event => event.id !== id))
         } catch (error) {
             console.error('Error deleting event:', error)
@@ -109,7 +111,7 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
 
     const toggleEventStatus = async (id: number, isActive: boolean): Promise<Event> => {
         try {
-            const updatedEvent = await eventsAPI.toggleEventStatus(id, isActive)
+            const updatedEvent = await eventsApi.updateEvent(id.toString(), { is_active: isActive })
             setEvents(prevEvents => 
                 prevEvents.map(event => 
                     event.id === id ? updatedEvent : event

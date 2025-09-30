@@ -49,7 +49,7 @@ export function MainNav() {
 
     // Add dashboard link based on user role
     if (isAuthenticated) {
-      if (user?.userType === "speaker") {
+      if (user?.role?.role === "speaker") {
         baseRoutes.splice(3, 0, {
           href: "/dashboard/speaker",
           label: "Dashboard",
@@ -99,7 +99,7 @@ export function MainNav() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <User className="h-4 w-4" />
-                  <span>{user ? `${user.firstName || ''} ${user.lastName || ''}` : 'Account'}</span>
+                  <span>{user ? `${user.first_name || ''} ${user.last_name || ''}` : 'Account'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
@@ -158,7 +158,7 @@ export function MainNav() {
               {isAuthenticated ? (
                 <>
                   <div className="px-2 py-1.5 text-sm font-medium">
-                    Signed in as <span className="font-bold">{user ? `${user.firstName || ''} ${user.lastName || ''}` : 'User'}</span>
+                    Signed in as <span className="font-bold">{user ? `${user.first_name || ''} ${user.last_name || ''}` : 'User'}</span>
                   </div>
                   <Link href="/profile" onClick={() => setIsMenuOpen(false)}>
                     <Button variant="outline" className="w-full justify-start">

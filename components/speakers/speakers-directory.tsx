@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Star, Search, MapPin, Briefcase, Loader2 } from "lucide-react"
-import { speakersAPI, type Speaker } from "@/lib/api/speakersApi"
+import { speakerApi, type Speaker } from "@/lib/api/speakerApi"
 
 // Type definitions will use Speaker from speakersApi
 
@@ -21,7 +21,7 @@ export function SpeakersDirectory() {
     const fetchSpeakers = async () => {
       try {
         setLoading(true)
-        const data = await speakersAPI.getSpeakers()
+        const data = await speakerApi.getSpeakers()
         setSpeakers(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch speakers')
@@ -94,7 +94,7 @@ export function SpeakersDirectory() {
               <CardHeader className="flex flex-row items-start gap-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-orange-100 border-2 border-orange-200">
                   <img
-                    src={getAvatarUrl(speaker.avatar)}
+                    src={getAvatarUrl(speaker.avatar || null)}
                     alt={speaker.speaker_name || `Speaker ${speaker.id}`}
                     className="w-full h-full object-cover"
                     onError={(e) => {

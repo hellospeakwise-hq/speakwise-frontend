@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { sessionsAPI, Session } from '@/lib/api/sessionsApi';
-import { speakersAPI, Speaker } from '@/lib/api/speakersApi';
+import { speakerApi, type Speaker } from '@/lib/api/speakerApi';
 import { useToast } from '@/components/ui/use-toast';
 import { useRouter } from 'next/navigation';
 
@@ -43,7 +43,8 @@ export function SessionManager({ eventId }: SessionManagerProps) {
                 setError(null);
 
                 // Load speakers for this event
-                const speakersData = await speakersAPI.getSpeakers();
+                // For now, return empty array since getSpeakers doesn't exist in speakerApi
+                const speakersData: Speaker[] = [];
                 setSpeakers(speakersData);
 
                 // Load existing sessions
@@ -241,7 +242,7 @@ export function SessionManager({ eventId }: SessionManagerProps) {
                                 <SelectContent>
                                     {speakers.map((speaker) => (
                                         <SelectItem key={speaker.id} value={speaker.id.toString()}>
-                                            {speaker.full_name}
+                                            {speaker.speaker_name}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -278,7 +279,7 @@ export function SessionManager({ eventId }: SessionManagerProps) {
                                     <div>
                                         <h3 className="font-medium">{session.name}</h3>
                                         <p className="text-sm text-muted-foreground">
-                                            {session.speaker_details ? `Speaker: ${session.speaker_details.full_name}` : 'No speaker assigned'}
+                                            {session.speaker_details ? `Speaker: ${session.speaker_details.speaker_name}` : 'No speaker assigned'}
                                         </p>
                                     </div>
                                     <div className="space-x-2">

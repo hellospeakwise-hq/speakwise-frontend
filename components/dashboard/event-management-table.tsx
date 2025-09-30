@@ -34,7 +34,8 @@ import {
   Plus
 } from "lucide-react"
 import Link from "next/link"
-import { type Event } from "@/lib/api/eventsApi"
+import { eventsApi } from "@/lib/api/events"
+import { type Event } from "@/lib/types/api"
 import { EventFormDialog } from "@/components/dashboard/event-form-dialog"
 import {
   AlertDialog,
@@ -229,7 +230,9 @@ export function EventManagementTable({
                           {event.location ? (
                             <div className="flex items-center gap-1 text-sm">
                               <MapPin className="h-3 w-3 text-muted-foreground" />
-                              {event.location}
+                              {typeof event.location === 'string' 
+                                ? event.location 
+                                : event.location?.venue || 'Location TBD'}
                             </div>
                           ) : (
                             <span className="text-muted-foreground text-sm">No location</span>

@@ -24,6 +24,7 @@ export function SignUpForm() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [nationality, setNationality] = useState("")
+  const [username, setUsername] = useState("")
 
   const validateForm = () => {
     if (!firstName.trim()) {
@@ -39,6 +40,18 @@ export function SignUpForm() {
     if (!nationality.trim()) {
       setError("Nationality is required")
       toast.error("Nationality is required")
+      return false
+    }
+
+    if (!username.trim()) {
+      setError("Username is required")
+      toast.error("Username is required")
+      return false
+    }
+
+    if (username.length < 3) {
+      setError("Username must be at least 3 characters long")
+      toast.error("Username must be at least 3 characters long")
       return false
     }
 
@@ -73,21 +86,38 @@ export function SignUpForm() {
     }
     setIsLoading(true)
     try {
+      toast.loading("Creating your account...", { id: "registration" })
+      
       // Register the user with the auth context
       await register(
         firstName,
         lastName,
         nationality,
+        username,
         email,
         password,
         userType as 'attendee' | 'speaker' | 'organizer'
       )
-      toast.success("Account created successfully! Please sign in.")
-      router.push("/signin")
+      
+      toast.success("🎉 Account created successfully! Redirecting to sign in...", { 
+        id: "registration",
+        duration: 3000 
+      })
+      
+      // Wait a bit before redirecting to show the success message
+      setTimeout(() => {
+        router.push("/signin")
+      }, 1500)
+      
     } catch (error: any) {
       console.error("Registration error:", error)
-      setError(error.message || "Failed to create account. Please try again.")
-      toast.error(error.message || "Registration failed")
+      const errorMessage = error.message || "Failed to create account. Please try again."
+      setError(errorMessage)
+      
+      toast.error(`❌ Registration failed: ${errorMessage}`, { 
+        id: "registration",
+        duration: 5000 
+      })
     } finally {
       setIsLoading(false)
     }
@@ -106,7 +136,18 @@ export function SignUpForm() {
             <Input
               id="firstName"
               value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
+              onChange={(e) => {
+                setFirstName(e.target.value)
+                // Auto-generate username if it's empty
+                if (!username && e.target.value) {
+                  const suggestedUsername = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')
+                  if (lastName) {
+                    setUsername(suggestedUsername + lastName.toLowerCase().replace(/[^a-z0-9]/g, ''))
+                  } else {
+                    setUsername(suggestedUsername)
+                  }
+                }
+              }}
               required
             />
           </div>
@@ -115,7 +156,15 @@ export function SignUpForm() {
             <Input
               id="lastName"
               value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
+              onChange={(e) => {
+                setLastName(e.target.value)
+                // Auto-generate username if it's empty
+                if (!username && firstName && e.target.value) {
+                  const suggestedUsername = firstName.toLowerCase().replace(/[^a-z0-9]/g, '') + 
+                                           e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')
+                  setUsername(suggestedUsername)
+                }
+              }}
               required
             />
           </div>
@@ -127,6 +176,19 @@ export function SignUpForm() {
               onChange={(e) => setNationality(e.target.value)}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="username">Username</Label>
+            <Input
+              id="username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Choose a unique username"
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Username must be at least 3 characters long and unique
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>

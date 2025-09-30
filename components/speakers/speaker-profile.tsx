@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Star, MapPin, Calendar, MessageSquare, Globe, Twitter, Linkedin, Github, Loader2, Mail, ExternalLink } from "lucide-react"
-import { speakersAPI, type Speaker } from '@/lib/api/speakersApi';
+import { speakerApi, type Speaker } from '@/lib/api/speakerApi';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -26,7 +26,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
       try {
         setLoading(true);
         setError(null);
-        const data = await speakersAPI.getSpeakerById(parseInt(id));
+        const data = await speakerApi.getSpeakerById(id);
         setSpeaker(data);
       } catch (err) {
         console.error('Error fetching speaker:', err);
@@ -73,21 +73,24 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
   }
 
   // Extract social media links
-  const socials = {
-    twitter: speaker.social_links?.find(link => link.name.toLowerCase().includes('twitter'))?.link,
-    linkedin: speaker.social_links?.find(link => link.name.toLowerCase().includes('linkedin'))?.link,
-    github: speaker.social_links?.find(link => link.name.toLowerCase().includes('github'))?.link,
-    website: speaker.social_links?.find(link => 
-      link.name.toLowerCase().includes('website') ||
-      link.name.toLowerCase().includes('personal')
+  const getSocialLinks = (speaker: Speaker) => ({
+    twitter: speaker.social_links?.find((link) => link.name.toLowerCase().includes('twitter'))?.link,
+    linkedin: speaker.social_links?.find((link) => link.name.toLowerCase().includes('linkedin'))?.link,
+    github: speaker.social_links?.find((link) => link.name.toLowerCase().includes('github'))?.link,
+    website: speaker.social_links?.find((link) =>
+      !link.name.toLowerCase().includes('twitter') &&
+      !link.name.toLowerCase().includes('linkedin') &&
+      !link.name.toLowerCase().includes('github')
     )?.link,
-  };  // For now, use placeholder data for features not yet implemented in backend
+  })  // For now, use placeholder data for features not yet implemented in backend
   const placeholderStats = {
     averageRating: 4.8,
     totalReviews: 12,
     totalEvents: 5,
     countries: 3,
   };
+
+  const socials = speaker ? getSocialLinks(speaker) : { twitter: null, linkedin: null, github: null, website: null };
 
   return (
     <div className="space-y-8">
@@ -253,7 +256,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                {speaker.long_bio || speaker.short_bio || 'No bio available yet.'}
+                {(speaker as any).long_bio || speaker.short_bio || 'No bio available yet.'}
               </p>
             </CardContent>
           </Card>
@@ -268,20 +271,20 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                 <CardHeader>
                   <CardTitle className="text-lg">Professional Background</CardTitle>
                   <CardDescription>
-                    Learn more about {(speaker.speaker_name || `Speaker ${speaker.id}`).split(" ")[0]}'s experience and expertise
+                    Learn more about {(speaker.speaker_name || `Speaker ${speaker.id}`).split(" ")[0]}&apos;s experience and expertise
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {speaker.long_bio && (
+                    {(speaker as any).long_bio && (
                       <div>
                         <h4 className="font-medium mb-2">Detailed Bio</h4>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {speaker.long_bio}
+                          {(speaker as any).long_bio}
                         </p>
                       </div>
                     )}
-                    {speaker.short_bio && speaker.short_bio !== speaker.long_bio && (
+                    {speaker.short_bio && speaker.short_bio !== (speaker as any).long_bio && (
                       <div>
                         <h4 className="font-medium mb-2">Summary</h4>
                         <p className="text-sm text-muted-foreground">
@@ -297,7 +300,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                         </p>
                       </div>
                     )}
-                    {!speaker.long_bio && !speaker.short_bio && (
+                    {!(speaker as any).long_bio && !speaker.short_bio && (
                       <p className="text-sm text-muted-foreground italic">
                         No biography available yet. This speaker profile is still being updated.
                       </p>
@@ -316,8 +319,8 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {speaker.social_links && speaker.social_links.length > 0 ? (
-                      speaker.social_links.map((link, index) => (
+                    {(speaker as any).social_links && (speaker as any).social_links.length > 0 ? (
+                      (speaker as any).social_links.map((link: any, index: number) => (
                         <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                           <div className="flex items-center space-x-3">
                             <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">

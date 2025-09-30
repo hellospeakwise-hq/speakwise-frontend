@@ -1,93 +1,78 @@
-// Base API client configuration
+import axios, { AxiosInstance, AxiosError } from 'axios';
+
+// API configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000',
   TIMEOUT: 10000,
 } as const;
 
-// API response wrapper type
-export interface ApiResponse<T> {
-  data: T;
-  success: boolean;
-  message?: string;
-}
+// Create Axios instance
+export const apiClient: AxiosInstance = axios.create({
+  baseURL: `${API_CONFIG.BASE_URL}/api`,
+  timeout: API_CONFIG.TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
-// Base API error class
-export class ApiError extends Error {
-  constructor(
-    message: string,
-    public status: number,
-    public response?: any
-  ) {
-    super(message);
-    this.name = 'ApiError';
-  }
-}
-
-// Base API client class
-export class BaseApiClient {
-  private baseURL: string;
-
-  constructor(baseURL: string = API_CONFIG.BASE_URL) {
-    this.baseURL = baseURL;
-  }
-
-  protected async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    try {
-      const response = await fetch(url, config);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new ApiError(
-          errorData.message || `HTTP ${response.status}: ${response.statusText}`,
-          response.status,
-          errorData
-        );
+// Request interceptor to add auth token
+apiClient.interceptors.request.use(
+  (config) => {
+    // Add auth token if available
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
       }
-
-      return await response.json();
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw error;
-      }
-      throw new ApiError(
-        error instanceof Error ? error.message : 'Network error',
-        0
-      );
     }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
+);
 
-  protected get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET' });
-  }
+// Response interceptor for error handling
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error: AxiosError) => {
+    // Handle token expiration, but not for public endpoints
+    if (error.response?.status === 401) {
+      const url = error.config?.url || '';
+      
+      // Don't redirect for public endpoints that should be accessible without auth
+      const publicEndpoints = ['/events/', '/events/1/', '/events/2/', '/events/3/', '/events/4/', '/events/5/'];
+      const isPublicEndpoint = publicEndpoints.some(endpoint => url.includes(endpoint)) || 
+                              url.match(/\/events\/\d+\/$/); // Match any event detail endpoint
+      
+      if (!isPublicEndpoint) {
+        // Clear tokens and redirect to login only for protected endpoints
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          window.location.href = '/signin';
+        }
+      }
+    }
 
-  protected post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network error:', error.message);
+      throw new Error('Network error. Please check your connection.');
+    }
 
-  protected put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
+    // Handle API errors
+    const errorData = error.response?.data as any;
+    const errorMessage = errorData?.message || 
+                        errorData?.detail || 
+                        error.message || 
+                        'An unexpected error occurred';
 
-  protected delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+    throw new Error(errorMessage);
   }
-}
+);
+
+export default apiClient;

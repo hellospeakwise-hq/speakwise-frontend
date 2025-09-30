@@ -1,7 +1,4 @@
-import { authenticatedAPI } from './authenticatedAPI'
-
-// API Base URL
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+import { apiClient } from './base';
 
 export interface SpeakerProfile {
     id: number;
@@ -20,6 +17,27 @@ export interface SpeakerProfile {
 export interface SkillTag {
     id: number;
     name: string;
+    description?: string;
+    duration?: number;
+}
+
+export interface SocialLink {
+    id: number;
+    name: string;
+    link: string;
+}
+
+export interface Speaker {
+    id: number;
+    social_links: SocialLink[];
+    skill_tag: SkillTag[];
+    speaker_name: string;
+    organization: string;
+    short_bio: string;
+    long_bio: string;
+    country: string;
+    avatar: string;
+    user_account: string;
 }
 
 export interface UpdateSpeakerProfileData {
@@ -31,30 +49,56 @@ export interface UpdateSpeakerProfileData {
 }
 
 export const speakerApi = {
+    // Get all speakers
+    async getSpeakers(): Promise<Speaker[]> {
+        const response = await apiClient.get<Speaker[]>('/speakers/');
+        return response.data;
+    },
+
+    // Get speaker by ID
+    async getSpeakerById(id: string): Promise<Speaker> {
+        const response = await apiClient.get<Speaker[]>('/speakers/');
+        const speakers = response.data;
+        const speaker = speakers.find(s => s.id.toString() === id);
+        if (!speaker) {
+            throw new Error('Speaker not found');
+        }
+        return speaker;
+    },
+
     // Get speaker profile
     async getProfile(): Promise<SpeakerProfile> {
-        return authenticatedAPI.get('/api/speakers/profile/')
+        const response = await apiClient.get<SpeakerProfile>('/speakers/profile/');
+        return response.data;
     },
 
     // Update speaker profile
     async updateProfile(data: UpdateSpeakerProfileData): Promise<SpeakerProfile> {
-        return authenticatedAPI.patch('/api/speakers/profile/', data)
+        const response = await apiClient.patch<SpeakerProfile>('/speakers/profile/', data);
+        return response.data;
     },
 
     // Upload speaker avatar
     async uploadAvatar(file: File): Promise<SpeakerProfile> {
         const formData = new FormData();
         formData.append('avatar', file);
-        return authenticatedAPI.postFormData('/api/speakers/profile/avatar/', formData)
+        const response = await apiClient.post<SpeakerProfile>('/speakers/profile/avatar/', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
     },
 
     // Get all skill tags
     async getSkillTags(): Promise<SkillTag[]> {
-        return authenticatedAPI.get('/api/speakers/skill-tags/')
+        const response = await apiClient.get<SkillTag[]>('/speakers/skill-tags/');
+        return response.data;
     },
 
     // Create a new skill tag
     async createSkillTag(name: string): Promise<SkillTag> {
-        return authenticatedAPI.post('/api/speakers/skill-tags/', { name })
+        const response = await apiClient.post<SkillTag>('/speakers/skill-tags/', { name });
+        return response.data;
     }
 };
+
+export default speakerApi;

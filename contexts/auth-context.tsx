@@ -1,23 +1,27 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authApiSimple } from '@/lib/api/authApiSimple';
+import { authApi, type AuthResponse } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
 
 type User = {
-    id: number;
-    firstName?: string;
-    lastName?: string;
+    id: string;
+    first_name: string;
+    last_name: string;
     email: string;
-    userType?: 'attendee' | 'speaker' | 'organizer' | 'admin';
-};
+    role: {
+        id: number;
+        role: 'attendee' | 'speaker' | 'organizer' | 'admin';
+    };
+    userType: 'attendee' | 'speaker' | 'organizer' | 'admin';
+}
 
 interface AuthContextType {
     user: User | null;
     setUser: (user: User | null) => void;
     loading: boolean;
-    login: (email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer' | 'admin') => Promise<string>;
-    register: (firstName: string, lastName: string, nationality: string, email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer' | 'admin') => Promise<string>;
+    login: (email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer') => Promise<string>;
+    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer') => Promise<string>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -42,26 +46,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         const checkAuth = async () => {
             setLoading(true);
-            if (authApiSimple.isAuthenticated()) {
+            if (authApi.isAuthenticated()) {
                 try {
+                    // Try to get fresh user profile from API
+                    const userProfile = await authApi.getProfile();
+                    const userWithType = { ...userProfile, userType: userProfile.role.role };
+                    setUser(userWithType);
                     setIsAuthenticated(true);
-                    // Try to load user from localStorage
-                    const storedUser = localStorage.getItem('user');
-                    if (storedUser) {
-                        setUser(JSON.parse(storedUser));
-                    } else {
-                        setUser({
-                            id: 1,
-                            firstName: 'User',
-                            lastName: '',
-                            email: 'user@example.com',
-                            userType: 'attendee',
-                        });
-                    }
+                    localStorage.setItem('user', JSON.stringify(userProfile));
                 } catch (error) {
                     console.error('Error validating authentication', error);
-                    authApiSimple.logout();
-                    setIsAuthenticated(false);
+                    // Fall back to stored user data
+                    const storedUser = localStorage.getItem('user');
+                    if (storedUser) {
+                        try {
+                            setUser(JSON.parse(storedUser));
+                            setIsAuthenticated(true);
+                        } catch (parseError) {
+                            console.error('Error parsing stored user data', parseError);
+                            await authApi.logout();
+                            setIsAuthenticated(false);
+                        }
+                    } else {
+                        await authApi.logout();
+                        setIsAuthenticated(false);
+                    }
                 }
             } else {
                 setIsAuthenticated(false);
@@ -74,18 +83,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const login = async (email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer') => {
         setLoading(true);
         try {
-            const response = await authApiSimple.login({ email, password }, userType);
+            const response = await authApi.login({ email, password }, userType);
+            console.log('Login API Response:', response);
             setIsAuthenticated(true);
-            const userData = {
-                id: response.user?.id || 1,
-                firstName: response.user?.first_name || '',
-                lastName: response.user?.last_name || '',
-                email: response.user?.email || email,
-                userType: response.user?.role?.display || userType,
+            
+            // Use the response data directly as it matches our User type
+            const userData: User = {
+                id: response.id,
+                first_name: response.first_name,
+                last_name: response.last_name,
+                email: response.email,
+                role: response.role || { id: 1, role: userType },
+                userType: response.role?.role || userType
             };
+            
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
-            return "/";
+            return getRoleBasedRedirectPath(userData);
         } finally {
             setLoading(false);
         }
@@ -103,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         // Default redirects based on role
-        switch (user.userType) {
+        switch (user.role.role) {
             case 'speaker':
                 return '/dashboard/speaker';
             case 'organizer':
@@ -118,40 +132,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         firstName: string,
         lastName: string,
         nationality: string,
+        username: string,
         email: string,
         password: string,
         userType: 'attendee' | 'speaker' | 'organizer'
     ) => {
         setLoading(true);
         try {
-            console.log("Attempting registration with:", { firstName, lastName, nationality, email, userType });
-            const response = await authApiSimple.register({
+            console.log("Attempting registration with:", { firstName, lastName, nationality, username, email, userType });
+            const response = await authApi.register({
                 firstName,
                 lastName,
                 nationality,
+                username,
                 email,
                 password,
                 userType
             });
 
             console.log("Registration response:", response);
-            setIsAuthenticated(true);
-
-            // If registration is successful, we assume it returns a login response with tokens
-            // Log the user in using these credentials
-            const loginResponse = await authApiSimple.login({ email, password }, userType);
-
-            const userData = {
-                id: response.id || 1,
-                firstName,
-                lastName,
-                email,
-                userType,
+            
+            // Use the response data directly as it matches our User type
+            const userData: User = {
+                id: response.id,
+                first_name: response.first_name,
+                last_name: response.last_name,
+                email: response.email,
+                role: response.role,
+                userType: response.role.role
             };
-            setUser(userData);
 
-            // Return the redirect path for after registration
-            return getRoleBasedRedirectPath(userData);
+            setUser(userData);
+            setIsAuthenticated(true);
+            localStorage.setItem('user', JSON.stringify(userData));
+
+            // Return success message - user will be redirected to signin
+            return "/signin";
         } catch (error) {
             console.error("Registration error in context:", error);
             throw error;
@@ -163,10 +179,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const logout = async () => {
         setLoading(true);
         try {
-            await authApiSimple.logout();
+            await authApi.logout();
             setUser(null);
             setIsAuthenticated(false);
-            localStorage.removeItem('user');
             router.push('/signin');
         } finally {
             setLoading(false);

@@ -22,34 +22,27 @@ export interface LoginData {
 export const authApiSimple = {
     // Register a new user
     async register(data: RegisterData) {
-        console.log('Registration payload:', {
+        // Create username from email (before @ symbol)
+        const username = data.email.split('@')[0];
+        
+        const payload = {
             email: data.email,
             password: data.password,
-            username: data.email,
+            username: username,
             first_name: data.firstName,
             last_name: data.lastName,
             nationality: data.nationality,
-            role: {
-                display: data.userType
-            }
-        });
+            role: data.userType
+        };
 
-        const response = await fetch(`${API_BASE_URL}/users/register/`, {
+        console.log('Registration payload:', payload);
+
+        const response = await fetch(`${API_BASE_URL}/users/auth/register/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                email: data.email,
-                password: data.password,
-                username: data.email,
-                first_name: data.firstName,
-                last_name: data.lastName,
-                nationality: data.nationality,
-                role: {
-                    display: data.userType
-                }
-            })
+            body: JSON.stringify(payload)
         });
 
         console.log('Registration response status:', response.status);

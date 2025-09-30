@@ -5,9 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { fetchEventById, type Event } from "@/lib/api/events"
+import { eventsApi } from "@/lib/api/events"
+import { type Event } from "@/lib/types/api"
 import { EventSessions } from "./event-sessions"
 import { useAuth } from "@/contexts/auth-context"
+import { useEvents } from "@/hooks/use-events"
 import Link from "next/link"
 
 interface EventDetailsProps {
@@ -19,6 +21,7 @@ export function EventDetails({ id }: EventDetailsProps) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const { user } = useAuth()
+  const { events: allEvents, loading: eventsLoading } = useEvents()
 
   // Only show management buttons to organizers
   const canManageEvent = user?.userType === 'organizer'
@@ -28,23 +31,46 @@ export function EventDetails({ id }: EventDetailsProps) {
       try {
         setLoading(true)
         setError(null)
-        const data = await fetchEventById(parseInt(id))
-        console.log('Event data received in details component:', data)
-        console.log('Tags data:', data.tags)
-        setEvent(data)
+        
+        // First, try to find the event in the already loaded events list
+        const eventFromList = allEvents.find(e => e.id.toString() === id)
+        
+        if (eventFromList && !eventsLoading) {
+          // If we found the event in the list, use it directly
+          console.log('Using event from events list:', eventFromList)
+          setEvent(eventFromList)
+          setLoading(false)
+          return
+        }
+        
+        // If not found in list or list is still loading, try API call
+        if (!eventsLoading) {
+          console.log('Event not found in list, trying API call...')
+          const data = await eventsApi.getEvent(id)
+          console.log('Event data received from API:', data)
+          setEvent(data)
+        }
       } catch (err) {
         console.error('Error fetching event:', err)
         setEvent(null)
-        setError('Failed to load event. Please check if the backend is running.')
+        
+        // Handle 401 errors gracefully for event details
+        if (err instanceof Error && err.message.includes('401')) {
+          setError('Event details are not available. The event may require authentication to view.')
+        } else {
+          setError('Failed to load event details.')
+        }
       } finally {
-        setLoading(false)
+        if (!eventsLoading) {
+          setLoading(false)
+        }
       }
     }
 
     if (id) {
       loadEvent()
     }
-  }, [id])
+  }, [id, allEvents, eventsLoading])
 
   if (loading) {
     return (
@@ -70,7 +96,7 @@ export function EventDetails({ id }: EventDetailsProps) {
           <h1 className="text-3xl font-bold tracking-tight">{event.name || event.title}</h1>
           <div className="flex flex-wrap gap-2 mt-2">
             {event.tags && event.tags.length > 0 ? (
-              event.tags.map(tag => (
+              event.tags.map((tag: any) => (
                 <span
                   key={tag.id}
                   className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
