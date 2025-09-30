@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
-import { eventsAPI, type Event } from "@/lib/api/eventsApi"
+import { fetchEventById, type Event } from "@/lib/api/events"
 import { EventSessions } from "./event-sessions"
 import { useAuth } from "@/contexts/auth-context"
 import Link from "next/link"
@@ -28,7 +28,7 @@ export function EventDetails({ id }: EventDetailsProps) {
       try {
         setLoading(true)
         setError(null)
-        const data = await eventsAPI.getEventById(parseInt(id))
+        const data = await fetchEventById(parseInt(id))
         console.log('Event data received in details component:', data)
         console.log('Tags data:', data.tags)
         setEvent(data)
@@ -203,7 +203,7 @@ export function EventDetails({ id }: EventDetailsProps) {
                 <Users className="h-5 w-5 mr-2 text-orange-500" />
                 <span className="font-medium">Attendees</span>
               </div>
-              <span className="text-lg font-bold">{event.attendees}</span>
+              <span className="text-lg font-bold">TBA</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -226,7 +226,7 @@ export function EventDetails({ id }: EventDetailsProps) {
                 </svg>
                 <span className="font-medium">Speakers</span>
               </div>
-              <span className="text-lg font-bold">{event.speakers}</span>
+              <span className="text-lg font-bold">TBA</span>
             </div>
           </CardContent>
         </Card>
@@ -235,11 +235,11 @@ export function EventDetails({ id }: EventDetailsProps) {
       {/* Sessions Section */}
       <Card className="col-span-1 md:col-span-2">
         <CardHeader>
-          <CardTitle>Event Sessions</CardTitle>
+          <CardTitle>Event Talks</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
-            <p className="text-muted-foreground">View all scheduled sessions for this event</p>
+            <p className="text-muted-foreground">View all Speakers and their respective talks and give feedback to talk sessions</p>
           </div>
           <EventSessions eventId={id} />
         </CardContent>

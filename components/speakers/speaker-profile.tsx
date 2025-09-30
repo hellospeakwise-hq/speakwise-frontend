@@ -72,18 +72,16 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
     );
   }
 
-  // Extract social links into a more usable format
-  const socialLinks = {
-    twitter: speaker.social_links?.find(link => link.social_name.toLowerCase().includes('twitter'))?.social_url,
-    linkedin: speaker.social_links?.find(link => link.social_name.toLowerCase().includes('linkedin'))?.social_url,
-    github: speaker.social_links?.find(link => link.social_name.toLowerCase().includes('github'))?.social_url,
-    website: speaker.social_links?.find(link =>
-      link.social_name.toLowerCase().includes('website') ||
-      link.social_name.toLowerCase().includes('personal')
-    )?.social_url,
-  };
-
-  // For now, use placeholder data for features not yet implemented in backend
+  // Extract social media links
+  const socials = {
+    twitter: speaker.social_links?.find(link => link.name.toLowerCase().includes('twitter'))?.link,
+    linkedin: speaker.social_links?.find(link => link.name.toLowerCase().includes('linkedin'))?.link,
+    github: speaker.social_links?.find(link => link.name.toLowerCase().includes('github'))?.link,
+    website: speaker.social_links?.find(link => 
+      link.name.toLowerCase().includes('website') ||
+      link.name.toLowerCase().includes('personal')
+    )?.link,
+  };  // For now, use placeholder data for features not yet implemented in backend
   const placeholderStats = {
     averageRating: 4.8,
     totalReviews: 12,
@@ -101,16 +99,16 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                 <Avatar className="w-32 h-32 mb-4">
                   <AvatarImage
                     src={getAvatarUrl(speaker.avatar) || undefined}
-                    alt={speaker.full_name}
+                    alt={speaker.speaker_name || "Speaker"}
                     onError={(e) => {
                       console.error('Avatar failed to load:', speaker.avatar);
                     }}
                   />
                   <AvatarFallback className="text-2xl bg-orange-100 text-orange-600">
-                    {speaker.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                    {(speaker.speaker_name || `Speaker ${speaker.id}`).split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
-                <h2 className="text-2xl font-bold">{speaker.full_name}</h2>
+                <h2 className="text-2xl font-bold">{speaker.speaker_name || `Speaker ${speaker.id}`}</h2>
                 <p className="text-muted-foreground">{speaker.organization || 'Independent Speaker'}</p>
                 <div className="flex items-center mt-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4 mr-1" />
@@ -127,9 +125,9 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                 </div>
 
                 <div className="flex justify-center gap-4 mt-6">
-                  {socialLinks.twitter && (
+                  {socials.twitter && (
                     <a
-                      href={socialLinks.twitter}
+                      href={socials.twitter}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-primary"
@@ -138,9 +136,9 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                       <span className="sr-only">Twitter</span>
                     </a>
                   )}
-                  {socialLinks.linkedin && (
+                  {socials.linkedin && (
                     <a
-                      href={socialLinks.linkedin}
+                      href={socials.linkedin}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-primary"
@@ -149,9 +147,9 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                       <span className="sr-only">LinkedIn</span>
                     </a>
                   )}
-                  {socialLinks.github && (
+                  {socials.github && (
                     <a
-                      href={socialLinks.github}
+                      href={socials.github}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-primary"
@@ -160,9 +158,9 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                       <span className="sr-only">GitHub</span>
                     </a>
                   )}
-                  {socialLinks.website && (
+                  {socials.website && (
                     <a
-                      href={socialLinks.website}
+                      href={socials.website}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-muted-foreground hover:text-primary"
@@ -196,8 +194,8 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {speaker.skill_tags && speaker.skill_tags.length > 0 ? (
-                  speaker.skill_tags.map((skill) => (
+                {speaker.skill_tag && speaker.skill_tag.length > 0 ? (
+                  speaker.skill_tag.map((skill) => (
                     <Badge key={skill.id} variant="secondary">
                       {skill.name}
                     </Badge>
@@ -251,7 +249,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
         <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>About {speaker.full_name}</CardTitle>
+              <CardTitle>About {speaker.speaker_name || `Speaker ${speaker.id}`}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
@@ -270,7 +268,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                 <CardHeader>
                   <CardTitle className="text-lg">Professional Background</CardTitle>
                   <CardDescription>
-                    Learn more about {speaker.full_name.split(" ")[0]}'s experience and expertise
+                    Learn more about {(speaker.speaker_name || `Speaker ${speaker.id}`).split(" ")[0]}'s experience and expertise
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -313,28 +311,28 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                 <CardHeader>
                   <CardTitle className="text-lg">Get in Touch</CardTitle>
                   <CardDescription>
-                    Connect with {speaker.full_name.split(" ")[0]} through their professional networks
+                    Connect with {(speaker.speaker_name || `Speaker ${speaker.id}`).split(" ")[0]} through their professional networks
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {speaker.social_links && speaker.social_links.length > 0 ? (
-                      speaker.social_links.map((link) => (
-                        <div key={link.id || link.social_name} className="flex items-center justify-between p-3 border rounded-lg">
+                      speaker.social_links.map((link, index) => (
+                        <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                           <div className="flex items-center space-x-3">
                             <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
                               <ExternalLink className="h-4 w-4 text-orange-600" />
                             </div>
                             <div>
-                              <p className="font-medium">{link.social_name}</p>
+                              <p className="font-medium">{link.name}</p>
                               <p className="text-xs text-muted-foreground truncate max-w-[200px]">
-                                {link.social_url}
+                                {link.link}
                               </p>
                             </div>
                           </div>
                           <Button asChild variant="outline" size="sm">
                             <a
-                              href={link.social_url}
+                              href={link.link}
                               target="_blank"
                               rel="noopener noreferrer"
                             >

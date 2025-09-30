@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { eventsAPI, type Event, type Region, type Country } from "@/lib/api/eventsApi"
+import { useState } from "react"
+import { useEvents } from "@/hooks/use-events"
 
 interface RegionFilterProps {
   onRegionChange?: (regionId: number | null) => void
@@ -9,36 +9,14 @@ interface RegionFilterProps {
 }
 
 export function RegionFilter({ onRegionChange, onCountryChange }: RegionFilterProps) {
+  const { countries, loading } = useEvents()
   const [selectedRegion, setSelectedRegion] = useState<number | null>(null)
   const [selectedCountry, setSelectedCountry] = useState<number | null>(null)
-  const [events, setEvents] = useState<Event[]>([])
-  const [regions, setRegions] = useState<Region[]>([])
-  const [countries, setCountries] = useState<Country[]>([])
-  const [loading, setLoading] = useState(true)
 
-  // Fetch events and extract regions/countries
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        setLoading(true)
-        const eventsData = await eventsAPI.getEvents()
-        setEvents(eventsData)
-
-        // Extract regions and countries from events
-        const regionsData = eventsAPI.getRegionsFromEvents(eventsData)
-        setRegions(regionsData)
-
-        const countriesData = eventsAPI.getCountriesFromEvents(eventsData)
-        setCountries(countriesData)
-      } catch (error) {
-        console.error('Error loading filter data:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadData()
-  }, [])
+  // Extract unique regions from countries
+  const regions = Array.from(
+    new Map(countries.map(country => [country.region?.id, country.region])).values()
+  ).filter(Boolean)
 
   // Filter countries by selected region
   const filteredCountries = selectedRegion

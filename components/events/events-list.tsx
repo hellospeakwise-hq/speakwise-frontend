@@ -2,74 +2,32 @@
 import Link from "next/link"
 import Image from "next/image"
 import { Calendar, MapPin, Users, ImageIcon, Loader2 } from "lucide-react"
-import { useState, useEffect, useMemo } from "react"
-import { eventsAPI, type Event } from "@/lib/api/eventsApi"
+import { useMemo } from "react"
+import { useEvents } from "@/hooks/use-events"
 import { useAuth } from "@/contexts/auth-context"
+import type { Event } from "@/lib/api/events"
 
 interface EventsListProps {
-    regionFilter?: number | null
-    countryFilter?: number | null
+    countryFilter?: number[]
     tagFilter?: number | null
 }
 
-export function EventsList({ regionFilter, countryFilter, tagFilter }: EventsListProps) {
-    const [events, setEvents] = useState<Event[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-    const { isAuthenticated, user, loading: authLoading } = useAuth()
+export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
+    const { events, loading, error } = useEvents()
 
-    // Fetch events data
-    useEffect(() => {
-        const loadEvents = async () => {
-            try {
-                setLoading(true)
-                setError(null)
-                const data = await eventsAPI.getEvents()
-                setEvents(data)
-            } catch (err) {
-                console.error('Error fetching events:', err)
-                
-                // Check authentication status to provide better error messages
-                if (!isAuthenticated && !authLoading) {
-                    setError('Please sign in to view events.')
-                } else {
-                    setError('Failed to load events. Please try again later.')
-                }
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        // Only load events if auth state is determined
-        if (!authLoading) {
-            loadEvents()
-        }
-    }, [isAuthenticated, authLoading])
-
-    // Filter events based on region, country, and tags
+    // Filter events based on country and tags
     const filteredEvents = useMemo(() => {
-        if (!regionFilter && !countryFilter && !tagFilter) {
+        if ((!countryFilter || countryFilter.length === 0) && !tagFilter) {
             return events
         }
 
         return events.filter(event => {
-            let matchesRegionOrCountry = true;
+            let matchesCountry = true;
             let matchesTag = true;
 
-            // Apply region/country filter
-            if (regionFilter || countryFilter) {
-                // If country filter is selected, filter by country
-                if (countryFilter && event.country) {
-                    matchesRegionOrCountry = event.country.id === countryFilter;
-                }
-                // If only region filter is selected, filter by region
-                else if (regionFilter && event.country?.region) {
-                    matchesRegionOrCountry = event.country.region.id === regionFilter;
-                }
-                // If filters are applied but event has no country/region data, exclude it
-                else {
-                    matchesRegionOrCountry = false;
-                }
+            // Apply country filter
+            if (countryFilter && countryFilter.length > 0 && event.location?.country) {
+                matchesCountry = countryFilter.includes(event.location.country.id);
             }
 
             // Apply tag filter
@@ -77,9 +35,9 @@ export function EventsList({ regionFilter, countryFilter, tagFilter }: EventsLis
                 matchesTag = event.tags?.some(tag => tag.id === tagFilter) || false;
             }
 
-            return matchesRegionOrCountry && matchesTag;
+            return matchesCountry && matchesTag;
         })
-    }, [events, regionFilter, countryFilter, tagFilter])
+    }, [events, countryFilter, tagFilter])
 
     if (loading) {
         return (
@@ -95,13 +53,6 @@ export function EventsList({ regionFilter, countryFilter, tagFilter }: EventsLis
             {error && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <p className="text-yellow-800 text-sm">{error}</p>
-                    {!isAuthenticated && (
-                        <div className="mt-2">
-                            <Link href="/auth/signin" className="text-blue-600 text-sm hover:underline">
-                                Sign in to view events
-                            </Link>
-                        </div>
-                    )}
                 </div>
             )}
 
@@ -109,14 +60,14 @@ export function EventsList({ regionFilter, countryFilter, tagFilter }: EventsLis
                 <p className="text-sm text-muted-foreground">
                     Showing {filteredEvents.length} events
                     {filteredEvents.length === 0 && !loading && " (No events found)"}
-                    {(regionFilter || countryFilter || tagFilter) && ` (filtered)`}
+                    {((countryFilter && countryFilter.length > 0) || tagFilter) && ` (filtered)`}
                 </p>
             </div>
 
             {filteredEvents.length === 0 && !loading ? (
                 <div className="text-center py-12">
                     <p className="text-muted-foreground">
-                        {(regionFilter || countryFilter || tagFilter)
+                        {((countryFilter && countryFilter.length > 0) || tagFilter)
                             ? "No events found matching the selected filters."
                             : "No events available at the moment."
                         }
@@ -202,11 +153,11 @@ export function EventsList({ regionFilter, countryFilter, tagFilter }: EventsLis
                                     <div className="flex items-center">
                                         <Users className="h-4 w-4 mr-1 text-orange-500" />
                                         <span className="text-xs text-muted-foreground">
-                                            {event.attendees || 0} Attendees
+                                            Event
                                         </span>
                                     </div>
                                     <div className="text-xs text-muted-foreground">
-                                        {event.speakers || 0} Speakers
+                                        {event.is_active ? 'Active' : 'Inactive'}
                                     </div>
                                 </div>
                             </div>

@@ -13,66 +13,51 @@ export interface Tag {
 export interface Country {
     id: number;
     name: string;
-    code?: string;
+    code: string;
 }
 
 export interface Location {
     id: number;
-    venue?: string;
-    address?: string;
-    city?: string;
-    state?: string;
-    postal_code?: string;
-    latitude?: number;
-    longitude?: number;
-    description?: string;
-    country?: Country;
+    country: Country;
+    venue: string;
+    address: string;
+    city: string;
+    state: string;
+    postal_code: string;
+    latitude: string;
+    longitude: string;
+    description: string;
+}
+
+export interface DateTimeInfo {
+    date: string;
+    time: string;
+    datetime: string;
 }
 
 export interface DateRange {
-    start: {
-        date: string;
-        time: string;
-        datetime: string;
-    } | null;
-    end: {
-        date: string;
-        time: string;
-        datetime: string;
-    } | null;
+    start: DateTimeInfo;
+    end: DateTimeInfo;
     same_day: boolean;
 }
 
 export interface Event {
     id: number;
+    event_image: string | null;
+    tags: Tag[];
+    website: string;
+    short_description: string;
+    location: Location;
+    name: string;
+    date: string; // Formatted display date
+    date_range: DateRange;
     title: string;
-    name: string; // Computed field aliasing title
-    event_nickname?: string;
-    event_image?: string | null;
-    short_description?: string;
-    description?: string;
-    website?: string;
-    location?: Location | string; // Can be either an object or string for backward compatibility
-    start_date_time?: string;
-    end_date_time?: string;
-    date?: string; // Computed field for frontend display
-    date_range?: DateRange; // New structured date field
+    event_nickname: string;
+    description: string;
+    start_date_time: string; // ISO string
+    end_date_time: string; // ISO string
     is_active: boolean;
-    attendees: number; // Computed field
-    speakers: number; // Computed field
-    created_at: string;
-    updated_at: string;
-    tags?: Tag[]; // Event tags
-    country?: {
-        id: number;
-        name: string;
-        region: {
-            id: number;
-            name: string;
-            countries?: string[];
-        };
-        events?: string[];
-    };
+    organizer: any | null;
 }
 
 export interface Region {
