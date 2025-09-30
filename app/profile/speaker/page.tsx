@@ -162,7 +162,7 @@ export default function SpeakerProfilePage() {
                                     <Avatar className="w-24 h-24">
                                         <AvatarImage 
                                             src={profile?.avatar} 
-                                            alt={user?.firstName || "Speaker"} 
+                                            alt={user?.first_name || "Speaker"} 
                                         />
                                         <AvatarFallback>
                                             <User className="w-12 h-12" />
@@ -192,11 +192,11 @@ export default function SpeakerProfilePage() {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div className="space-y-2">
                                             <Label>First Name</Label>
-                                            <Input value={user?.firstName || ""} disabled />
+                                            <Input value={user?.first_name || ""} disabled />
                                         </div>
                                         <div className="space-y-2">
                                             <Label>Last Name</Label>
-                                            <Input value={user?.lastName || ""} disabled />
+                                            <Input value={user?.last_name || ""} disabled />
                                         </div>
                                     </div>
                                     <div className="space-y-2">

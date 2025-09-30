@@ -35,8 +35,8 @@ export default function ProfilePage() {
     // Sync form state with user data
     useEffect(() => {
         if (user) {
-            setFirstName(user.firstName || '')
-            setLastName(user.lastName || '')
+            setFirstName(user.first_name || '')
+            setLastName(user.last_name || '')
             setEmail(user.email || '')
         }
     }, [user])
@@ -190,7 +190,7 @@ export default function ProfilePage() {
                                             id="firstName"
                                             value={firstName}
                                             disabled
-                                            placeholder={user?.firstName ? "" : "Not provided"}
+                                            placeholder={user?.first_name ? "" : "Not provided"}
                                         />
                                     </div>
                                     <div className="space-y-2">

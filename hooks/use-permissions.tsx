@@ -25,7 +25,7 @@ export function usePermissions() {
       }
     }
 
-    const userType = user.userType || 'attendee'
+    const userType = user.role.role
     
     return {
       // Public permissions
@@ -60,11 +60,11 @@ export function usePermissions() {
 
 // Permission checker utility function
 export function hasPermission(
-  user: { userType?: string } | null,
+  user: { role: { role: string } } | null,
   requiredRoles: string[]
 ): boolean {
-  if (!user || !user.userType) return false
-  return requiredRoles.includes(user.userType)
+  if (!user || !user.role?.role) return false
+  return requiredRoles.includes(user.role.role)
 }
 
 // Component permission wrapper

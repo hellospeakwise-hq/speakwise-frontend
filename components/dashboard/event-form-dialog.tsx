@@ -34,7 +34,8 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { CalendarIcon, Upload, X, Plus } from "lucide-react"
-import { eventsAPI, type Event, type CreateEventData, type Country, type Tag } from "@/lib/api/eventsApi"
+import { eventsApi, type CreateEventRequest } from "@/lib/api/events"
+import { type Event, type Country, type Tag } from "@/lib/types/api"
 
 const eventFormSchema = z.object({
   title: z.string().min(1, "Event title is required"),
@@ -82,8 +83,8 @@ export function EventFormDialog({
       try {
         console.log('Loading countries and tags data...');
         const [countriesData, tagsData] = await Promise.all([
-          eventsAPI.getCountries(),
-          eventsAPI.getTags()
+          eventsApi.getCountries(),
+          eventsApi.getTags()
         ]);
         console.log('Countries loaded:', countriesData);
         console.log('Tags loaded:', tagsData);
@@ -119,7 +120,7 @@ export function EventFormDialog({
       short_description: event?.short_description || "",
       description: event?.description || "",
       website: event?.website || "",
-      location: event?.location || "",
+      location: typeof event?.location === 'string' ? event.location : (event?.location?.venue || ""),
       start_date_time: event?.start_date_time 
         ? new Date(event.start_date_time).toISOString().slice(0, 16) 
         : "",
@@ -127,7 +128,7 @@ export function EventFormDialog({
         ? new Date(event.end_date_time).toISOString().slice(0, 16) 
         : "",
       is_active: event?.is_active || false,
-      country: event?.country?.id || undefined,
+      country: typeof event?.location === 'object' ? event.location?.country?.id : undefined,
       tags: event?.tags?.map(tag => tag.id) || [],
     },
   })
@@ -142,7 +143,7 @@ export function EventFormDialog({
         short_description: event.short_description || "",
         description: event.description || "",
         website: event.website || "",
-        location: event.location || "",
+        location: typeof event.location === 'string' ? event.location : (event.location?.venue || ""),
         start_date_time: event.start_date_time 
           ? new Date(event.start_date_time).toISOString().slice(0, 16) 
           : "",
@@ -150,7 +151,7 @@ export function EventFormDialog({
           ? new Date(event.end_date_time).toISOString().slice(0, 16) 
           : "",
         is_active: event.is_active || false,
-        country: event.country?.id || undefined,
+        country: typeof event.location === 'object' ? event.location?.country?.id : undefined,
         tags: event.tags?.map(tag => tag.id) || [],
       });
       
@@ -271,7 +272,7 @@ export function EventFormDialog({
     try {
       // Generate a random color for the tag
       const randomColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
-      const newTag = await eventsAPI.createTag(newTagName.trim(), randomColor)
+      const newTag = await eventsApi.createTag(newTagName.trim(), randomColor)
       console.log('New tag created:', newTag)
       setTags(prev => [...prev, newTag])
       addTag(newTag.id)
@@ -295,9 +296,9 @@ export function EventFormDialog({
       const formValues = form.getValues();
       console.log('Form values before submission:', formValues);
       
-      const eventData: CreateEventData = {
+      const eventData: CreateEventRequest = {
         ...values,
-        event_image: selectedImage,
+        event_image: selectedImage ? selectedImage.name : undefined, // Convert File to string or handle file upload separately
         tags: tagsArray, // Use the state instead of form values for tags
       }
 
@@ -328,10 +329,10 @@ export function EventFormDialog({
       let savedEvent: Event
       if (event) {
         // Update existing event
-        savedEvent = await eventsAPI.updateEvent(event.id, eventData)
+        savedEvent = await eventsApi.updateEvent(event.id.toString(), eventData)
       } else {
         // Create new event
-        savedEvent = await eventsAPI.createEvent(eventData)
+        savedEvent = await eventsApi.createEvent(eventData)
       }
 
       onEventSaved(savedEvent)

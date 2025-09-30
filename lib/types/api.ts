@@ -43,7 +43,7 @@ export interface Event {
   tags: Tag[];
   website: string;
   short_description: string;
-  location: Location;
+  location: Location | string;
   name: string;
   date: string; // Formatted display date
   date_range: DateRange;
@@ -53,6 +53,7 @@ export interface Event {
   start_date_time: string; // ISO string
   end_date_time: string; // ISO string
   is_active: boolean;
+  attendees?: number; // Number of attendees
   organizer: any | null; // Will be defined when organizer structure is known
 }
 

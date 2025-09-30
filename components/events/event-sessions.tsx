@@ -7,7 +7,19 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Loader2, User, Star, MessageSquare } from "lucide-react";
-import { fetchEventTalks, type EventTalk } from '@/lib/api/events';
+import { apiClient } from '@/lib/api/base';
+
+interface EventTalk {
+    id: number;
+    title: string;
+    speaker: number;
+    speaker_name: string;
+    description: string;
+    duration: number;
+    category: string;
+    presentation_files?: string;
+    event: number;
+}
 
 interface EventSessionsProps {
     eventId: string;
@@ -24,8 +36,13 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                 setLoading(true);
                 setError(null);
                 
-                const data = await fetchEventTalks(eventId);
-                setTalks(data);
+                // Fetch talks from the API
+                const response = await apiClient.get<EventTalk[]>('/talks/');
+                const allTalks = response.data;
+                
+                // Filter talks for this specific event
+                const eventTalks = allTalks.filter(talk => talk.event.toString() === eventId);
+                setTalks(eventTalks);
             } catch (err) {
                 console.error('Error fetching talks:', err);
                 setError('Failed to load talks');
