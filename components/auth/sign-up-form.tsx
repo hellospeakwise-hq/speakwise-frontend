@@ -124,13 +124,13 @@ export function SignUpForm() {
   }
 
   return (
-    <Card>
+    <Card className="w-full max-w-md mx-auto">
       <form onSubmit={handleSubmit}>
         <CardHeader>
           <CardTitle>Sign Up</CardTitle>
           <CardDescription>Create your SpeakWise account</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 max-h-[60vh] overflow-y-auto">
           <div className="space-y-2">
             <Label htmlFor="firstName">First Name</Label>
             <Input
