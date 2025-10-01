@@ -65,7 +65,21 @@ export function SignInForm() {
       router.push(redirectPath)
     } catch (error: any) {
       console.error("Login error:", error)
-      const errorMessage = error.message || "Invalid credentials. Please check your email and password."
+      
+      // Provide user-friendly error messages
+      let errorMessage = "Invalid credentials. Please check your email and password."
+      
+      if (error?.message) {
+        // Use the message from our improved auth API
+        errorMessage = error.message;
+      } else if (error?.response?.status === 400 || error?.response?.status === 401) {
+        errorMessage = "Incorrect email or password";
+      } else if (!error?.response) {
+        errorMessage = "Network error. Please check your connection and try again.";
+      } else if (error?.response?.status >= 500) {
+        errorMessage = "Server error. Please try again later.";
+      }
+      
       setError(errorMessage)
       toast.error(errorMessage)
     } finally {
