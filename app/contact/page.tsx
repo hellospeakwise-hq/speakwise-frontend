@@ -46,10 +46,10 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-medium">Email</h3>
                   <a 
-                    href="mailto:speakwise@gmail.com" 
+                    href="mailto:hello.speakwise@gmail.com" 
                     className="text-sm text-orange-600 dark:text-orange-400 hover:underline"
                   >
-                    speakwise@gmail.com
+                    hello.speakwise@gmail.com
                   </a>
                 </div>
               </div>
@@ -61,10 +61,10 @@ export default function ContactPage() {
                 <div>
                   <h3 className="font-medium">Phone</h3>
                   <a 
-                    href="tel:+233555555555" 
+                    href="tel:+233500159892" 
                     className="text-sm text-orange-600 dark:text-orange-400 hover:underline"
                   >
-                    +233 55 555 5555
+                    +233 50 015 9892 
                   </a>
                 </div>
               </div>
