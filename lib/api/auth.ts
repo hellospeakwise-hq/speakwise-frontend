@@ -67,22 +67,52 @@ export const authApi = {
   async login(data: LoginRequest, userType: UserRole): Promise<LoginResponse> {
     console.log(`Login request:`, { ...data, password: '[HIDDEN]' });
     
-    const response = await apiClient.post<LoginResponse>(`/users/auth/login/`, data);
+    try {
+      const response = await apiClient.post<LoginResponse>(`/users/auth/login/`, data);
 
-    // Store tokens if provided
-    if (response.data.access_token || response.data.token) {
-      const token = response.data.access_token || response.data.token;
-      if (token && typeof window !== 'undefined') {
-        localStorage.setItem('accessToken', token);
+      // Store tokens if provided
+      if (response.data.access_token || response.data.token) {
+        const token = response.data.access_token || response.data.token;
+        if (token && typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', token);
+        }
+        
+        if (response.data.refresh_token && typeof window !== 'undefined') {
+          localStorage.setItem('refreshToken', response.data.refresh_token);
+        }
+      }
+
+      console.log('Login successful');
+      return response.data;
+    } catch (error: any) {
+      console.log('Auth error details:', error.response?.data);
+      
+      // Handle authentication-specific errors
+      if (error.response?.status === 400 || error.response?.status === 401) {
+        const errorData = error.response?.data;
+        
+        // Check for various error message formats from the backend
+        if (errorData?.non_field_errors && Array.isArray(errorData.non_field_errors)) {
+          // Backend returns non_field_errors as an array
+          throw new Error('Incorrect email or password');
+        } else if (errorData?.detail) {
+          // If detail contains authentication-related keywords, provide friendly message
+          const detail = errorData.detail.toLowerCase();
+          if (detail.includes('invalid') || detail.includes('incorrect') || detail.includes('authentication') || detail.includes('credentials')) {
+            throw new Error('Incorrect email or password');
+          }
+          throw new Error(errorData.detail);
+        } else if (errorData?.message) {
+          throw new Error(errorData.message);
+        } else {
+          // Generic auth error message for 400/401 status codes
+          throw new Error('Incorrect email or password');
+        }
       }
       
-      if (response.data.refresh_token && typeof window !== 'undefined') {
-        localStorage.setItem('refreshToken', response.data.refresh_token);
-      }
+      // Re-throw other errors as-is
+      throw error;
     }
-
-    console.log('Login successful');
-    return response.data;
   },
 
   /**

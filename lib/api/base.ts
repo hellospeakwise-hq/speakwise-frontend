@@ -64,10 +64,20 @@ apiClient.interceptors.response.use(
       throw new Error('Network error. Please check your connection.');
     }
 
-    // Handle API errors
+    // Skip generic error handling for auth endpoints - let them handle their own errors
+    const url = error.config?.url || '';
+    const isAuthEndpoint = url.includes('/auth/login/') || url.includes('/auth/register/');
+    
+    if (isAuthEndpoint) {
+      // Re-throw the original error for auth endpoints to handle specifically
+      throw error;
+    }
+
+    // Handle API errors for non-auth endpoints
     const errorData = error.response?.data as any;
     const errorMessage = errorData?.message || 
                         errorData?.detail || 
+                        errorData?.non_field_errors?.[0] ||
                         error.message || 
                         'An unexpected error occurred';
 

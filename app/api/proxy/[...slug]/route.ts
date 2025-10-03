@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api'
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
 export async function GET(
   request: NextRequest,
@@ -14,7 +14,7 @@ export async function GET(
     const url = new URL(request.url)
     const searchParams = url.searchParams.toString()
     
-    const apiUrl = `${API_BASE_URL}/${apiPath}/${searchParams ? `?${searchParams}` : ''}`
+    const apiUrl = `${API_BASE_URL}/api/${apiPath}${searchParams ? `?${searchParams}` : ''}`
     
     console.log(`Proxying GET request to: ${apiUrl}`)
     
@@ -50,7 +50,7 @@ export async function POST(
   try {
     const body = await request.json()
     
-    const apiUrl = `${API_BASE_URL}/${apiPath}/`
+    const apiUrl = `${API_BASE_URL}/api/${apiPath}/`
     
     console.log(`Proxying POST request to: ${apiUrl}`)
     
@@ -87,7 +87,7 @@ export async function PUT(
   try {
     const body = await request.json()
     
-    const apiUrl = `${API_BASE_URL}/${apiPath}/`
+    const apiUrl = `${API_BASE_URL}/api/${apiPath}/`
     
     console.log(`Proxying PUT request to: ${apiUrl}`)
     
@@ -123,7 +123,7 @@ export async function DELETE(
   
   try {
     
-    const apiUrl = `${API_BASE_URL}/${apiPath}/`
+    const apiUrl = `${API_BASE_URL}/api/${apiPath}/`
     
     console.log(`Proxying DELETE request to: ${apiUrl}`)
     

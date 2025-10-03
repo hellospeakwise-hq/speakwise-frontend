@@ -143,10 +143,12 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                                     <Star className="h-4 w-4 mr-1" />
                                     Rate
                                 </Button>
-                                <Button variant="outline" size="sm" className="flex-1">
-                                    <MessageSquare className="h-4 w-4 mr-1" />
-                                    Feedback
-                                </Button>
+                                <Link href={`/events/${eventId}/speakers/${talk.speaker}/feedback`}>
+                                    <Button variant="outline" size="sm" className="flex-1 w-full">
+                                        <MessageSquare className="h-4 w-4 mr-1" />
+                                        Feedback
+                                    </Button>
+                                </Link>
                             </div>
                         </div>
                     </CardContent>
