@@ -87,14 +87,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             console.log('Login API Response:', response);
             setIsAuthenticated(true);
             
-            // Use the response data directly as it matches our User type
+            // Store tokens from the response (access and refresh)
+            if (response.access_token || response.access) {
+                const accessToken = response.access_token || response.access;
+                if (accessToken && typeof window !== 'undefined') {
+                    localStorage.setItem('accessToken', accessToken);
+                }
+            }
+            
+            if (response.refresh_token || response.refresh) {
+                const refreshToken = response.refresh_token || response.refresh;
+                if (refreshToken && typeof window !== 'undefined') {
+                    localStorage.setItem('refreshToken', refreshToken);
+                }
+            }
+            
+            // Create user data from response - use the actual role from backend, not the userType parameter
             const userData: User = {
                 id: response.id,
                 first_name: response.first_name,
                 last_name: response.last_name,
                 email: response.email,
-                role: response.role || { id: 1, role: userType },
-                userType: response.role?.role || userType
+                role: response.role, // Use actual role from backend
+                userType: response.role.role // Set userType to the actual role from backend
             };
             
             setUser(userData);
@@ -121,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             case 'speaker':
                 return '/dashboard/speaker';
             case 'organizer':
-                return '/dashboard'; // Could be a specific organizer dashboard in the future
+                return '/dashboard/organizer';
             case 'attendee':
             default:
                 return '/dashboard';

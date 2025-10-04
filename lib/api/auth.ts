@@ -34,7 +34,9 @@ export interface AuthResponse {
 export interface LoginResponse extends AuthResponse {
   access_token?: string;
   refresh_token?: string;
-  token?: string;
+  access?: string;  // New token format from backend
+  refresh?: string; // New token format from backend
+  token?: string;   // Legacy token support
 }
 
 // Auth API service
@@ -70,16 +72,16 @@ export const authApi = {
     try {
       const response = await apiClient.post<LoginResponse>(`/users/auth/login/`, data);
 
-      // Store tokens if provided
-      if (response.data.access_token || response.data.token) {
-        const token = response.data.access_token || response.data.token;
-        if (token && typeof window !== 'undefined') {
-          localStorage.setItem('accessToken', token);
-        }
-        
-        if (response.data.refresh_token && typeof window !== 'undefined') {
-          localStorage.setItem('refreshToken', response.data.refresh_token);
-        }
+      // Store tokens if provided - handle both old and new token formats
+      const accessToken = response.data.access_token || response.data.access || response.data.token;
+      const refreshToken = response.data.refresh_token || response.data.refresh;
+      
+      if (accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('accessToken', accessToken);
+      }
+      
+      if (refreshToken && typeof window !== 'undefined') {
+        localStorage.setItem('refreshToken', refreshToken);
       }
 
       console.log('Login successful');

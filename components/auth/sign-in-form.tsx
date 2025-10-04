@@ -17,14 +17,12 @@ export function SignInForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [userType, setUserType] = useState("attendee")
   const [error, setError] = useState("")
 
   // Always clear form state on mount (prevents name/email carryover)
   useEffect(() => {
     setEmail("")
     setPassword("")
-    setUserType("attendee")
     setError("")
   }, [])
 
@@ -58,7 +56,7 @@ export function SignInForm() {
       const redirectPath = await login(
         email,
         password,
-        userType as 'attendee' | 'speaker' | 'organizer'
+        'attendee' // Default userType - actual role will be determined by backend
       )
 
       toast.success("Welcome back! You've been signed in successfully.")
