@@ -1,0 +1,274 @@
+﻿Product Requirements Document (PRD) for SpeakWise
+
+
+
+
+Product Name: SpeakWise  
+
+
+Vision: SpeakWise is a platform that enables conference attendees to anonymously provide feedback on speakers, allows speakers to build a public portfolio of their engagements, and supports organizers in managing events and feedback. The platform tracks speaker performance, verifies attendee participation, and provides a centralized hub for speaker profiles.
+
+
+Target Audience:  
+* Attendees: Conference participants (in-person or virtual) who provide feedback on speakers.  
+* Speakers: Professionals who want to track their speaking engagements, feedback, and performance.  
+* Organizers: Event hosts who upload event details and attendance lists to facilitate feedback.
+
+
+Value Proposition:  
+
+
+* For Attendees: Anonymously rate and review speakers for sessions they attended, with verified participation.  
+
+* For Speakers: Build a public profile showcasing speaking engagements, track performance metrics, and gain visibility.  
+
+* For Organizers: Streamline event feedback collection and speaker performance evaluation.
+
+
+
+
+ 2. Key Features
+
+
+ 2.1 Attendee Features
+
+1. Event Discovery:
+   * Attendees visit the SpeakWise website (no app initially) and navigate to the Events Page.
+   * Events are filterable by:
+   * Region (e.g., Africa, North America).
+   * Country (e.g., Ghana, USA).
+   * Upon selecting a country, a list of events from the database is populated with details (e.g., event name, date, location).
+
+
+
+
+2. Event and Speaker Selection:
+   *  Attendees select the conference they attended.
+   *  A list of all speakers for the event is displayed, including session details (e.g., session title, time).
+   *   Attendees choose the speaker/session they want to provide feedback for.
+
+
+3. Attendee Verification:
+   - In-Person Attendees:
+   * Prompted to enter their email address.
+   * System checks the email against the organizer-uploaded attendance list.
+   * if verified, they proceed to provide feedback.
+   * If not verified, they’re prompted to contact the organizer or provide proof of attendance (e.g., ticket, photo).
+   * Virtual Attendees (e.g., YouTube viewers):
+   * No email verification required (optional verification TBD).
+   * Feedback is flagged as “virtual” to differentiate from in-person feedback.
+
+
+4. Anonymous Feedback:
+   * Feedback is submitted anonymously (no identifiable information tied to submissions).
+   * Feedback includes:
+   * Quantitative: 1-5 star rating for speaker engagement, content, or overall performance.
+   * Qualitative: Optional text comments for additional feedback.
+   * Sample questions:
+“How engaging was the speaker?” (1-5 stars)
+   * “What did you like or suggest for improvement?” (text)
+
+
+ 2.2 Speaker Features
+1. Speaker Profile Creation:
+   * Speakers sign up and create a profile with:
+   * Bio, photo, expertise, and social links.
+   * List of past and upcoming speaking engagements (manually added or synced via organizer uploads).
+   * Profiles are public-facing, acting as a portfolio to showcase their work.
+
+
+2. Speaker Dashboard:
+   * Displays:
+   * List of events they’ve spoken at (populated from organizer uploads or manual Anonymous feedback (ratings and comments) for each session.
+   * Performance metrics (e.g., average rating, number of feedback submissions).
+      Analytics:
+   * Traction metrics (e.g., number of feedback submissions per event).
+   * Trends (e.g., rating improvement over time).
+   * Option to share profile link for booking inquiries.
+
+
+3. Public Profile:
+   * A “GitHub-like” portfolio showcasing:
+   * Events spoken at (name, date, location, session title).
+   * Aggregated ratings (e.g., “4.5/5 across 10 events”).
+   * Select testimonials (if approved by organizers).
+   * External users (e.g., event planners) can view profiles to request speakers for future events.
+
+
+ 2.3 Organizer Features
+1. Event Management:
+   * Organizers create events with details (name, date, location, speakers, sessions).
+   * Upload attendance lists (CSV or similar) to verify in-person attendees.
+   * Option to mark events as hybrid (in-person and virtual).
+
+
+2. Feedback Oversight:
+   * View aggregated feedback for each speaker/session.
+   * Moderate qualitative comments for inappropriate content.
+   * Export feedback reports for internal use or sharing with speakers.
+
+
+2.4 Platform-Wide Features
+1. Anonymity:
+   - Feedback is stored without linking to attendee identities.
+   - Backend ensures no traceable data (e.g., IP addresses) is retained.
+2. Regional Database:
+   - Events are stored and filterable by region/country.
+3. Speaker Traction:
+   - Feedback submissions increase a speaker’s “traction” score (e.g., visibility or engagement metric).
+   - Traction is visible on the speaker’s dashboard and public profile.
+4. Request a Speaker:
+   - External users can browse speaker profiles and submit booking requests via a contact form.
+
+
+
+
+ 3. User Flow
+3.1 Attendee Flow
+1. Visit the SpeakWise website and navigate to the Events Page.
+2. Select Region and Country to view events.
+3. Choose the attended Event from the populated list.
+4. View list of Speakers and their sessions.
+5. Select a speaker/session to provide feedback.
+6. Verify attendance:
+   - In-Person: Enter email; system checks against attendance list.
+     - If verified, proceed to feedback.
+     - If not, display message: “Email not found. Contact organizer or provide proof of attendance.”
+   - Virtual: Skip verification (or optional proof TBD).
+7. Submit anonymous feedback:
+   - Rate speaker (1-5 stars).
+   - Add optional comments.
+8. Receive confirmation of submission.
+
+
+3.2 Speaker Flow
+1. Sign up and create a Profile (bio, expertise, etc.).
+2. Log into Speaker Dashboard.
+3. View:
+   - Events (auto-populated from organizer uploads or manually added).
+   - Anonymous feedback (ratings, comments).
+   - Traction metrics (e.g., feedback volume, average rating).
+4. Update public profile with new engagements or testimonials.
+5. Share profile link or respond to booking requests.
+
+
+# 3.3 Organizer Flow
+1. Sign up and create an Event.
+2. Upload event details and attendance list.
+3. Post-event, view aggregated feedback for speakers.
+4. Moderate comments and export reports.
+
+
+# 3.4 External User Flow (Request a Speaker)
+1. Visit SpeakWise and browse Speaker Profiles.
+2. View speaker details (events, ratings, bio).
+3. Submit a booking request via a contact form.
+
+
+
+
+ 4. Technical Requirements
+
+
+1. Frontend:
+   - Responsive web design (HTML, CSS, JavaScript, React).
+   - Clean UI for event filtering, feedback forms, and speaker profiles.
+
+
+2. Backend:
+   - Database for events, speakers, feedback, and attendance lists (e.g., PostgreSQL).
+   - API for event filtering, feedback submission, and profile management (REST).
+   - Email verification system to check attendance lists.
+   - Anonymity layer to strip identifiable data from feedback.
+
+
+3. Analytics:
+   - Calculate traction scores (e.g., feedback volume, rating averages).
+   - Visualize metrics in speaker dashboard (e.g., Chart.js).
+
+
+4. Security:
+   - GDPR/CCPA compliance for anonymous feedback and user data.
+   - Encrypted attendance list uploads and feedback submissions.
+   - Role-based access (attendees, speakers, organizers).
+
+
+5. Scalability:
+   - Cloud hosting (e.g., AWS) for global event support.
+   - Optimized database queries for fast event filtering.
+
+
+---
+
+
+ 5. Success Metrics
+1. Attendee Engagement:
+   - Number of feedback submissions per event.
+   - Percentage of verified in-person attendees providing feedback.
+2. Speaker Adoption:
+   - Number of speakers creating and updating profiles.
+   - Frequency of dashboard logins and profile shares.
+3. Organizer Usage:
+   - Number of events created and attendance lists uploaded.
+   - Percentage of organizers using feedback reports.
+4. Traction Growth:
+   - Increase in speaker traction scores over time.
+   - Number of booking requests via speaker profiles.
+
+
+
+
+ 6. Roadmap
+Phase 1 (0-3 Months):
+- Build a core website (event filtering, feedback submission, speaker profiles).
+- Support single-country events with email verification.
+- Launch MVP with anonymous feedback and basic traction metrics.
+
+
+Phase 2 (4-6 Months):
+- Add regional filtering and multi-country support.
+- Implement public speaker profiles and booking request forms.
+- Enhance organizer tools (comment moderation, reports).
+
+
+Phase 3 (7-12 Months):
+- Add advanced analytics (e.g., traction trends, session comparisons).
+- Support virtual event feedback (e.g., YouTube viewers).
+- Explore integrations with event platforms (e.g., Eventbrite).
+
+
+Phase 4 (12+ Months):
+- Scale to global markets.
+- Introduce gamification (e.g., speaker badges for high traction).
+- Consider monetization (e.g., premium profiles, organizer subscriptions).
+
+
+---
+
+
+ 7. Risks and Mitigations
+1. Low Feedback Participation:
+   - Risk: Attendees may not submit feedback.
+   - Mitigation: Simplify feedback form; send post-event reminders.
+2. Verification Issues:
+   - Risk: Inaccurate attendance lists or verification failures.
+   - Mitigation: Allow manual proof submission; provide organizer support.
+3. Speaker Value Perception:
+   - Risk: Speakers may not see value in profiles.
+   - Mitigation: Highlight traction metrics and booking opportunities.
+4. Anonymity Concerns:
+   - Risk: Attendees may fear feedback isn’t anonymous.
+   - Mitigation: Clearly communicate anonymity; ensure robust data protection.
+
+
+---
+
+
+ 8. Additional Notes
+- Anonymity Emphasis: Reinforce in UI and messaging that feedback is anonymous to encourage honest responses.
+- Speaker Traction: Consider a visible “Traction Score” (e.g., based on feedback volume and ratings) to gamify engagement.
+- Public Profiles: Design profiles to be professional and shareable, like a LinkedIn for speakers.
+- Virtual Events: Future iterations could include verification for virtual attendees (e.g., YouTube watch time or event codes).
+
+
+If you need further refinements, mockups for the UI, or a deeper dive into any feature (e.g., verification flow, traction algorithm), let me know!
