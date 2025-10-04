@@ -53,20 +53,28 @@ export function MainNav() {
     ];
 
     // Add dashboard link based on user role
-    if (isAuthenticated) {
-      if (user?.role?.role === "speaker") {
-        baseRoutes.splice(3, 0, {
-          href: "/dashboard/speaker",
-          label: "Dashboard",
-          active: pathname.startsWith("/dashboard"),
-        });
-      } else {
-        baseRoutes.splice(3, 0, {
-          href: "/dashboard",
-          label: "Dashboard",
-          active: pathname.startsWith("/dashboard"),
-        });
+    if (isAuthenticated && user?.role?.role) {
+      let dashboardRoute = "/dashboard";
+      
+      switch (user.role.role) {
+        case "speaker":
+          dashboardRoute = "/dashboard/speaker";
+          break;
+        case "organizer":
+          dashboardRoute = "/dashboard/organizer";
+          break;
+        case "attendee":
+          dashboardRoute = "/dashboard/attendee";
+          break;
+        default:
+          dashboardRoute = "/dashboard/attendee";
       }
+      
+      baseRoutes.splice(3, 0, {
+        href: dashboardRoute,
+        label: "Dashboard",
+        active: pathname.startsWith("/dashboard"),
+      });
     }
 
     return baseRoutes;

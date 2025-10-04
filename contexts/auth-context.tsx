@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 return '/dashboard/organizer';
             case 'attendee':
             default:
-                return '/dashboard';
+                return '/dashboard/attendee';
         }
     };
 
