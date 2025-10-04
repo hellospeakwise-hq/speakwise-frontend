@@ -38,6 +38,8 @@ export function DashboardTabs() {
     // Redirect to role-specific dashboard if available
     if (value === "speaker") {
       router.push('/dashboard/speaker')
+    } else if (value === "organizer") {
+      router.push('/dashboard/organizer')
     } else {
       router.push('/dashboard')
     }
