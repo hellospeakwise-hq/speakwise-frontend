@@ -39,17 +39,6 @@ export interface LoginResponse extends AuthResponse {
   token?: string;   // Legacy token support
 }
 
-// Password reset types
-export interface PasswordResetRequest {
-  email: string;
-}
-
-export interface PasswordResetConfirmRequest {
-  email: string;
-  token: string;
-  new_password: string;
-}
-
 // Auth API service
 export const authApi = {
   /**
@@ -215,40 +204,6 @@ export const authApi = {
     
     return localStorage.getItem('accessToken');
   },
-
-  /**
-   * Request password reset (send reset email)
-   */
-  async requestPasswordReset(data: PasswordResetRequest): Promise<{ detail?: string }> {
-    try {
-      const response = await apiClient.post<{ detail?: string }>(
-        '/users/auth/password-reset/',
-        data
-      );
-      return response.data;
-    } catch (error: any) {
-      if (error?.response?.data) {
-        console.log('Password reset response:', error.response.data);
-      }
-      throw error;
-    }
-  },
-
-  /**
-   * Confirm password reset
-   */
-  async confirmPasswordReset(data: PasswordResetConfirmRequest): Promise<{ detail?: string }> {
-    try {
-      const response = await apiClient.post<{ detail?: string }>(
-        '/users/auth/password-reset/confirm',
-        data
-      );
-      return response.data;
-    } catch (error: any) {
-      const msg = error?.response?.data?.detail || error?.message || 'Failed to reset password';
-      throw new Error(msg);
-    }
-  },
 };
- 
+
 export default authApi;
