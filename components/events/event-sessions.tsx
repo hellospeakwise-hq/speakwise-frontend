@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, Loader2, User, Star, MessageSquare } from "lucide-react";
 import { apiClient } from '@/lib/api/base';
+import { speakerApi, type Speaker } from '@/lib/api/speakerApi';
 
 interface EventTalk {
     id: number;
@@ -21,12 +22,16 @@ interface EventTalk {
     event: number;
 }
 
+interface TalkWithSpeaker extends EventTalk {
+    speaker_details?: Speaker;
+}
+
 interface EventSessionsProps {
     eventId: string;
 }
 
 export function EventSessions({ eventId }: EventSessionsProps) {
-    const [talks, setTalks] = useState<EventTalk[]>([]);
+    const [talks, setTalks] = useState<TalkWithSpeaker[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -36,12 +41,23 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                 setLoading(true);
                 setError(null);
                 
-                // Fetch talks from the API
-                const response = await apiClient.get<EventTalk[]>('/talks/');
-                const allTalks = response.data;
+                // Fetch talks and speakers from the API
+                const [talksResponse, speakersResponse] = await Promise.all([
+                    apiClient.get<EventTalk[]>('/talks/'),
+                    speakerApi.getSpeakers()
+                ]);
                 
-                // Filter talks for this specific event
-                const eventTalks = allTalks.filter(talk => talk.event.toString() === eventId);
+                const allTalks = talksResponse.data;
+                const speakers = speakersResponse;
+                
+                // Filter talks for this specific event and add speaker details
+                const eventTalks = allTalks
+                    .filter(talk => talk.event.toString() === eventId)
+                    .map(talk => ({
+                        ...talk,
+                        speaker_details: speakers.find(speaker => speaker.id === talk.speaker)
+                    }));
+                
                 setTalks(eventTalks);
             } catch (err) {
                 console.error('Error fetching talks:', err);
@@ -90,26 +106,45 @@ export function EventSessions({ eventId }: EventSessionsProps) {
             {talks.map((talk) => (
                 <Card key={talk.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
                     <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                            <h3 className="text-lg font-semibold line-clamp-2">{talk.title}</h3>
-                            <Badge variant="outline" className="text-xs">
+                        <div className="flex justify-between items-start mb-2">
+                            <h3 className="text-lg font-semibold line-clamp-2 flex-1 pr-2">{talk.title}</h3>
+                            <Badge variant="outline" className="text-xs flex-shrink-0">
                                 {talk.category}
                             </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 mb-3">
+                            {talk.speaker_details?.avatar ? (
+                                <Avatar className="h-8 w-8">
+                                    <AvatarImage 
+                                        src={talk.speaker_details.avatar} 
+                                        alt={talk.speaker_name}
+                                    />
+                                    <AvatarFallback className="text-sm">
+                                        {talk.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                    </AvatarFallback>
+                                </Avatar>
+                            ) : (
+                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+                                    <User className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                            )}
+                            <div className="flex flex-col">
+                                <span className="text-sm font-medium">{talk.speaker_name}</span>
+                                {talk.speaker_details?.organization && (
+                                    <span className="text-xs text-muted-foreground">
+                                        {talk.speaker_details.organization}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <p className="text-sm text-muted-foreground line-clamp-3">{talk.description}</p>
                     </CardHeader>
 
                     <CardContent className="space-y-4">
                         {/* Talk Details */}
-                        <div className="space-y-2">
-                            <div className="flex items-center text-sm">
-                                <Clock className="h-4 w-4 mr-2 text-orange-500" />
-                                <span>{talk.duration} hour{talk.duration !== 1 ? 's' : ''}</span>
-                            </div>
-                            <div className="flex items-center text-sm">
-                                <User className="h-4 w-4 mr-2 text-orange-500" />
-                                <span>{talk.speaker_name}</span>
-                            </div>
+                        <div className="flex items-center text-sm">
+                            <Clock className="h-4 w-4 mr-2 text-orange-500" />
+                            <span>{talk.duration} hour{talk.duration !== 1 ? 's' : ''}</span>
                         </div>
 
                         {/* Presentation Files */}
