@@ -122,9 +122,30 @@ export const authApi = {
    */
   async logout(): Promise<void> {
     try {
-      await apiClient.post('/auth/logout/');
-    } catch (error) {
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+      
+      if (refreshToken) {
+        console.log('Sending logout request with refresh token');
+        // Send refresh token to backend for proper logout
+        // Try different possible field names that the backend might expect
+        await apiClient.post('/users/auth/logout/', {
+          refresh_token: refreshToken,
+          refresh: refreshToken  // Also try this format in case backend expects 'refresh'
+        });
+        console.log('Logout request successful');
+      } else {
+        console.warn('No refresh token found for logout');
+      }
+    } catch (error: any) {
       console.error('Logout request failed:', error);
+      console.error('Logout error response:', error?.response?.data);
+      console.error('Logout error status:', error?.response?.status);
+      
+      // Log the refresh token being sent for debugging
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+      console.log('Refresh token being sent:', refreshToken ? 'Token exists' : 'No token');
+      
+      // Continue with local cleanup even if server request fails
     } finally {
       // Always clear local storage
       if (typeof window !== 'undefined') {
