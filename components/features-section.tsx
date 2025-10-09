@@ -3,59 +3,80 @@ import { MessageSquare, UserCircle, Calendar, Shield, BarChart, Globe } from "lu
 export function FeaturesSection() {
   const features = [
     {
-      icon: <MessageSquare className="h-10 w-10 text-orange-500" />,
+      icon: <MessageSquare className="h-6 w-6" />,
       title: "Anonymous Feedback",
       description: "Provide honest, anonymous feedback on speakers without fear of identification.",
     },
     {
-      icon: <UserCircle className="h-10 w-10 text-orange-500" />,
+      icon: <UserCircle className="h-6 w-6" />,
       title: "Speaker Portfolios",
       description: "Build a public profile showcasing speaking engagements, ratings, and performance.",
     },
     {
-      icon: <Calendar className="h-10 w-10 text-orange-500" />,
+      icon: <Calendar className="h-6 w-6" />,
       title: "Event Management",
       description: "Organize events, upload attendance lists, and collect valuable speaker feedback.",
     },
     {
-      icon: <Shield className="h-10 w-10 text-orange-500" />,
+      icon: <Shield className="h-6 w-6" />,
       title: "Verified Attendance",
       description: "Ensure feedback comes from actual attendees with our verification system.",
     },
     {
-      icon: <BarChart className="h-10 w-10 text-orange-500" />,
+      icon: <BarChart className="h-6 w-6" />,
       title: "Performance Analytics",
       description: "Track speaker performance metrics and improvement over time.",
     },
     {
-      icon: <Globe className="h-10 w-10 text-orange-500" />,
+      icon: <Globe className="h-6 w-6" />,
       title: "Regional Events",
       description: "Discover and filter events by region and country from around the world.",
     },
   ]
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 bg-orange-50 dark:bg-orange-900/5">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <div className="space-y-2">
-            <div className="inline-block rounded-lg bg-orange-500 px-3 py-1 text-sm text-white">Features</div>
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Everything You Need</h2>
-            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+    <section className="relative w-full py-12 md:py-20 lg:py-24 bg-gray-50 dark:bg-black">
+      <div className="container px-4 md:px-6 mx-auto">
+        {/* Section Header */}
+        <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
+          <div className="space-y-3">
+            <div className="inline-flex items-center rounded-full bg-orange-500/20 border border-orange-500/30 px-3 py-1 text-xs font-medium text-orange-400">
+              <span className="mr-1.5">✨</span> Features
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl text-gray-900 dark:text-white">
+              <span className="block">Everything You Need to</span>
+              <span className="block bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">Excel at Speaking</span>
+            </h2>
+            <p className="max-w-[700px] mx-auto text-base text-gray-600 dark:text-gray-300">
               SpeakWise provides a comprehensive platform for all conference stakeholders
             </p>
           </div>
         </div>
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-12">
+
+        {/* Features Grid */}
+        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {features.map((feature, index) => (
             <div
               key={index}
-                  className="flex flex-col items-center space-y-4 rounded-lg border p-6 shadow-sm bg-white hover:shadow-lg 
-                  hover:scale-105 transition-all duration-200 dark:bg-background dark:hover:shadow-2xl dark:hover:shadow-white/20"
+              className="group relative flex flex-col items-start space-y-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-orange-500/50 p-6 bg-white dark:bg-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 hover:-translate-y-1"
             >
-              <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/20">{feature.icon}</div>
-              <h3 className="text-xl font-bold">{feature.title}</h3>
-              <p className="text-muted-foreground text-center">{feature.description}</p>
+              {/* Icon */}
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 text-white shadow-md shadow-orange-500/20 group-hover:scale-105 group-hover:shadow-orange-500/40 transition-all duration-300">
+                {feature.icon}
+              </div>
+              
+              {/* Content */}
+              <div className="space-y-1.5">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {feature.title}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
+              
+              {/* Hover effect gradient */}
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/10 group-hover:to-transparent transition-all duration-300 pointer-events-none"></div>
             </div>
           ))}
         </div>

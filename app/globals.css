@@ -44,39 +44,39 @@
   }
 
   .dark {
-    --background: 20 14.3% 4.1%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 98%;
 
     /* Orange primary color in dark mode */
     --primary: 24 95% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 24 30% 15%;
+    --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 12 6.5% 15.1%;
-    --muted-foreground: 24 5.4% 63.9%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 12 6.5% 15.1%;
+    --accent: 0 0% 10%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 12 6.5% 15.1%;
-    --input: 12 6.5% 15.1%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
     --ring: 24 95% 53%;
 
-    --card: 20 14.3% 4.1%;
+    --card: 0 0% 0%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 20 14.3% 4.1%;
+    --popover: 0 0% 0%;
     --popover-foreground: 0 0% 98%;
 
-    --sidebar: 20 14.3% 4.1%;
+    --sidebar: 0 0% 0%;
     --sidebar-foreground: 0 0% 98%;
-    --sidebar-border: 12 6.5% 15.1%;
-    --sidebar-accent: 24 30% 15%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-ring: 24 95% 53%;
   }
@@ -88,5 +88,32 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  /* Blob animation for background shapes */
+  @keyframes blob {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+    }
+    33% {
+      transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+      transform: translate(-20px, 20px) scale(0.9);
+    }
+  }
+  
+  .animate-blob {
+    animation: blob 7s infinite;
+  }
+  
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  
+  .animation-delay-4000 {
+    animation-delay: 4s;
   }
 }

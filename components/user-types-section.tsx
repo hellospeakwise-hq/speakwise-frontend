@@ -1,10 +1,10 @@
 import { Users, Mic, Building } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Check } from "lucide-react"
 
 export function UserTypesSection() {
   const userTypes = [
     {
-      icon: <Users className="h-12 w-12 text-orange-500" />,
+      icon: <Users className="h-8 w-8" />,
       title: "For Attendees",
       description: "Provide anonymous feedback on speakers for sessions you attended, with verified participation.",
       features: [
@@ -15,7 +15,7 @@ export function UserTypesSection() {
       ],
     },
     {
-      icon: <Mic className="h-12 w-12 text-orange-500" />,
+      icon: <Mic className="h-8 w-8" />,
       title: "For Speakers",
       description:
         "Build a public profile showcasing speaking engagements, track performance metrics, and gain visibility.",
@@ -27,7 +27,7 @@ export function UserTypesSection() {
       ],
     },
     {
-      icon: <Building className="h-12 w-12 text-orange-500" />,
+      icon: <Building className="h-8 w-8" />,
       title: "For Organizers",
       description: "Streamline event feedback collection and speaker performance evaluation for better events.",
       features: [
@@ -40,48 +40,52 @@ export function UserTypesSection() {
   ]
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center justify-center space-y-4 text-center">
+    <section className="w-full py-12 md:py-20 lg:py-24 bg-white dark:bg-black">
+      <div className="container px-4 md:px-6 mx-auto">
+        {/* Section Header */}
+        <div className="flex flex-col items-center justify-center space-y-3 text-center mb-12">
           <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Who SpeakWise Is For</h2>
-            <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+            <h2 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl text-gray-900 dark:text-white">
+              Who SpeakWise Is For
+            </h2>
+            <p className="max-w-[900px] text-base text-gray-600 dark:text-gray-400">
               Our platform serves the needs of all conference stakeholders
             </p>
           </div>
         </div>
-        <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-3 mt-12">
+
+        {/* User Type Cards */}
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 md:grid-cols-3">
           {userTypes.map((userType, index) => (
-            <Card key={index} className="flex flex-col h-full border-orange-100">
-              <CardHeader className="flex flex-col items-center text-center">
-                <div className="p-2 rounded-full bg-orange-100 mb-4">{userType.icon}</div>
-                <CardTitle className="text-xl">{userType.title}</CardTitle>
-                <CardDescription className="text-sm">{userType.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-1">
-                <ul className="space-y-2">
-                  {userType.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="h-5 w-5 text-orange-500 mr-2 shrink-0"
-                      >
-                        <polyline points="20 6 9 17 4 12" />
-                      </svg>
-                      <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+            <div
+              key={index}
+              className="group relative flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-black p-6 transition-all duration-300 hover:border-orange-500/50"
+            >
+              {/* Icon */}
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 text-white mb-5 mx-auto">
+                {userType.icon}
+              </div>
+
+              {/* Title */}
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-3">
+                {userType.title}
+              </h3>
+
+              {/* Description */}
+              <p className="text-sm text-gray-600 dark:text-gray-400 text-center mb-5 leading-relaxed">
+                {userType.description}
+              </p>
+
+              {/* Features List */}
+              <ul className="space-y-2.5 flex-1">
+                {userType.features.map((feature, featureIndex) => (
+                  <li key={featureIndex} className="flex items-start">
+                    <Check className="h-4 w-4 text-orange-500 mr-2.5 shrink-0 mt-0.5" />
+                    <span className="text-xs text-gray-600 dark:text-gray-300">{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
       </div>

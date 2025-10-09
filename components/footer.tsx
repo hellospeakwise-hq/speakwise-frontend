@@ -2,82 +2,82 @@ import Link from "next/link"
 
 export function Footer() {
   return (
-    <footer className="w-full border-t bg-background">
-      <div className="container py-8 md:py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="w-full border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-black">
+      <div className="container py-8 md:py-12 mx-auto px-4 md:px-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
           <div className="space-y-3">
-            <h3 className="text-lg font-semibold">SpeakWise</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white">SpeakWise</h3>
+            <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
               Empowering speakers, attendees, and organizers with valuable feedback and insights.
             </p>
           </div>
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Platform</h3>
+            <h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Platform</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/events" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/events" className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
                   Events
                 </Link>
               </li>
               <li>
-                <Link href="/speakers" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/speakers" className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
                   Speakers
                 </Link>
               </li>
               <li>
-                <Link href="/organizers" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/organizers" className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
                   Organizers
                 </Link>
               </li>
             </ul>
           </div>
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Company</h3>
+            <h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Company</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/about" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/about" className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
                   About
                 </Link>
               </li>
               <li>
-                <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/contact" className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link href="/careers" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/careers" className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
                   Careers
                 </Link>
               </li>
             </ul>
           </div>
           <div className="space-y-3">
-            <h3 className="text-sm font-semibold">Legal</h3>
+            <h3 className="text-xs font-semibold text-gray-900 dark:text-white uppercase tracking-wider">Legal</h3>
             <ul className="space-y-2">
               <li>
-                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/privacy" className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/terms" className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/cookies" className="text-sm text-muted-foreground hover:text-primary">
+                <Link href="/cookies" className="text-xs text-gray-600 dark:text-gray-400 hover:text-orange-500 transition-colors">
                   Cookie Policy
                 </Link>
               </li>
             </ul>
           </div>
         </div>
-        <div className="mt-8 border-t pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-xs text-muted-foreground">
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center gap-3">
+          <p className="text-xs text-gray-600 dark:text-gray-400">
             &copy; {new Date().getFullYear()} SpeakWise. All rights reserved.
           </p>
-          <div className="flex items-center gap-4 mt-4 md:mt-0">
-            <Link href="#" className="text-muted-foreground hover:text-primary">
+          <div className="flex items-center gap-6">
+            <Link href="#" className="text-gray-400 hover:text-orange-500 transition-colors">
               <span className="sr-only">Twitter</span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
