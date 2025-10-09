@@ -1,6 +1,6 @@
 "use client"
 
-import React, { Suspense, useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { authApi } from "@/lib/api/auth"
 
-function ResetPasswordContent() {
+export default function ResetPasswordPage() {
   const router = useRouter()
   const search = useSearchParams()
   const [email, setEmail] = useState("")
@@ -106,13 +106,5 @@ function ResetPasswordContent() {
         </form>
       </Card>
     </div>
-  )
-}
-
-export default function ResetPasswordPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <ResetPasswordContent />
-    </Suspense>
   )
 }
