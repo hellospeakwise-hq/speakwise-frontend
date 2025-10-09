@@ -90,48 +90,95 @@ export function EventDetails({ id }: EventDetailsProps) {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{event.name || event.title}</h1>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {event.tags && event.tags.length > 0 ? (
-              event.tags.map((tag: any) => (
-                <span
-                  key={tag.id}
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: `${tag.color || '#007bff'}33`, // Add transparency
-                    color: tag.color || '#007bff',
-                    border: `1px solid ${tag.color || '#007bff'}`
-                  }}
-                >
-                  {tag.name || `Tag ${tag.id}`}
+    <div className="container mx-auto px-4 py-6 space-y-6">
+      {/* Hero Banner Section - Contained with rounded borders */}
+      <div 
+        className="relative h-64 md:h-80 w-full rounded-2xl overflow-hidden"
+        style={{
+          backgroundImage: event.event_image 
+            ? `url(${event.event_image})` 
+            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Overlay for better text readability */}
+        <div className="absolute inset-0 bg-black/50"></div>
+        
+        {/* Content */}
+        <div className="relative h-full flex flex-col justify-end p-6 md:p-8">
+          {/* Management buttons - top right */}
+          {canManageEvent && (
+            <div className="absolute top-4 right-4 flex space-x-2">
+              <Link href={`/events/${id}/manage-sessions`}>
+                <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
+                  Manage Sessions
+                </Button>
+              </Link>
+              <Link href={`/events/${id}/manage-speakers`}>
+                <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
+                  Manage Speakers
+                </Button>
+              </Link>
+            </div>
+          )}
+          
+          {/* Event Title and Info */}
+          <div className="space-y-4">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
+              {event.name || event.title}
+            </h1>
+            
+            {/* Event Tags */}
+            <div className="flex flex-wrap gap-2">
+              {event.tags && event.tags.length > 0 ? (
+                event.tags.map((tag: any) => (
+                  <span
+                    key={tag.id}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white/20 backdrop-blur-sm text-white border border-white/30"
+                  >
+                    {tag.name || `Tag ${tag.id}`}
+                  </span>
+                ))
+              ) : (
+                <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30">
+                  Event
+                </Badge>
+              )}
+            </div>
+
+            {/* Quick Info Row */}
+            <div className="flex flex-wrap gap-4 text-white/90 text-sm">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>
+                  {event.date_range ? 
+                    (event.date_range.same_day ? 
+                      event.date_range.start?.date : 
+                      `${event.date_range.start?.date} - ${event.date_range.end?.date}`
+                    ) : 
+                    (event.date || 'TBA')
+                  }
                 </span>
-              ))
-            ) : (
-              <Badge variant="outline">No tags</Badge>
-            )}
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                <span>
+                  {event.location 
+                    ? typeof event.location === 'string' 
+                      ? event.location
+                      : `${event.location.city || ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'TBA'
+                    : 'TBA'
+                  }
+                </span>
+              </div>
+            </div>
           </div>
         </div>
-
-        {/* Management links only shown to organizers */}
-        {canManageEvent && (
-          <div className="flex space-x-2">
-            <Link href={`/events/${id}/manage-sessions`}>
-              <Button variant="outline" size="sm">
-                Manage Sessions
-              </Button>
-            </Link>
-            <Link href={`/events/${id}/manage-speakers`}>
-              <Button variant="outline" size="sm">
-                Manage Speakers
-              </Button>
-            </Link>
-          </div>
-        )}
       </div>
 
+      {/* Content Section */}
       <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
         <Card>
           <CardHeader>
@@ -258,6 +305,7 @@ export function EventDetails({ id }: EventDetailsProps) {
         </Card>
       </div>
 
+      {/* Sessions Section */}
       {/* Sessions Section */}
       <Card className="col-span-1 md:col-span-2">
         <CardHeader>

@@ -24,11 +24,11 @@ export function Footer() {
                   Speakers
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/organizers" className="text-sm text-muted-foreground hover:text-primary">
                   Organizers
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
           <div className="space-y-3">
@@ -44,11 +44,11 @@ export function Footer() {
                   Contact
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/careers" className="text-sm text-muted-foreground hover:text-primary">
                   Careers
                 </Link>
-              </li>
+              </li> */}
             </ul>
           </div>
           <div className="space-y-3">
