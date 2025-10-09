@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 
 // API configuration
 export const API_CONFIG = {
-  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'https://apis.speak-wise.live',
+  BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000',
   TIMEOUT: 10000,
 } as const;
 
@@ -66,12 +66,8 @@ apiClient.interceptors.response.use(
 
     // Skip generic error handling for auth endpoints - let them handle their own errors
     const url = error.config?.url || '';
-    const isAuthEndpoint =
-      url.includes('/auth/login/') ||
-      url.includes('/auth/register/') ||
-      url.includes('/auth/password-reset/') ||
-      url.includes('/auth/password-reset/confirm');
-
+    const isAuthEndpoint = url.includes('/auth/login/') || url.includes('/auth/register/');
+    
     if (isAuthEndpoint) {
       // Re-throw the original error for auth endpoints to handle specifically
       throw error;
