@@ -1,5 +1,8 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Calendar, MapPin, Users, Clock, ExternalLink } from "lucide-react"
+import { Calendar, MapPin, Users, Clock, ExternalLink, CalendarPlus } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -8,65 +11,41 @@ interface UpcomingEventsProps {
   limit?: number
 }
 
+interface Event {
+  id: string
+  name: string
+  date: string
+  time: string
+  location: string
+  session: string
+  attendees: number
+  status: string
+  materials: string
+}
+
 export function UpcomingEvents({ limit }: UpcomingEventsProps) {
-  // Sample data - in a real app, this would come from an API
-  const events = [
-    {
-      id: "1",
-      name: "TechConf 2025",
-      date: "June 15-17, 2025",
-      time: "10:00 AM - 11:30 AM",
-      location: "Moscone Center, San Francisco, USA",
-      session: "The Future of Generative AI",
-      attendees: 1200,
-      status: "confirmed",
-      materials: "pending",
-    },
-    {
-      id: "2",
-      name: "AI Summit",
-      date: "July 8-10, 2025",
-      time: "2:00 PM - 3:30 PM",
-      location: "ExCeL London, UK",
-      session: "Ethical Considerations in AI Development",
-      attendees: 800,
-      status: "confirmed",
-      materials: "pending",
-    },
-    {
-      id: "3",
-      name: "DevCon Europe",
-      date: "August 22-24, 2025",
-      time: "11:00 AM - 12:30 PM",
-      location: "Messe Berlin, Germany",
-      session: "Building Responsible AI Systems",
-      attendees: 950,
-      status: "tentative",
-      materials: "not-required",
-    },
-    {
-      id: "4",
-      name: "Women in Tech Summit",
-      date: "September 5-7, 2025",
-      time: "9:30 AM - 11:00 AM",
-      location: "Javits Center, New York, USA",
-      session: "Leading AI Research Teams",
-      attendees: 650,
-      status: "confirmed",
-      materials: "pending",
-    },
-    {
-      id: "5",
-      name: "Global AI Conference",
-      date: "October 12-14, 2025",
-      time: "3:00 PM - 4:30 PM",
-      location: "Marina Bay Sands, Singapore",
-      session: "Next Generation Neural Networks",
-      attendees: 1100,
-      status: "confirmed",
-      materials: "submitted",
-    },
-  ]
+  const [events, setEvents] = useState<Event[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // TODO: Fetch real events from API
+    const fetchEvents = async () => {
+      try {
+        // const response = await fetch('/api/speakers/upcoming-events')
+        // const data = await response.json()
+        // setEvents(data)
+        
+        // For now, showing empty state
+        setEvents([])
+      } catch (error) {
+        console.error('Error fetching events:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchEvents()
+  }, [])
 
   const displayEvents = limit ? events.slice(0, limit) : events
 
@@ -147,20 +126,19 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
               </div>
             ))
           ) : (
-            <div className="text-center py-6">
-              <p className="text-muted-foreground">No upcoming events found</p>
+            <div className="text-center py-12">
+              <CalendarPlus className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Upcoming Events</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                You don&apos;t have any confirmed speaking engagements yet.
+              </p>
+              <Button asChild variant="outline">
+                <Link href="/events">Browse Events</Link>
+              </Button>
             </div>
           )}
         </div>
       </CardContent>
-      {!limit && (
-        <CardFooter>
-          <Button className="w-full">
-            <Calendar className="mr-2 h-4 w-4" />
-            Sync with Calendar
-          </Button>
-        </CardFooter>
-      )}
     </Card>
   )
 }

@@ -3,14 +3,14 @@ const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export interface FeedbackData {
     session: number;
-    attendee: number;
+    attendee: number | null;
     overall_rating: number;
     engagement: number;
     clarity: number;
     content_depth: number;
     speaker_knowledge: number;
     practical_relevance: number;
-    comment?: string | null;
+    comments?: string | null;  // Backend uses "comments" (plural)
     is_anonymous?: boolean;
     is_editable?: boolean;
 }
@@ -126,7 +126,7 @@ class FeedbackAPI {
         try {
             const response = await fetch(`${API_BASE_URL}/feedbacks/`, {
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
                 },
             });
 
@@ -162,6 +162,28 @@ class FeedbackAPI {
             return allFeedback;
         } catch (error) {
             console.error(`Error fetching feedback for speaker ${speakerId}:`, error);
+            throw error;
+        }
+    }
+
+    // Get feedback for the current authenticated speaker
+    async getCurrentSpeakerFeedback(): Promise<Feedback[]> {
+        try {
+            const token = localStorage.getItem('accessToken');
+            const response = await fetch(`${API_BASE_URL}/feedbacks/`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching current speaker feedback:', error);
             throw error;
         }
     }

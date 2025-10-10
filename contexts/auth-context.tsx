@@ -47,8 +47,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const checkAuth = async () => {
             setLoading(true);
             if (authApi.isAuthenticated()) {
+                // Always use stored user data first
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    try {
+                        setUser(JSON.parse(storedUser));
+                        setIsAuthenticated(true);
+                    } catch (parseError) {
+                        console.error('Error parsing stored user', parseError);
+                    }
+                }
+                
+                // Try to get fresh user profile from API in the background
                 try {
-                    // Try to get fresh user profile from API
                     const userProfile = await authApi.getProfile();
                     const userWithType = { ...userProfile, userType: userProfile.role.role };
                     setUser(userWithType);
@@ -56,21 +67,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     localStorage.setItem('user', JSON.stringify(userProfile));
                 } catch (error) {
                     console.error('Error validating authentication', error);
-                    // Fall back to stored user data
-                    const storedUser = localStorage.getItem('user');
-                    if (storedUser) {
-                        try {
-                            setUser(JSON.parse(storedUser));
-                            setIsAuthenticated(true);
-                        } catch (parseError) {
-                            console.error('Error parsing stored user data', parseError);
-                            await authApi.logout();
-                            setIsAuthenticated(false);
-                        }
-                    } else {
+                    // If no stored user exists, logout
+                    if (!storedUser) {
                         await authApi.logout();
                         setIsAuthenticated(false);
                     }
+                    // Otherwise, continue with stored user data
                 }
             } else {
                 setIsAuthenticated(false);
