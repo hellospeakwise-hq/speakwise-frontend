@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { feedbackAPI, type Feedback as ApiFeedback } from "@/lib/api/feedbackApi"
+import { FeedbackNavigation } from "@/components/dashboard/speaker/feedback-navigation"
 
 interface FeedbackDisplay {
   id: number
@@ -127,6 +128,8 @@ export default function SpeakerFeedbackPage() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <FeedbackNavigation />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -139,6 +142,11 @@ export default function SpeakerFeedbackPage() {
           <h1 className="text-3xl font-bold">All Feedback</h1>
           <p className="text-muted-foreground">Review all feedback from your speaking engagements</p>
         </div>
+        <Link href="/dashboard/speaker/feedback-by-talks">
+          <Button variant="outline" className="text-orange-600 dark:text-orange-400 border-orange-200 hover:bg-orange-50 dark:border-orange-800 dark:hover:bg-orange-900/20">
+            View by Talks
+          </Button>
+        </Link>
       </div>
 
       {/* Statistics Cards */}

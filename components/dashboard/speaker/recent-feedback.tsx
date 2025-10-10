@@ -98,11 +98,18 @@ export function RecentFeedback({ limit }: RecentFeedbackProps) {
           <CardDescription>Anonymous feedback from your speaking engagements</CardDescription>
         </div>
         {limit && feedback.length > 0 && (
-          <Link href="/dashboard/speaker/feedback">
-            <Button variant="ghost" size="sm" className="text-orange-600 dark:text-orange-400">
-              View All
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <Link href="/dashboard/speaker/feedback">
+              <Button variant="ghost" size="sm" className="text-orange-600 dark:text-orange-400">
+                View All
+              </Button>
+            </Link>
+            <Link href="/dashboard/speaker/feedback-by-talks">
+              <Button variant="outline" size="sm" className="text-orange-600 dark:text-orange-400 border-orange-200 hover:bg-orange-50 dark:border-orange-800 dark:hover:bg-orange-900/20">
+                By Talks
+              </Button>
+            </Link>
+          </div>
         )}
       </CardHeader>
       <CardContent>
