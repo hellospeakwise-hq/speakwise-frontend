@@ -1,36 +1,49 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Bell, X } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
+interface Notification {
+  id: string
+  type: string
+  title: string
+  description: string
+  link: string
+  date: string
+}
+
 export function Notifications() {
-  const [notifications, setNotifications] = useState([
-    {
-      id: "1",
-      type: "request",
-      title: "New Speaking Request",
-      description: "You have a new speaking request for DevConf 2025",
-      link: "/dashboard/speaker/requests",
-      date: "2 hours ago",
-    },
-    {
-      id: "2",
-      type: "feedback",
-      title: "New Feedback Received",
-      description: "You received 5 new feedback submissions from TechConf 2024",
-      link: "/dashboard/speaker/feedback",
-      date: "1 day ago",
-    },
-  ])
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // TODO: Fetch real notifications from API
+    const fetchNotifications = async () => {
+      try {
+        // const response = await fetch('/api/speakers/notifications')
+        // const data = await response.json()
+        // setNotifications(data)
+        
+        // For now, showing empty state
+        setNotifications([])
+      } catch (error) {
+        console.error('Error fetching notifications:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchNotifications()
+  }, [])
 
   const dismissNotification = (id: string) => {
     setNotifications(notifications.filter((notification) => notification.id !== id))
   }
 
-  if (notifications.length === 0) return null
+  if (loading || notifications.length === 0) return null
 
   return (
     <div className="space-y-3">
