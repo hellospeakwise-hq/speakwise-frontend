@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { eventsApi } from '@/lib/api/events'
 import { type Event } from '@/lib/types/api'
 import { attendeeAPI } from '@/lib/api/attendeeApi'
@@ -31,12 +31,12 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
     const [error, setError] = useState<string | null>(null)
     const [totalAttendees, setTotalAttendees] = useState(0)
 
-    const fetchEvents = async () => {
+    const fetchEvents = useCallback(async () => {
         try {
             setLoading(true)
             setError(null)
             const response = await eventsApi.getEvents()
-            const data = response.results || []
+            const data = Array.isArray(response) ? response : (response.results ?? [])
             setEvents(data)
             
             // Calculate total attendees across all events
@@ -47,7 +47,7 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
         } finally {
             setLoading(false)
         }
-    }
+    }, [])
 
     const calculateTotalAttendees = async (eventsList: Event[]) => {
         try {
@@ -71,7 +71,7 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
 
     useEffect(() => {
         fetchEvents()
-    }, [])
+    }, [fetchEvents])
 
     const createEvent = async (data: any): Promise<Event> => {
         try {
