@@ -1,72 +1,92 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Star, MessageSquare } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { feedbackAPI, type Feedback as ApiFeedback } from "@/lib/api/feedbackApi"
 
 interface RecentFeedbackProps {
   limit?: number
 }
 
+interface FeedbackDisplay {
+  id: number
+  rating: number
+  comment: string
+  categories: string[]
+  date: string
+  engagement: number
+  clarity: number
+  contentDepth: number
+  speakerKnowledge: number
+  practicalRelevance: number
+}
+
 export function RecentFeedback({ limit }: RecentFeedbackProps) {
-  // Sample data - in a real app, this would come from an API
-  const feedback = [
-    {
-      id: "1",
-      event: "AI Summit 2024",
-      session: "Advancements in Generative AI",
-      date: "March 15, 2024",
-      rating: 5,
-      comment:
-        "Dr. Johnson's presentation on generative AI was incredibly insightful and accessible. She has a unique ability to explain complex concepts in a way that everyone can understand.",
-      categories: ["Content", "Delivery", "Engagement"],
-      isNew: true,
-    },
-    {
-      id: "2",
-      event: "TechConf 2024",
-      session: "Ethical Considerations in AI Development",
-      date: "January 11, 2024",
-      rating: 4,
-      comment:
-        "Great presentation on AI ethics. The examples were relevant and thought-provoking. Would have liked more time for Q&A at the end.",
-      categories: ["Content", "Examples"],
-      isNew: true,
-    },
-    {
-      id: "3",
-      event: "Global ML Conference",
-      session: "The Future of Neural Networks",
-      date: "November 6, 2023",
-      rating: 5,
-      comment:
-        "Sarah's deep knowledge of neural networks and her ability to communicate complex ideas clearly made her session the highlight of the conference for me.",
-      categories: ["Knowledge", "Communication", "Engagement"],
-      isNew: false,
-    },
-    {
-      id: "4",
-      event: "AI in Healthcare Summit",
-      session: "AI Applications in Medical Diagnostics",
-      date: "September 21, 2023",
-      rating: 5,
-      comment:
-        "The presentation on AI in medical diagnostics was excellent. The case studies were particularly helpful in understanding real-world applications.",
-      categories: ["Content", "Case Studies", "Applications"],
-      isNew: false,
-    },
-    {
-      id: "5",
-      event: "DevConf 2023",
-      session: "Building Responsible AI Systems",
-      date: "August 16, 2023",
-      rating: 4,
-      comment:
-        "Very informative session on responsible AI. The frameworks presented will be useful in my work. The presentation slides were well-designed and easy to follow.",
-      categories: ["Content", "Frameworks", "Visuals"],
-      isNew: false,
-    },
-  ]
+  const [feedback, setFeedback] = useState<FeedbackDisplay[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchFeedback = async () => {
+      try {
+        const data = await feedbackAPI.getCurrentSpeakerFeedback()
+        
+        console.log('Raw feedback data:', data) // Debug log
+        
+        // Transform API data to display format
+        const transformedFeedback: FeedbackDisplay[] = data.map((item: ApiFeedback) => {
+          // Calculate categories based on ratings
+          const categories: string[] = []
+          if (item.engagement >= 4) categories.push("Engagement")
+          if (item.clarity >= 4) categories.push("Clarity")
+          if (item.content_depth >= 4) categories.push("Content")
+          if (item.speaker_knowledge >= 4) categories.push("Knowledge")
+          if (item.practical_relevance >= 4) categories.push("Practical")
+          
+          // Handle date formatting safely
+          let formattedDate = 'Date not available'
+          if (item.created_at) {
+            try {
+              const dateObj = new Date(item.created_at)
+              if (!isNaN(dateObj.getTime())) {
+                formattedDate = dateObj.toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })
+              }
+            } catch (e) {
+              console.error('Date parsing error:', e)
+            }
+          }
+          
+          return {
+            id: item.id,
+            rating: item.overall_rating,
+            comment: item.comments || "No comments provided",  // Backend uses "comments" (plural)
+            categories: categories.length > 0 ? categories : ["General"],
+            date: formattedDate,
+            engagement: item.engagement,
+            clarity: item.clarity,
+            contentDepth: item.content_depth,
+            speakerKnowledge: item.speaker_knowledge,
+            practicalRelevance: item.practical_relevance
+          }
+        })
+        
+        setFeedback(transformedFeedback)
+      } catch (error) {
+        console.error('Error fetching feedback:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFeedback()
+  }, [])
 
   const displayFeedback = limit ? feedback.slice(0, limit) : feedback
 
@@ -77,12 +97,19 @@ export function RecentFeedback({ limit }: RecentFeedbackProps) {
           <CardTitle>Recent Feedback</CardTitle>
           <CardDescription>Anonymous feedback from your speaking engagements</CardDescription>
         </div>
-        {limit && (
-          <Link href="/dashboard/speaker/feedback">
-            <Button variant="ghost" size="sm" className="text-orange-600 dark:text-orange-400">
-              View All
-            </Button>
-          </Link>
+        {limit && feedback.length > 0 && (
+          <div className="flex gap-2">
+            <Link href="/dashboard/speaker/feedback">
+              <Button variant="ghost" size="sm" className="text-orange-600 dark:text-orange-400">
+                View All
+              </Button>
+            </Link>
+            <Link href="/dashboard/speaker/feedback-by-talks">
+              <Button variant="outline" size="sm" className="text-orange-600 dark:text-orange-400 border-orange-200 hover:bg-orange-50 dark:border-orange-800 dark:hover:bg-orange-900/20">
+                By Talks
+              </Button>
+            </Link>
+          </div>
         )}
       </CardHeader>
       <CardContent>
@@ -91,32 +118,55 @@ export function RecentFeedback({ limit }: RecentFeedbackProps) {
             displayFeedback.map((item) => (
               <div key={item.id} className="border-b pb-6 last:border-0 last:pb-0">
                 <div className="flex justify-between items-start">
-                  <div>
+                  <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{item.event}</h3>
-                      {item.isNew && (
-                        <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
-                          New
-                        </Badge>
-                      )}
+                      <h3 className="font-medium">Feedback #{item.id}</h3>
                     </div>
-                    <p className="text-sm text-orange-600 dark:text-orange-400">{item.session}</p>
-                    <p className="text-xs text-muted-foreground">{item.date}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{item.date}</p>
                   </div>
-                  <div className="flex items-center">
-                    {Array.from({ length: 5 }).map((_, i) => (
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, i) => (
                       <Star
                         key={i}
                         className={`h-4 w-4 ${
-                          i < item.rating ? "text-yellow-500 fill-yellow-500" : "text-muted stroke-muted-foreground"
+                          i < Math.round(item.rating / 2)  // Convert 10-scale to 5-star display
+                            ? "text-yellow-500 fill-yellow-500"
+                            : "text-gray-300 dark:text-gray-600"
                         }`}
                       />
                     ))}
+                    <span className="ml-2 text-sm font-semibold">{item.rating}/10</span>
                   </div>
                 </div>
-                <div className="mt-2">
+                
+                {/* Individual Rating Criteria */}
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                  <div className="text-center p-2 bg-muted/50 rounded">
+                    <p className="text-xs text-muted-foreground mb-1">Engagement</p>
+                    <p className="text-sm font-semibold">{item.engagement}/10</p>
+                  </div>
+                  <div className="text-center p-2 bg-muted/50 rounded">
+                    <p className="text-xs text-muted-foreground mb-1">Clarity</p>
+                    <p className="text-sm font-semibold">{item.clarity}/10</p>
+                  </div>
+                  <div className="text-center p-2 bg-muted/50 rounded">
+                    <p className="text-xs text-muted-foreground mb-1">Content</p>
+                    <p className="text-sm font-semibold">{item.contentDepth}/10</p>
+                  </div>
+                  <div className="text-center p-2 bg-muted/50 rounded">
+                    <p className="text-xs text-muted-foreground mb-1">Knowledge</p>
+                    <p className="text-sm font-semibold">{item.speakerKnowledge}/10</p>
+                  </div>
+                  <div className="text-center p-2 bg-muted/50 rounded">
+                    <p className="text-xs text-muted-foreground mb-1">Practical</p>
+                    <p className="text-sm font-semibold">{item.practicalRelevance}/10</p>
+                  </div>
+                </div>
+                
+                <div className="mt-3">
+                    <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 mb-1 block">Comments:</span>
                   <p className="text-sm text-muted-foreground">{item.comment}</p>
-                  <div className="mt-2 flex flex-wrap gap-2">
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {item.categories.map((category) => (
                       <Badge
                         key={category}
@@ -131,20 +181,16 @@ export function RecentFeedback({ limit }: RecentFeedbackProps) {
               </div>
             ))
           ) : (
-            <div className="text-center py-6">
-              <p className="text-muted-foreground">No feedback found</p>
+            <div className="text-center py-12">
+              <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Feedback Yet</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                You haven&apos;t received any feedback from attendees yet. Complete your first speaking engagement to start receiving feedback!
+              </p>
             </div>
           )}
         </div>
       </CardContent>
-      {!limit && feedback.length > 0 && (
-        <div className="px-6 pb-6 flex justify-center">
-          <Button variant="outline">
-            <MessageSquare className="mr-2 h-4 w-4" />
-            Export Feedback Report
-          </Button>
-        </div>
-      )}
     </Card>
   )
 }
