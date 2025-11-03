@@ -1,4 +1,6 @@
 // API client for SpeakWise backend - Feedback endpoints
+import { apiClient } from './base';
+
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export interface FeedbackData {
@@ -27,29 +29,28 @@ export interface AttendeeVerification {
 }
 
 class FeedbackAPI {
-    // Verify attendee email against attendance list
+    // Verify attendee email against the uploaded attendance list
+    // NOTE: Backend needs to provide a PUBLIC endpoint for this
+    // Suggested endpoint: POST /api/attendees/verify-email/
+    // Body: { email: string, event_id: number }
+    // Response: { verified: boolean, message?: string }
     async verifyAttendee(email: string, eventId?: number): Promise<{ verified: boolean; message?: string }> {
         try {
-            const response = await fetch(`${API_BASE_URL}/attendees/verify-attendee/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email.trim(),
-                    ...(eventId && { event: eventId })
-                }),
+            console.log('🔐 Verifying attendee:', email, 'for event:', eventId);
+
+            // TODO: Replace with actual backend endpoint when available
+            // For now, this is a placeholder that calls the old endpoint
+            const response = await apiClient.post('/attendees/verify-attendee/', {
+                email,
+                event: eventId
             });
 
-            if (response.ok) {
-                return { verified: true };
-            } else {
-                const errorText = await response.text();
-                return {
-                    verified: false,
-                    message: errorText || "Attendee with the specified email does not exist"
-                };
-            }
+            console.log('✅ Verification response:', response.data);
+            
+            return {
+                verified: response.data.verified || false,
+                message: response.data.message
+            };
         } catch (error) {
             console.error('Error verifying attendee:', error);
             return {

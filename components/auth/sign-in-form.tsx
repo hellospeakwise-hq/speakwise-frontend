@@ -53,11 +53,7 @@ export function SignInForm() {
     setIsLoading(true)
 
     try {
-      const redirectPath = await login(
-        email,
-        password,
-        'attendee' // Default userType - actual role will be determined by backend
-      )
+      const redirectPath = await login(email, password)
 
       toast.success("Welcome back! You've been signed in successfully.")
       router.push(redirectPath)

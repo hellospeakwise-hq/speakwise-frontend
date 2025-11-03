@@ -4,13 +4,12 @@ import { apiClient } from './base';
 export type UserRole = 'attendee' | 'speaker' | 'organizer' | 'admin';
 
 export interface RegisterRequest {
+  first_name: string;
+  last_name: string;
   email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
   nationality: string;
   username: string;
-  userType: UserRole;
+  password: string;
 }
 
 export interface LoginRequest {
@@ -42,16 +41,13 @@ export interface LoginResponse extends AuthResponse {
 // Auth API service
 export const authApi = {
   /**
-   * Register a new user
+   * Register a new user (defaults to speaker role)
    */
   async register(data: RegisterRequest): Promise<AuthResponse> {
     const payload = {
-      first_name: data.firstName,
-      last_name: data.lastName,
+      first_name: data.first_name,
+      last_name: data.last_name,
       email: data.email,
-      role: {
-        role: data.userType
-      },
       nationality: data.nationality,
       username: data.username,
       password: data.password
@@ -59,18 +55,18 @@ export const authApi = {
 
     console.log('Registration request:', { ...payload, password: '[HIDDEN]' });
     
-    const response = await apiClient.post<AuthResponse>('/users/auth/register/', payload);
+    const response = await apiClient.post<AuthResponse>('users/auth/register/', payload);
     return response.data;
   },
 
   /**
    * Login user
    */
-  async login(data: LoginRequest, userType: UserRole): Promise<LoginResponse> {
+  async login(data: LoginRequest): Promise<LoginResponse> {
     console.log(`Login request:`, { ...data, password: '[HIDDEN]' });
     
     try {
-      const response = await apiClient.post<LoginResponse>(`/users/auth/login/`, data);
+      const response = await apiClient.post<LoginResponse>(`users/auth/login/`, data);
 
       // Store tokens if provided - handle both old and new token formats
       const accessToken = response.data.access_token || response.data.access || response.data.token;

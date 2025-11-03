@@ -39,6 +39,7 @@ export default function SpeakerFeedbackByTalksPage() {
   const [sessions, setSessions] = useState<SessionGroup[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedSession, setSelectedSession] = useState<SessionGroup | null>(null)
+  const [activeAnalyticsCard, setActiveAnalyticsCard] = useState(0)
 
   useEffect(() => {
     const fetchGroupedFeedback = async () => {
@@ -270,39 +271,170 @@ export default function SpeakerFeedbackByTalksPage() {
 
         <div className="container mx-auto p-6 space-y-6">
 
+        {/* Talk Analytics - Carousel/Slider */}
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Talk Analytics</h2>
+          <div className="relative">
+            <div 
+              className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-6 px-6"
+              onScroll={(e) => {
+                const container = e.currentTarget
+                const cardWidth = 280 + 16 // card width + gap
+                const scrollPosition = container.scrollLeft
+                const activeIndex = Math.round(scrollPosition / cardWidth)
+                setActiveAnalyticsCard(activeIndex)
+              }}
+            >
+              {/* Average Rating by Category */}
+              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-orange-100 dark:border-orange-900/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Engagement</CardTitle>
+                  <Users className="h-4 w-4 text-orange-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {(selectedSession.feedback.reduce((sum, f) => sum + f.engagement, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Avg. engagement score
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-blue-100 dark:border-blue-900/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Clarity</CardTitle>
+                  <Eye className="h-4 w-4 text-blue-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {(selectedSession.feedback.reduce((sum, f) => sum + f.clarity, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Avg. clarity score
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-purple-100 dark:border-purple-900/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Content Depth</CardTitle>
+                  <MessageSquare className="h-4 w-4 text-purple-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {(selectedSession.feedback.reduce((sum, f) => sum + f.contentDepth, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Avg. content score
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-green-100 dark:border-green-900/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Knowledge</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-green-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {(selectedSession.feedback.reduce((sum, f) => sum + f.speakerKnowledge, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Avg. knowledge score
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-yellow-100 dark:border-yellow-900/20">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Practical</CardTitle>
+                  <Star className="h-4 w-4 text-yellow-500" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {(selectedSession.feedback.reduce((sum, f) => sum + f.practicalRelevance, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Avg. practical score
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            {/* Scroll indicator */}
+            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1.5 lg:hidden">
+              {[0, 1, 2, 3, 4].map((index) => (
+                <div
+                  key={index}
+                  className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
+                    activeAnalyticsCard === index ? 'bg-orange-500' : 'bg-muted'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
         {/* Session Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{selectedSession.feedbackCount}</div>
-            </CardContent>
-          </Card>
+        <div>
+          <h2 className="text-xl font-semibold mb-4">Quick Stats</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{selectedSession.feedbackCount}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Responses received
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Highest Rating</CardTitle>
-              <TrendingUp className="h-4 w-4 text-green-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {Math.max(...selectedSession.feedback.map(f => f.rating)).toFixed(1)}/10
-              </div>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Highest Rating</CardTitle>
+                <TrendingUp className="h-4 w-4 text-green-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {Math.max(...selectedSession.feedback.map(f => f.rating)).toFixed(1)}/10
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Best overall score
+                </p>
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Event Date</CardTitle>
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-sm font-medium">{selectedSession.eventDate}</div>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Lowest Rating</CardTitle>
+                <TrendingUp className="h-4 w-4 text-red-500 rotate-180" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {Math.min(...selectedSession.feedback.map(f => f.rating)).toFixed(1)}/10
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Needs improvement
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Event Date</CardTitle>
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-sm font-medium">{selectedSession.eventDate}</div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Talk delivered
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         {/* Individual Feedback */}

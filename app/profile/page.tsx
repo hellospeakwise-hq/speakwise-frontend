@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/contexts/auth-context"
 import { ProtectedRoute } from "@/components/auth/protected-route"
-import { RoleGuard } from "@/components/auth/role-guard"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
@@ -11,76 +10,76 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
-import { speakerApi, SpeakerProfile, SkillTag } from "@/lib/api/speakerApi"
-import { Upload, X } from "lucide-react"
+import { userApi, UserProfileResponse, SkillTag } from "@/lib/api/userApi"
+import { speakerApi } from "@/lib/api/speakerApi"
+import { Upload, X, Building2 } from "lucide-react"
+import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
 
 export default function ProfilePage() {
-    const { user, setUser } = useAuth()
+    const { user } = useAuth()
     const [isEditing, setIsEditing] = useState(false)
-    const [speakerProfile, setSpeakerProfile] = useState<SpeakerProfile | null>(null)
-    const [skillTags, setSkillTags] = useState<SkillTag[]>([])
-    const [availableSkills, setAvailableSkills] = useState<SkillTag[]>([])
-    const [newSkillName, setNewSkillName] = useState("")
-    const [isLoadingProfile, setIsLoadingProfile] = useState(false)
+    const [profileData, setProfileData] = useState<UserProfileResponse | null>(null)
+    const [isCreateOrgDialogOpen, setIsCreateOrgDialogOpen] = useState(false)
+    const [isLoadingProfile, setIsLoadingProfile] = useState(true)
 
-    // Form state - initialize with empty strings
+    // Form state
     const [firstName, setFirstName] = useState('')
     const [lastName, setLastName] = useState('')
-    const [email, setEmail] = useState('')
+    const [username, setUsername] = useState('')
+    const [nationality, setNationality] = useState('')
     const [organization, setOrganization] = useState("")
     const [shortBio, setShortBio] = useState("")
     const [longBio, setLongBio] = useState("")
     const [country, setCountry] = useState("")
+    const [skillTags, setSkillTags] = useState<SkillTag[]>([])
+    const [availableSkills, setAvailableSkills] = useState<SkillTag[]>([])
+    const [newSkillName, setNewSkillName] = useState("")
 
-    // Sync form state with user data
+    // Load profile data on mount
     useEffect(() => {
-        if (user) {
-            setFirstName(user.first_name || '')
-            setLastName(user.last_name || '')
-            setEmail(user.email || '')
-        }
-    }, [user])
+        loadProfile()
+        loadAvailableSkills()
+    }, [])
 
-    // Load speaker profile and skill tags
+    // Update form state when profile data loads
     useEffect(() => {
-        if (user?.userType === 'speaker') {
-            loadSkillTags().then(() => {
-                loadSpeakerProfile()
-            })
+        if (profileData) {
+            const { user: userData, speaker } = profileData
+            
+            // User data
+            setFirstName(userData.first_name || '')
+            setLastName(userData.last_name || '')
+            setUsername(userData.username || '')
+            setNationality(userData.nationality || '')
+            
+            // Speaker data
+            if (speaker) {
+                setOrganization(speaker.organization || "")
+                setShortBio(speaker.short_bio || "")
+                setLongBio(speaker.long_bio || "")
+                setCountry(speaker.country || "")
+                setSkillTags(speaker.skill_tag || [])
+            }
         }
-    }, [user])
+    }, [profileData])
 
-    // Update skill tags when both speaker profile and available skills are loaded
-    useEffect(() => {
-        if (speakerProfile && availableSkills.length > 0 && speakerProfile.skill_tags) {
-            const currentSkills = availableSkills.filter(skill => 
-                speakerProfile.skill_tags.includes(skill.id)
-            )
-            setSkillTags(currentSkills)
-        }
-    }, [speakerProfile, availableSkills])
-
-    const loadSpeakerProfile = async () => {
+    const loadProfile = async () => {
         try {
             setIsLoadingProfile(true)
-            const profile = await speakerApi.getProfile()
-            setSpeakerProfile(profile)
-            setOrganization(profile.organization || "")
-            setShortBio(profile.short_bio || "")
-            setLongBio(profile.long_bio || "")
-            setCountry(profile.country || "")
+            const data = await userApi.getUserProfile()
+            setProfileData(data)
         } catch (error) {
-            console.error('Failed to load speaker profile:', error)
-            toast.error("Failed to load speaker profile")
+            console.error('Failed to load profile:', error)
+            toast.error("Failed to load profile")
         } finally {
             setIsLoadingProfile(false)
         }
     }
 
-    const loadSkillTags = async () => {
+    const loadAvailableSkills = async () => {
         try {
             const tags = await speakerApi.getSkillTags()
-            setAvailableSkills(tags)
+            setAvailableSkills(tags as any)
         } catch (error) {
             console.error('Failed to load skill tags:', error)
         }
@@ -88,22 +87,29 @@ export default function ProfilePage() {
 
     const handleSaveProfile = async () => {
         try {
-            // Only update speaker-specific information if user is a speaker
-            if (user?.userType === 'speaker') {
-                const speakerUpdateData = {
+            const updateData: any = {
+                user: {
+                    first_name: firstName,
+                    last_name: lastName,
+                    username: username,
+                    nationality: nationality,
+                }
+            }
+
+            // Add speaker data if user has speaker profile
+            if (profileData?.speaker) {
+                updateData.speaker = {
                     organization,
                     short_bio: shortBio,
                     long_bio: longBio,
                     country,
-                    skill_tags: skillTags.map(tag => tag.id)
+                    skill_tag: skillTags.map(tag => tag.id)
                 }
-                const updatedProfile = await speakerApi.updateProfile(speakerUpdateData)
-                setSpeakerProfile(updatedProfile)
-                toast.success("Profile updated successfully")
-            } else {
-                toast.success("Profile updated successfully")
             }
-            
+
+            const updatedProfile = await userApi.updateUserProfile(updateData)
+            setProfileData(updatedProfile)
+            toast.success("Profile updated successfully")
             setIsEditing(false)
         } catch (error) {
             console.error('Failed to update profile:', error)
@@ -113,11 +119,11 @@ export default function ProfilePage() {
 
     const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
-        if (!file || user?.userType !== 'speaker') return
+        if (!file) return
 
         try {
-            const updatedProfile = await speakerApi.uploadAvatar(file)
-            setSpeakerProfile(updatedProfile)
+            const updatedProfile = await userApi.uploadAvatar(file)
+            setProfileData(updatedProfile)
             toast.success("Avatar uploaded successfully")
         } catch (error) {
             console.error('Failed to upload avatar:', error)
@@ -130,8 +136,8 @@ export default function ProfilePage() {
 
         try {
             const newTag = await speakerApi.createSkillTag(newSkillName.trim())
-            setAvailableSkills(prev => [...prev, newTag])
-            setSkillTags(prev => [...prev, newTag])
+            setAvailableSkills(prev => [...prev, newTag as any])
+            setSkillTags(prev => [...prev, newTag as any])
             setNewSkillName("")
             toast.success("Skill added successfully")
         } catch (error) {
@@ -155,6 +161,10 @@ export default function ProfilePage() {
         setSkillTags(prev => prev.filter(tag => tag.id !== skillId))
     }
 
+    const handleCreateOrganization = () => {
+        setIsCreateOrgDialogOpen(true)
+    }
+
     if (isLoadingProfile) {
         return (
             <ProtectedRoute>
@@ -167,6 +177,8 @@ export default function ProfilePage() {
         )
     }
 
+    const hasSpeakerProfile = profileData?.speaker !== null && profileData?.speaker !== undefined
+
     return (
         <ProtectedRoute>
             <div className="container py-10">
@@ -176,10 +188,68 @@ export default function ProfilePage() {
                         <p className="text-muted-foreground">Manage your personal information</p>
                     </div>
 
+                    {/* Profile Picture - First */}
+                    {hasSpeakerProfile && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Profile Picture</CardTitle>
+                                <CardDescription>Upload your profile picture</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center space-x-4">
+                                    {profileData.speaker.avatar && (
+                                        <div className="relative">
+                                            <img
+                                                src={profileData.speaker.avatar.startsWith('http') 
+                                                    ? profileData.speaker.avatar 
+                                                    : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${profileData.speaker.avatar}`
+                                                }
+                                                alt="Profile"
+                                                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                                                onError={(e) => {
+                                                    e.currentTarget.style.display = 'none';
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col space-y-2">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleAvatarUpload}
+                                            className="hidden"
+                                            id="avatar-upload"
+                                            disabled={isEditing}
+                                        />
+                                        <label htmlFor="avatar-upload">
+                                            <Button 
+                                                variant="outline" 
+                                                className="cursor-pointer" 
+                                                asChild
+                                                disabled={isEditing}
+                                            >
+                                                <span>
+                                                    <Upload className="w-4 h-4 mr-2" />
+                                                    {profileData.speaker.avatar ? 'Change Picture' : 'Upload Picture'}
+                                                </span>
+                                            </Button>
+                                        </label>
+                                        {profileData.speaker.avatar && (
+                                            <p className="text-xs text-muted-foreground">
+                                                Current image: {profileData.speaker.avatar.split('/').pop()}
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Personal Information */}
                     <Card>
                         <CardHeader>
                             <CardTitle>Personal Information</CardTitle>
-                            <CardDescription>Your basic account information (read-only)</CardDescription>
+                            <CardDescription>Your basic account information</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <form className="space-y-4">
@@ -189,8 +259,9 @@ export default function ProfilePage() {
                                         <Input
                                             id="firstName"
                                             value={firstName}
-                                            disabled
-                                            placeholder={user?.first_name ? "" : "Not provided"}
+                                            onChange={(e) => setFirstName(e.target.value)}
+                                            disabled={!isEditing}
+                                            placeholder="Enter your first name"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -198,7 +269,8 @@ export default function ProfilePage() {
                                         <Input
                                             id="lastName"
                                             value={lastName}
-                                            disabled
+                                            onChange={(e) => setLastName(e.target.value)}
+                                            disabled={!isEditing}
                                             placeholder="Enter your last name"
                                         />
                                     </div>
@@ -209,226 +281,216 @@ export default function ProfilePage() {
                                     <Input
                                         id="email"
                                         type="email"
-                                        value={email}
+                                        value={profileData?.user.email || ''}
                                         disabled
                                     />
                                 </div>
 
-                                <div className="space-y-2">
-                                    <Label htmlFor="role">User Role</Label>
-                                    <Input
-                                        id="role"
-                                        value={user?.userType || 'User'}
-                                        disabled
-                                    />
-                                </div>
-
-                                <div className="flex justify-end space-x-2 pt-4">
-                                    {isEditing ? (
-                                        <>
-                                            <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                                            <Button onClick={handleSaveProfile}>Save Changes</Button>
-                                        </>
-                                    ) : (
-                                        <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
-                                    )}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="username">Username</Label>
+                                        <Input
+                                            id="username"
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            disabled={!isEditing}
+                                            placeholder="Enter your username"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="nationality">Nationality</Label>
+                                        <Input
+                                            id="nationality"
+                                            value={nationality}
+                                            onChange={(e) => setNationality(e.target.value)}
+                                            disabled={!isEditing}
+                                            placeholder="Enter your nationality"
+                                        />
+                                    </div>
                                 </div>
                             </form>
                         </CardContent>
                     </Card>
 
-                    {/* Speaker-specific profile sections */}
-                    {user?.userType === 'speaker' && (
-                        <>
-                            {/* Avatar Upload */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Profile Picture</CardTitle>
-                                    <CardDescription>Upload your profile picture</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="flex items-center space-x-4">
-                                        {speakerProfile?.avatar && (
-                                            <div className="relative">
-                                                <img
-                                                    src={speakerProfile.avatar.startsWith('http') 
-                                                        ? speakerProfile.avatar 
-                                                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${speakerProfile.avatar}`
-                                                    }
-                                                    alt="Profile"
-                                                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                                                    onError={(e) => {
-                                                        e.currentTarget.style.display = 'none';
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-                                        <div className="flex flex-col space-y-2">
-                                            <input
-                                                type="file"
-                                                accept="image/*"
-                                                onChange={handleAvatarUpload}
-                                                className="hidden"
-                                                id="avatar-upload"
+                    {/* Speaker Details */}
+                    {hasSpeakerProfile && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Speaker Profile</CardTitle>
+                                <CardDescription>Professional information and bio</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="organization">Organization</Label>
+                                            <Input
+                                                id="organization"
+                                                value={organization}
+                                                onChange={(e) => setOrganization(e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="Your company or organization"
                                             />
-                                            <label htmlFor="avatar-upload">
-                                                <Button variant="outline" className="cursor-pointer" asChild>
-                                                    <span>
-                                                        <Upload className="w-4 h-4 mr-2" />
-                                                        {speakerProfile?.avatar ? 'Change Picture' : 'Upload Picture'}
-                                                    </span>
-                                                </Button>
-                                            </label>
-                                            {speakerProfile?.avatar && (
-                                                <p className="text-xs text-muted-foreground">
-                                                    Current image: {speakerProfile.avatar.split('/').pop()}
-                                                </p>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="country">Country</Label>
+                                            <Input
+                                                id="country"
+                                                value={country}
+                                                onChange={(e) => setCountry(e.target.value)}
+                                                disabled={!isEditing}
+                                                placeholder="Your country"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="shortBio">Short Bio</Label>
+                                        <Input
+                                            id="shortBio"
+                                            value={shortBio}
+                                            onChange={(e) => setShortBio(e.target.value)}
+                                            disabled={!isEditing}
+                                            placeholder="A brief description (255 characters max)"
+                                            maxLength={255}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label htmlFor="longBio">Biography</Label>
+                                        <Textarea
+                                            id="longBio"
+                                            value={longBio}
+                                            onChange={(e) => setLongBio(e.target.value)}
+                                            disabled={!isEditing}
+                                            placeholder="Tell us about yourself, your experience, and expertise..."
+                                            rows={6}
+                                        />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Skills Management */}
+                    {hasSpeakerProfile && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Skills & Expertise</CardTitle>
+                                <CardDescription>Add your skills and areas of expertise</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {/* Current Skills */}
+                                    <div className="space-y-2">
+                                        <Label>Your Skills</Label>
+                                        <div className="flex flex-wrap gap-2">
+                                            {skillTags.map((skill) => (
+                                                <Badge key={skill.id} variant="secondary" className="text-sm">
+                                                    {skill.name}
+                                                    {isEditing && (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="ml-2 h-auto p-0"
+                                                            onClick={() => removeSkillTag(skill.id)}
+                                                        >
+                                                            <X className="w-3 h-3" />
+                                                        </Button>
+                                                    )}
+                                                </Badge>
+                                            ))}
+                                            {skillTags.length === 0 && (
+                                                <p className="text-muted-foreground">No skills added yet</p>
                                             )}
                                         </div>
                                     </div>
-                                </CardContent>
-                            </Card>
 
-                            {/* Speaker Details */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Speaker Details</CardTitle>
-                                    <CardDescription>Professional information and bio</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="organization">Organization</Label>
-                                                <Input
-                                                    id="organization"
-                                                    value={organization}
-                                                    onChange={(e) => setOrganization(e.target.value)}
-                                                    disabled={!isEditing}
-                                                    placeholder="Your company or organization"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="country">Country</Label>
-                                                <Input
-                                                    id="country"
-                                                    value={country}
-                                                    onChange={(e) => setCountry(e.target.value)}
-                                                    disabled={!isEditing}
-                                                    placeholder="Your country"
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="shortBio">Short Bio</Label>
-                                            <Input
-                                                id="shortBio"
-                                                value={shortBio}
-                                                onChange={(e) => setShortBio(e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="A brief description (255 characters max)"
-                                                maxLength={255}
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="longBio">Biography</Label>
-                                            <Textarea
-                                                id="longBio"
-                                                value={longBio}
-                                                onChange={(e) => setLongBio(e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="Tell us about yourself, your experience, and expertise..."
-                                                rows={6}
-                                            />
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Skills Management */}
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>Skills & Expertise</CardTitle>
-                                    <CardDescription>Add your skills and areas of expertise</CardDescription>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-4">
-                                        {/* Current Skills */}
-                                        <div className="space-y-2">
-                                            <Label>Your Skills</Label>
+                                    {/* Add Skills */}
+                                    {isEditing && (
+                                        <div className="space-y-3">
+                                            <Label>Available Skills</Label>
                                             <div className="flex flex-wrap gap-2">
-                                                {skillTags.map((skill) => (
-                                                    <Badge key={skill.id} variant="secondary" className="text-sm">
-                                                        {skill.name}
-                                                        {isEditing && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                className="ml-2 h-auto p-0"
-                                                                onClick={() => removeSkillTag(skill.id)}
-                                                            >
-                                                                <X className="w-3 h-3" />
-                                                            </Button>
-                                                        )}
-                                                    </Badge>
-                                                ))}
-                                                {skillTags.length === 0 && (
-                                                    <p className="text-muted-foreground">No skills added yet</p>
-                                                )}
+                                                {availableSkills
+                                                    .filter(skill => !skillTags.find(tag => tag.id === skill.id))
+                                                    .map((skill) => (
+                                                        <Badge
+                                                            key={skill.id}
+                                                            variant="outline"
+                                                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+                                                            onClick={() => toggleSkillTag(skill)}
+                                                        >
+                                                            {skill.name}
+                                                        </Badge>
+                                                    ))}
+                                            </div>
+
+                                            <div className="flex space-x-2">
+                                                <Input
+                                                    value={newSkillName}
+                                                    onChange={(e) => setNewSkillName(e.target.value)}
+                                                    placeholder="Add a new skill"
+                                                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkillTag())}
+                                                />
+                                                <Button onClick={addSkillTag} disabled={!newSkillName.trim()}>
+                                                    Add Skill
+                                                </Button>
                                             </div>
                                         </div>
-
-                                        {/* Add Skills */}
-                                        {isEditing && (
-                                            <div className="space-y-3">
-                                                <Label>Available Skills</Label>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {availableSkills
-                                                        .filter(skill => !skillTags.find(tag => tag.id === skill.id))
-                                                        .map((skill) => (
-                                                            <Badge
-                                                                key={skill.id}
-                                                                variant="outline"
-                                                                className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-                                                                onClick={() => toggleSkillTag(skill)}
-                                                            >
-                                                                {skill.name}
-                                                            </Badge>
-                                                        ))}
-                                                </div>
-
-                                                <div className="flex space-x-2">
-                                                    <Input
-                                                        value={newSkillName}
-                                                        onChange={(e) => setNewSkillName(e.target.value)}
-                                                        placeholder="Add a new skill"
-                                                        onKeyPress={(e) => e.key === 'Enter' && addSkillTag()}
-                                                    />
-                                                    <Button onClick={addSkillTag} disabled={!newSkillName.trim()}>
-                                                        Add Skill
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
                     )}
 
+                    {/* Organization Management */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Account Security</CardTitle>
-                            <CardDescription>Update your password</CardDescription>
+                            <CardTitle>Organization</CardTitle>
+                            <CardDescription>Create and manage your organization</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Button variant="outline">Change Password</Button>
+                            <div className="space-y-4">
+                                <p className="text-sm text-muted-foreground">
+                                    Create an organization to manage events and invite team members as organizers.
+                                </p>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border rounded-lg bg-muted/50">
+                                    <div className="flex-1">
+                                        <h4 className="font-medium text-base">No Organization Yet</h4>
+                                        <p className="text-sm text-muted-foreground mt-1">You haven&apos;t created an organization yet.</p>
+                                    </div>
+                                    <Button onClick={handleCreateOrganization} className="w-full sm:w-auto shrink-0">
+                                        <Building2 className="w-4 h-4 mr-2" />
+                                        Create Organization
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Edit Profile Button - At the bottom */}
+                    <Card>
+                        <CardContent className="pt-6">
+                            <div className="flex justify-end space-x-2">
+                                {isEditing ? (
+                                    <>
+                                        <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                                        <Button onClick={handleSaveProfile}>Save Changes</Button>
+                                    </>
+                                ) : (
+                                    <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+                                )}
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
             </div>
+
+            {/* Create Organization Dialog */}
+            <CreateOrganizationDialog
+                open={isCreateOrgDialogOpen}
+                onOpenChange={setIsCreateOrgDialogOpen}
+            />
         </ProtectedRoute>
     )
 }

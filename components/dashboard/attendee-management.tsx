@@ -10,11 +10,22 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Upload, Users, FileText, Download, Search, AlertCircle, CheckCircle, Clock, X } from "lucide-react"
+import { Upload, Users, FileText, Download, Search, AlertCircle, CheckCircle, Clock, X, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { type Event } from "@/lib/types/api"
 import { useAttendeeManagement } from "@/hooks/use-attendee-management"
 import type { AttendeeUpload } from "@/lib/api/attendeeApi"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface AttendeeManagementProps {
   events: Event[]
@@ -37,7 +48,9 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
     loading,
     error,
     uploadCSV,
-    refreshData
+    refreshData,
+    deleteAttendee,
+    deleteAllAttendees
   } = useAttendeeManagement(selectedEventId)
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -106,6 +119,50 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
       })
     } finally {
       setUploading(false)
+    }
+  }
+
+  const handleDeleteAttendee = async (attendeeId: number, attendeeEmail: string) => {
+    const loadingToast = toast.loading('Deleting attendee...', {
+      description: `Removing ${attendeeEmail}`
+    })
+
+    try {
+      await deleteAttendee(attendeeId)
+      toast.dismiss(loadingToast)
+      toast.success('Attendee deleted', {
+        description: `${attendeeEmail} has been removed`,
+        duration: 3000,
+      })
+    } catch (err) {
+      toast.dismiss(loadingToast)
+      console.error('Error deleting attendee:', err)
+      toast.error('Failed to delete attendee', {
+        description: 'Please try again',
+        duration: 4000,
+      })
+    }
+  }
+
+  const handleDeleteAllAttendees = async () => {
+    const loadingToast = toast.loading('Deleting all attendees...', {
+      description: 'This may take a moment'
+    })
+
+    try {
+      await deleteAllAttendees()
+      toast.dismiss(loadingToast)
+      toast.success('All attendees deleted', {
+        description: `Removed all attendees from ${selectedEvent?.title}`,
+        duration: 3000,
+      })
+    } catch (err) {
+      toast.dismiss(loadingToast)
+      console.error('Error deleting all attendees:', err)
+      toast.error('Failed to delete attendees', {
+        description: 'Please try again',
+        duration: 4000,
+      })
     }
   }
 
@@ -315,6 +372,33 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
                           className="pl-8 w-64"
                         />
                       </div>
+                      {attendees.length > 0 && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive/10">
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete All
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete All Attendees?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to remove all <strong>{attendees.length} attendees</strong> from <strong>{selectedEvent?.title}</strong>? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={handleDeleteAllAttendees}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete All
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
@@ -330,6 +414,7 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
                           <TableHead>Organization</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Joined</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -347,6 +432,32 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
                             </TableCell>
                             <TableCell>
                               {new Date(attendee.created_at).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Attendee?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to remove <strong>{attendee.email}</strong> from this event? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDeleteAttendee(attendee.id, attendee.email)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
                             </TableCell>
                           </TableRow>
                         ))}

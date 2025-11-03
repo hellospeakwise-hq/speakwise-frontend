@@ -9,9 +9,14 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
+
+const Icons = {
+  spinner: Loader2,
+}
 
 export function SignUpForm() {
   const router = useRouter()
@@ -19,7 +24,6 @@ export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [userType, setUserType] = useState("attendee")
   const [error, setError] = useState("")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -90,13 +94,12 @@ export function SignUpForm() {
       
       // Register the user with the auth context
       await register(
-        firstName,
-        lastName,
-        nationality,
-        username,
-        email,
-        password,
-        userType as 'attendee' | 'speaker' | 'organizer'
+        firstName, 
+        lastName, 
+        nationality, 
+        username, 
+        email, 
+        password
       )
       
       toast.success("🎉 Account created successfully! Redirecting to sign in...", { 
@@ -124,136 +127,112 @@ export function SignUpForm() {
   }
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card>
       <form onSubmit={handleSubmit}>
-        <CardHeader>
-          <CardTitle>Sign Up</CardTitle>
-          <CardDescription>Create your SpeakWise account</CardDescription>
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl font-bold">Sign Up</CardTitle>
+          <CardDescription>Create your SpeakWise account. All users start as speakers and can create organizations later.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 max-h-[60vh] overflow-y-auto">
-          <div className="space-y-2">
-            <Label htmlFor="firstName">First Name</Label>
-            <Input
-              id="firstName"
-              value={firstName}
-              onChange={(e) => {
-                setFirstName(e.target.value)
-                // Auto-generate username if it's empty
-                if (!username && e.target.value) {
-                  const suggestedUsername = e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')
-                  if (lastName) {
-                    setUsername(suggestedUsername + lastName.toLowerCase().replace(/[^a-z0-9]/g, ''))
-                  } else {
-                    setUsername(suggestedUsername)
-                  }
-                }
-              }}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input
-              id="lastName"
-              value={lastName}
-              onChange={(e) => {
-                setLastName(e.target.value)
-                // Auto-generate username if it's empty
-                if (!username && firstName && e.target.value) {
-                  const suggestedUsername = firstName.toLowerCase().replace(/[^a-z0-9]/g, '') + 
-                                           e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '')
-                  setUsername(suggestedUsername)
-                }
-              }}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="nationality">Nationality</Label>
-            <Input
-              id="nationality"
-              value={nationality}
-              onChange={(e) => setNationality(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Choose a unique username"
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              Username must be at least 3 characters long and unique
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <p className="text-xs text-muted-foreground">Password must be at least 8 characters long</p>
-          </div>
-          <div className="space-y-2">
-            <Label>I am a:</Label>
-            <RadioGroup value={userType} onValueChange={setUserType} className="flex flex-col space-y-1">
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="attendee" id="attendee" />
-                <Label htmlFor="attendee" className="font-normal">
-                  Conference Attendee
-                </Label>
+        <CardContent className="space-y-4">
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="John"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Doe"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="speaker" id="speaker" />
-                <Label htmlFor="speaker" className="font-normal">
-                  Speaker
-                </Label>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    type="text"
+                    placeholder="johndoe"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="nationality">Nationality</Label>
+                  <Input
+                    id="nationality"
+                    type="text"
+                    placeholder="e.g., USA"
+                    value={nationality}
+                    onChange={(e) => setNationality(e.target.value)}
+                    required
+                  />
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="organizer" id="organizer" />
-                <Label htmlFor="organizer" className="font-normal">
-                  Event Organizer
-                </Label>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="john.doe@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
-            </RadioGroup>
-          </div>
-          {error && <div className="text-sm font-medium text-red-500">{error}</div>}
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Create Account"}
-          </Button>
-          <p className="text-xs text-center text-muted-foreground">
-            By clicking create account, you agree to our{" "}
-            <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link href="/privacy" className="underline underline-offset-4 hover:text-primary">
-              Privacy Policy
-            </Link>
-            .
-          </p>
-        </CardFooter>
-      </form>
-    </Card>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isLoading}
+              >
+                {isLoading && (
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Sign Up
+              </Button>
+            </CardContent>
+            <CardFooter>
+              <p className="px-8 text-center text-sm text-muted-foreground">
+                By clicking continue, you agree to our{" "}
+                <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" className="underline underline-offset-4 hover:text-primary">
+                  Privacy Policy
+                </Link>
+                .
+              </p>
+            </CardFooter>
+          </form>
+        </Card>
   )
 }
