@@ -1,9 +1,14 @@
 // API client for SpeakWise backend - Feedback endpoints
+import { apiClient } from './base';
+
 const API_BASE_URL = 'http://127.0.0.1:8000/api';
 
 export interface FeedbackData {
     session: number;
     attendee: number | null;
+    // NEW: Backend requires explicit speaker id the feedback is for
+    // This links the feedback to the correct speaker dashboard
+    speaker: number;
     overall_rating: number;
     engagement: number;
     clarity: number;
@@ -19,6 +24,8 @@ export interface Feedback extends FeedbackData {
     id: number;
     created_at: string;
     updated_at: string;
+    // Some responses may include these flags
+    is_attendee?: boolean;
 }
 
 export interface AttendeeVerification {
@@ -27,29 +34,80 @@ export interface AttendeeVerification {
 }
 
 class FeedbackAPI {
-    // Verify attendee email against attendance list
-    async verifyAttendee(email: string, eventId?: number): Promise<{ verified: boolean; message?: string }> {
+    // Verify attendee email against attendance list for a specific event
+    // This should call a PUBLIC endpoint that checks if email is in attendance list
+    // Backend team needs to create: POST /api/attendees/verify-email/
+    async verifyAttendeeEmail(email: string, eventId: string): Promise<{ verified: boolean; message?: string; is_attendee?: boolean }> {
         try {
-            const response = await fetch(`${API_BASE_URL}/attendees/verify-attendee/`, {
+            console.log('🔐 Verifying attendee email:', email, 'for event:', eventId);
+
+            // TODO: Backend team needs to create this PUBLIC endpoint
+            // Endpoint: POST /api/attendees/verify-email/
+            // Body: { email: string, event_id: number }
+            // Response: { is_attendee: boolean, message: string }
+            // This endpoint should NOT require authentication
+
+            const response = await fetch(`${API_BASE_URL}/attendees/verify-email/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    email: email.trim(),
-                    ...(eventId && { event: eventId })
+                    email: email,
+                    event_id: parseInt(eventId, 10)
                 }),
             });
 
-            if (response.ok) {
-                return { verified: true };
-            } else {
-                const errorText = await response.text();
-                return {
-                    verified: false,
-                    message: errorText || "Attendee with the specified email does not exist"
-                };
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const data = await response.json();
+            console.log('✅ Verification response:', data);
+
+            // Backend should return: { is_attendee: true/false, message: "..." }
+            const isAttendee = data.is_attendee === true;
+
+            return {
+                verified: isAttendee,
+                is_attendee: isAttendee,
+                message: data.message || (isAttendee 
+                    ? "Your attendance has been verified successfully." 
+                    : "Email not found in attendance list for this event.")
+            };
+        } catch (error) {
+            console.error('Error verifying attendee email:', error);
+            
+            const errorMessage = error instanceof Error ? error.message : 'Failed to verify attendance. Please try again.';
+            
+            return {
+                verified: false,
+                is_attendee: false,
+                message: errorMessage
+            };
+        }
+    }
+
+    // Legacy method - kept for backward compatibility
+    // Verify attendee email against the uploaded attendance list
+    // NOTE: This is the old method, use verifyAttendeeViaFeedbackEndpoint instead
+    async verifyAttendee(email: string, eventId?: number): Promise<{ verified: boolean; message?: string }> {
+        try {
+            console.log('🔐 Verifying attendee (legacy method):', email, 'for event:', eventId);
+
+            // TODO: Replace with actual backend endpoint when available
+            // For now, this is a placeholder that calls the old endpoint
+            const response = await apiClient.post('/attendees/verify-attendee/', {
+                email,
+                event: eventId
+            });
+
+            console.log('✅ Verification response:', response.data);
+            
+            return {
+                verified: response.data.verified || false,
+                message: response.data.message
+            };
         } catch (error) {
             console.error('Error verifying attendee:', error);
             return {

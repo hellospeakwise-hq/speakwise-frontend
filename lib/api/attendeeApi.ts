@@ -46,17 +46,26 @@ export const attendeeAPI = {
    */
   async getAttendanceEmailsByEvent(eventId: number): Promise<AttendanceEmail[]> {
     try {
-      const response = await apiClient.get(`/organizers/attendance-list/`);
+      console.log('📥 Fetching attendees for event:', eventId);
       
-      // Filter by event ID if needed
+      const response = await apiClient.get(`/organizers/create-attendance/`, {
+        params: { event: eventId }
+      });
+      
+      console.log('📦 Received attendance data:', response.data);
+      
       if (Array.isArray(response.data)) {
-        return response.data.filter((item: AttendanceEmail) => item.event === eventId);
+        // Filter to ensure we only get attendees for this specific event
+        const filtered = response.data.filter((item: AttendanceEmail) => item.event === eventId);
+        console.log(`✅ Filtered ${filtered.length} attendees for event ${eventId}`);
+        return filtered;
       }
       
       return [];
     } catch (error) {
       console.error('Error fetching attendance emails:', error);
-      throw error;
+      // Return empty array instead of throwing to avoid breaking the UI
+      return [];
     }
   },
 
@@ -65,30 +74,28 @@ export const attendeeAPI = {
    */
   async getAttendeesByEvent(eventId: number): Promise<Attendee[]> {
     try {
-      // Try to get actual attendees first, fallback to attendance emails
-      try {
-        const response = await apiClient.get(`/events/${eventId}/attendees/`);
-        return response.data;
-      } catch {
-        // Fallback: convert attendance emails to attendee format
-        const attendanceEmails = await this.getAttendanceEmailsByEvent(eventId);
+      console.log('🔍 Getting attendees for event:', eventId);
+      
+      // Use attendance emails from create-attendance endpoint
+      const attendanceEmails = await this.getAttendanceEmailsByEvent(eventId);
+      
+      console.log(`📋 Converting ${attendanceEmails.length} attendance emails to attendees`);
+      
+      return attendanceEmails.map((email) => {
+        const emailParts = email.email.split('@')[0];
+        const nameParts = emailParts.split(/[._-]/);
         
-        return attendanceEmails.map((email) => {
-          const emailParts = email.email.split('@')[0];
-          const nameParts = emailParts.split(/[._-]/);
-          
-          return {
-            id: email.id,
-            first_name: nameParts[0] || 'Unknown',
-            last_name: nameParts[1] || '',
-            email: email.email,
-            organization: '',
-            is_verified: true,
-            created_at: email.created_at,
-            updated_at: email.created_at
-          };
-        });
-      }
+        return {
+          id: email.id,
+          first_name: nameParts[0] || 'Unknown',
+          last_name: nameParts[1] || '',
+          email: email.email,
+          organization: '',
+          is_verified: true,
+          created_at: email.created_at,
+          updated_at: email.created_at
+        };
+      });
     } catch (error) {
       console.error('Error fetching attendees:', error);
       return [];
@@ -104,15 +111,28 @@ export const attendeeAPI = {
       formData.append('file', csvFile);
       formData.append('event', eventId.toString());
       
-      const response = await apiClient.post(`/organizers/attendance-list/`, formData, {
+      console.log('📤 Uploading attendees CSV:', {
+        eventId,
+        fileName: csvFile.name,
+        fileSize: csvFile.size,
+        fileType: csvFile.type
+      });
+      
+      const response = await apiClient.post(`/organizers/create-attendance/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
       
+      console.log('✅ Upload successful:', response.data);
       return response.data;
-    } catch (error) {
-      console.error('Error uploading attendees CSV:', error);
+    } catch (error: any) {
+      console.error('❌ Error uploading attendees CSV:', error);
+      console.error('Error details:', {
+        status: error?.response?.status,
+        data: error?.response?.data,
+        message: error?.message
+      });
       throw error;
     }
   },
@@ -139,6 +159,42 @@ export const attendeeAPI = {
       return response.data;
     } catch (error) {
       console.error(`Error fetching upload status for upload ${uploadId}:`, error);
+      throw error;
+    }
+  },
+
+  /**
+   * Delete a single attendee
+   */
+  async deleteAttendee(attendeeId: number, eventId: number): Promise<void> {
+    try {
+      console.log('🗑️ Deleting attendee:', { attendeeId, eventId });
+      
+      await apiClient.delete(`/organizers/create-attendance/${attendeeId}/`, {
+        params: { event: eventId }
+      });
+      
+      console.log('✅ Attendee deleted successfully');
+    } catch (error) {
+      console.error('Error deleting attendee:', error);
+      throw error;
+    }
+  },
+
+  /**
+   * Delete all attendees for an event
+   */
+  async deleteAllAttendees(eventId: number): Promise<void> {
+    try {
+      console.log('🗑️ Deleting all attendees for event:', eventId);
+      
+      await apiClient.delete(`/organizers/create-attendance/`, {
+        params: { event: eventId }
+      });
+      
+      console.log('✅ All attendees deleted successfully');
+    } catch (error) {
+      console.error('Error deleting all attendees:', error);
       throw error;
     }
   }

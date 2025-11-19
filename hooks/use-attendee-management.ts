@@ -52,6 +52,30 @@ export function useAttendeeManagement(eventId: number | null) {
     await Promise.all([loadAttendees(), loadUploadHistory()])
   }
 
+  const deleteAttendee = async (attendeeId: number) => {
+    if (!eventId) throw new Error('No event selected')
+    
+    try {
+      await attendeeAPI.deleteAttendee(attendeeId, eventId)
+      await loadAttendees()
+    } catch (err) {
+      console.error('Error deleting attendee:', err)
+      throw err
+    }
+  }
+
+  const deleteAllAttendees = async () => {
+    if (!eventId) throw new Error('No event selected')
+    
+    try {
+      await attendeeAPI.deleteAllAttendees(eventId)
+      await loadAttendees()
+    } catch (err) {
+      console.error('Error deleting all attendees:', err)
+      throw err
+    }
+  }
+
   useEffect(() => {
     if (eventId) {
       refreshData()
@@ -59,6 +83,7 @@ export function useAttendeeManagement(eventId: number | null) {
       setAttendees([])
       setUploads([])
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId])
 
   return {
@@ -69,6 +94,8 @@ export function useAttendeeManagement(eventId: number | null) {
     uploadCSV,
     refreshData,
     loadAttendees,
-    loadUploadHistory
+    loadUploadHistory,
+    deleteAttendee,
+    deleteAllAttendees
   }
 }

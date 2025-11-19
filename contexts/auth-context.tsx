@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi, type AuthResponse } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
+import { scheduleTokenRefresh, cancelTokenRefresh, initializeTokenRefresh } from '@/lib/utils/tokenRefresh';
 
 type User = {
     id: string;
@@ -20,8 +21,8 @@ interface AuthContextType {
     user: User | null;
     setUser: (user: User | null) => void;
     loading: boolean;
-    login: (email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer') => Promise<string>;
-    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer') => Promise<string>;
+    login: (email: string, password: string) => Promise<string>;
+    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string) => Promise<string>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -47,6 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const checkAuth = async () => {
             setLoading(true);
             if (authApi.isAuthenticated()) {
+                // Initialize automatic token refresh for existing session
+                initializeTokenRefresh();
+                
                 // Always use stored user data first
                 const storedUser = localStorage.getItem('user');
                 if (storedUser) {
@@ -65,9 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setUser(userWithType);
                     setIsAuthenticated(true);
                     localStorage.setItem('user', JSON.stringify(userProfile));
-                } catch (error) {
-                    // Only log non-404 errors to reduce console noise
-                    if (error instanceof Error && !error.message.includes('404')) {
+                } catch (error: any) {
+                    // Silently handle 404 - endpoint not implemented yet
+                    // Only log unexpected errors
+                    if (error?.response?.status !== 404) {
                         console.error('Error validating authentication', error);
                     }
                     // If no stored user exists, logout
@@ -85,10 +90,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkAuth();
     }, [isClient]);
 
-    const login = async (email: string, password: string, userType: 'attendee' | 'speaker' | 'organizer') => {
+    const login = async (email: string, password: string) => {
         setLoading(true);
         try {
-            const response = await authApi.login({ email, password }, userType);
+            const response = await authApi.login({ email, password });
             console.log('Login API Response:', response);
             setIsAuthenticated(true);
             
@@ -107,18 +112,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
             }
             
-            // Create user data from response - use the actual role from backend, not the userType parameter
+            // Create user data from response - use the actual role from backend
+            // Default to speaker role if not provided by backend
             const userData: User = {
                 id: response.id,
                 first_name: response.first_name,
                 last_name: response.last_name,
                 email: response.email,
-                role: response.role, // Use actual role from backend
-                userType: response.role.role // Set userType to the actual role from backend
+                role: response.role || { id: 2, role: 'speaker' }, // Default to speaker if role not provided
+                userType: response.role?.role || 'speaker' // Default to speaker
             };
             
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
+            
+            // Start automatic token refresh
+            scheduleTokenRefresh();
+            
             return getRoleBasedRedirectPath(userData);
         } finally {
             setLoading(false);
@@ -154,40 +164,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         nationality: string,
         username: string,
         email: string,
-        password: string,
-        userType: 'attendee' | 'speaker' | 'organizer'
+        password: string
     ) => {
         setLoading(true);
         try {
-            console.log("Attempting registration with:", { firstName, lastName, nationality, username, email, userType });
+            console.log("Attempting registration with:", { first_name: firstName, last_name: lastName, nationality, username, email });
             const response = await authApi.register({
-                firstName,
-                lastName,
+                first_name: firstName,
+                last_name: lastName,
                 nationality,
                 username,
                 email,
-                password,
-                userType
+                password
             });
 
             console.log("Registration response:", response);
             
             // Use the response data directly as it matches our User type
+            // All new users default to speaker role
             const userData: User = {
                 id: response.id,
                 first_name: response.first_name,
                 last_name: response.last_name,
                 email: response.email,
-                role: response.role,
-                userType: response.role.role
+                role: response.role || { id: 2, role: 'speaker' }, // Default to speaker if role not provided
+                userType: response.role?.role || 'speaker' // Default to speaker
             };
 
             setUser(userData);
             setIsAuthenticated(true);
             localStorage.setItem('user', JSON.stringify(userData));
 
-            // Return success message - user will be redirected to signin
-            return "/signin";
+            // Start automatic token refresh
+            scheduleTokenRefresh();
+
+            // Return dashboard path - all new users default to speaker
+            return "/dashboard/speaker";
         } catch (error) {
             console.error("Registration error in context:", error);
             throw error;
@@ -199,6 +211,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const logout = async () => {
         setLoading(true);
         try {
+            // Cancel automatic token refresh
+            cancelTokenRefresh();
+            
             await authApi.logout();
             setUser(null);
             setIsAuthenticated(false);

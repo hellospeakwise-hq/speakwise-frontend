@@ -41,6 +41,11 @@ export function MainNav() {
         active: pathname === "/speakers",
       },
       {
+        href: "/blog",
+        label: "Blog",
+        active: pathname.startsWith("/blog"),
+      },
+      {
         href: "/about",
         label: "About",
         active: pathname === "/about",

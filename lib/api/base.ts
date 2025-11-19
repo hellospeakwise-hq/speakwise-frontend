@@ -32,29 +32,102 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Track if we're currently refreshing the token to avoid multiple refresh requests
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error: AxiosError) => {
-    // Handle token expiration, but not for public endpoints
-    if (error.response?.status === 401) {
-      const url = error.config?.url || '';
+  async (error: AxiosError) => {
+    const originalRequest: any = error.config;
+    
+    // Handle token expiration
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      const url = originalRequest?.url || '';
       
-      // Don't redirect for public endpoints that should be accessible without auth
-      const publicEndpoints = ['/events/', '/events/1/', '/events/2/', '/events/3/', '/events/4/', '/events/5/'];
+      // Don't try to refresh for public endpoints or auth endpoints
+      const publicEndpoints = ['/events/', '/auth/login/', '/auth/register/'];
       const isPublicEndpoint = publicEndpoints.some(endpoint => url.includes(endpoint)) || 
-                              url.match(/\/events\/\d+\/$/); // Match any event detail endpoint
+                              url.match(/\/events\/\d+\/$/);
       
-      if (!isPublicEndpoint) {
-        // Clear tokens and redirect to login only for protected endpoints
+      if (isPublicEndpoint) {
+        return Promise.reject(error);
+      }
+
+      if (isRefreshing) {
+        // If already refreshing, queue this request
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return apiClient(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+      
+      if (!refreshToken) {
+        // No refresh token, logout user
         if (typeof window !== 'undefined') {
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
           window.location.href = '/signin';
         }
+        return Promise.reject(error);
+      }
+
+      try {
+        // Try to refresh the token
+        const response = await axios.post(`${API_CONFIG.BASE_URL}/api/auth/refresh/`, {
+          refresh: refreshToken
+        });
+
+        const { access } = response.data;
+        
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('accessToken', access);
+        }
+
+        // Update the failed request with new token
+        originalRequest.headers['Authorization'] = 'Bearer ' + access;
+        
+        processQueue(null, access);
+        isRefreshing = false;
+
+        // Retry the original request
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed, logout user
+        processQueue(refreshError, null);
+        isRefreshing = false;
+        
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('user');
+          window.location.href = '/signin';
+        }
+        return Promise.reject(refreshError);
       }
     }
 

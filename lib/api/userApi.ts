@@ -1,34 +1,102 @@
-// Add to existing authApiSimple or create a new user API
+import apiClient from './base';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
+export interface SkillTag {
+    id: number;
+    name: string;
+    description: string;
+    duration: number;
+}
+
+export interface User {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    nationality: string;
+    username: string;
+}
+
+export interface SpeakerProfile {
+    id: number;
+    social_links: any[];
+    skill_tag: SkillTag[];
+    speaker_name: string;
+    organization: string;
+    short_bio: string;
+    long_bio: string;
+    country: string;
+    avatar: string;
+    user_account: string;
+}
+
+export interface UserProfileResponse {
+    user: User;
+    speaker: SpeakerProfile;
+}
 
 export interface UpdateUserData {
     first_name?: string;
     last_name?: string;
-    email?: string;
     nationality?: string;
+    username?: string;
+}
+
+export interface UpdateSpeakerData {
+    organization?: string;
+    short_bio?: string;
+    long_bio?: string;
+    country?: string;
+    skill_tag?: number[];
+    social_links?: any[];
+}
+
+export interface UpdateProfileData {
+    user?: UpdateUserData;
+    speaker?: UpdateSpeakerData;
 }
 
 export const userApi = {
-    // Update basic user information
-    async updateUser(data: UpdateUserData) {
-        const token = localStorage.getItem('access_token');
-        if (!token) {
-            throw new Error('No access token found');
-        }
+    // Get user profile (GET /api/users/me/)
+    async getUserProfile(): Promise<UserProfileResponse> {
+        const response = await apiClient.get('/users/me/');
+        return response.data;
+    },
 
-        const response = await fetch(`${API_BASE_URL}/api/users/profile/`, {
-            method: 'PATCH',
+    // Update user profile (PUT /api/users/me/)
+    // Expects flat structure: all fields at root level
+    async updateUserProfile(data: any): Promise<UserProfileResponse> {
+        console.log('==========================================');
+        console.log('📤 SENDING PROFILE UPDATE');
+        console.log('==========================================');
+        console.log('Data being sent:', JSON.stringify(data, null, 2));
+        
+        try {
+            const response = await apiClient.put('/users/me/', data);
+            console.log('✅ UPDATE SUCCESS');
+            console.log('Response:', response.data);
+            return response.data;
+        } catch (error: any) {
+            console.error('❌ UPDATE FAILED');
+            console.error('Status:', error.response?.status);
+            console.error('Status Text:', error.response?.statusText);
+            console.error('Error data:', error.response?.data);
+            console.error('Request data that was sent:', data);
+            throw error;
+        }
+    },
+
+    // Upload avatar (PUT /api/users/me/)
+    async uploadAvatar(file: File): Promise<UserProfileResponse> {
+        const formData = new FormData();
+        formData.append('avatar', file);
+        
+        const response = await apiClient.put('/users/me/', formData, {
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json',
+                'Content-Type': 'multipart/form-data',
             },
-            body: JSON.stringify(data),
         });
-
-        if (!response.ok) {
-            throw new Error('Failed to update user information');
-        }
-
-        return await response.json();
+        return response.data;
     }
 };

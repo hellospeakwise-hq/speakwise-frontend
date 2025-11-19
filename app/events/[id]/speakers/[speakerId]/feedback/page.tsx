@@ -230,16 +230,18 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
 
       const overallRating = Math.round(allRatings.reduce((sum, rating) => sum + rating, 0) / allRatings.length)
 
+      // Include required 'speaker' field and use 'comments' (plural)
       const feedbackData = {
         session: sessionData.sessionId,
         attendee: attendeeId,
+        speaker: parseInt(speakerId, 10),
         overall_rating: overallRating,
         engagement: ratings.engagement,
         clarity: ratings.clarity,
         content_depth: ratings.contentDepth,
         speaker_knowledge: ratings.speakerKnowledge,
         practical_relevance: ratings.practicalRelevance,
-        comment: comment.trim() || null,
+        comments: comment.trim() || null,
         is_anonymous: verifiedAttendeeData.isVirtual || false,
         is_editable: true
       }

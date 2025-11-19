@@ -69,10 +69,7 @@ export function OrganizerDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Organizer Dashboard</h1>
-          <p className="text-muted-foreground">Manage your events and attendees</p>
-        </div>
+    
         <Button variant="outline" onClick={handleRefreshStats} disabled={loading || refreshing}>
           <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'Refreshing...' : 'Refresh Stats'}
