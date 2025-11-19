@@ -1,17 +1,44 @@
 import Link from "next/link"
+import { Metadata } from "next"
 import { SignUpForm } from "@/components/auth/sign-up-form"
+import { Icons } from "@/components/icons"
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
+
+export const metadata: Metadata = {
+  title: "Sign Up",
+  description: "Create your SpeakWise account",
+}
 
 export default function SignUpPage() {
   return (
-    <div className="container flex min-h-screen w-screen flex-col items-center justify-center py-10">
+    <div className="container flex h-screen w-screen flex-col items-center justify-center">
+      <Link
+        href="/"
+        className={cn(
+          buttonVariants({ variant: "ghost" }),
+          "absolute left-4 top-4 md:left-8 md:top-8"
+        )}
+      >
+        <Icons.chevronLeft className="mr-2 h-4 w-4" />
+        Back
+      </Link>
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
         <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
-          <p className="text-sm text-muted-foreground">Enter your details to create your SpeakWise account</p>
+          <Icons.logo className="mx-auto h-6 w-6" />
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Create an account
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Enter your details to get started with SpeakWise
+          </p>
         </div>
         <SignUpForm />
         <p className="px-8 text-center text-sm text-muted-foreground">
-          <Link href="/signin" className="hover:text-brand underline underline-offset-4">
+          <Link
+            href="/signin"
+            className="hover:text-brand underline underline-offset-4"
+          >
             Already have an account? Sign In
           </Link>
         </p>

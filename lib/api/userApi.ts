@@ -65,12 +65,29 @@ export const userApi = {
     },
 
     // Update user profile (PUT /api/users/me/)
-    async updateUserProfile(data: UpdateProfileData): Promise<UserProfileResponse> {
-        const response = await apiClient.put('/users/me/', data);
-        return response.data;
+    // Expects flat structure: all fields at root level
+    async updateUserProfile(data: any): Promise<UserProfileResponse> {
+        console.log('==========================================');
+        console.log('📤 SENDING PROFILE UPDATE');
+        console.log('==========================================');
+        console.log('Data being sent:', JSON.stringify(data, null, 2));
+        
+        try {
+            const response = await apiClient.put('/users/me/', data);
+            console.log('✅ UPDATE SUCCESS');
+            console.log('Response:', response.data);
+            return response.data;
+        } catch (error: any) {
+            console.error('❌ UPDATE FAILED');
+            console.error('Status:', error.response?.status);
+            console.error('Status Text:', error.response?.statusText);
+            console.error('Error data:', error.response?.data);
+            console.error('Request data that was sent:', data);
+            throw error;
+        }
     },
 
-    // Upload avatar
+    // Upload avatar (PUT /api/users/me/)
     async uploadAvatar(file: File): Promise<UserProfileResponse> {
         const formData = new FormData();
         formData.append('avatar', file);

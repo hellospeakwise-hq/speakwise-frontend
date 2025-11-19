@@ -69,9 +69,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setUser(userWithType);
                     setIsAuthenticated(true);
                     localStorage.setItem('user', JSON.stringify(userProfile));
-                } catch (error) {
-                    // Only log non-404 errors to reduce console noise
-                    if (error instanceof Error && !error.message.includes('404')) {
+                } catch (error: any) {
+                    // Silently handle 404 - endpoint not implemented yet
+                    // Only log unexpected errors
+                    if (error?.response?.status !== 404) {
                         console.error('Error validating authentication', error);
                     }
                     // If no stored user exists, logout

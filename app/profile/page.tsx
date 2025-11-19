@@ -12,8 +12,10 @@ import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { userApi, UserProfileResponse, SkillTag } from "@/lib/api/userApi"
 import { speakerApi } from "@/lib/api/speakerApi"
-import { Upload, X, Building2 } from "lucide-react"
+import { Upload, X, Building2, ArrowRight, CheckCircle2, Clock } from "lucide-react"
 import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
+import { organizationApi, Organization } from "@/lib/api/organizationApi"
+import Link from "next/link"
 
 export default function ProfilePage() {
     const { user } = useAuth()
@@ -21,6 +23,8 @@ export default function ProfilePage() {
     const [profileData, setProfileData] = useState<UserProfileResponse | null>(null)
     const [isCreateOrgDialogOpen, setIsCreateOrgDialogOpen] = useState(false)
     const [isLoadingProfile, setIsLoadingProfile] = useState(true)
+    const [organizations, setOrganizations] = useState<Organization[]>([])
+    const [isLoadingOrgs, setIsLoadingOrgs] = useState(false)
 
     // Form state
     const [firstName, setFirstName] = useState('')
@@ -39,6 +43,7 @@ export default function ProfilePage() {
     useEffect(() => {
         loadProfile()
         loadAvailableSkills()
+        loadOrganizations()
     }, [])
 
     // Update form state when profile data loads
@@ -80,40 +85,94 @@ export default function ProfilePage() {
         try {
             const tags = await speakerApi.getSkillTags()
             setAvailableSkills(tags as any)
-        } catch (error) {
-            console.error('Failed to load skill tags:', error)
+        } catch (error: any) {
+            // Silently handle 404 - endpoint not implemented yet
+            if (error?.response?.status !== 404) {
+                console.error('Failed to load skill tags:', error)
+            }
+            setAvailableSkills([]) // Set empty array as fallback
+        }
+    }
+
+    const loadOrganizations = async () => {
+        try {
+            setIsLoadingOrgs(true)
+            const data = await organizationApi.getUserOrganizations()
+            setOrganizations(data)
+        } catch (error: any) {
+            // Silently handle 404 - endpoint not implemented yet
+            if (error?.response?.status !== 404) {
+                console.error('Failed to load organizations:', error)
+            }
+            setOrganizations([]) // Set empty array as fallback
+        } finally {
+            setIsLoadingOrgs(false)
         }
     }
 
     const handleSaveProfile = async () => {
         try {
+            // Build flat structure (all fields at root level)
             const updateData: any = {
-                user: {
-                    first_name: firstName,
-                    last_name: lastName,
-                    username: username,
-                    nationality: nationality,
-                }
+                first_name: firstName,
+                last_name: lastName,
+                username: username,
+                nationality: nationality,
             }
 
             // Add speaker data if user has speaker profile
             if (profileData?.speaker) {
-                updateData.speaker = {
-                    organization,
-                    short_bio: shortBio,
-                    long_bio: longBio,
-                    country,
-                    skill_tag: skillTags.map(tag => tag.id)
-                }
+                updateData.organization = organization
+                updateData.short_bio = shortBio
+                updateData.long_bio = longBio
+                updateData.country = country
+                updateData.skill_tag = skillTags.map(tag => tag.id)
             }
 
+            console.log('📤 Sending update with data:', updateData)
             const updatedProfile = await userApi.updateUserProfile(updateData)
+            console.log('📥 Received updated profile:', updatedProfile)
+            
+            // Update state with new data
             setProfileData(updatedProfile)
+            
+            // Verify the changes by comparing
+            console.log('🔍 Verification:')
+            console.log('Sent short_bio:', updateData.short_bio)
+            console.log('Received short_bio:', updatedProfile.speaker?.short_bio)
+            console.log('Match?', updateData.short_bio === updatedProfile.speaker?.short_bio)
+            
             toast.success("Profile updated successfully")
             setIsEditing(false)
-        } catch (error) {
+            
+            // Force reload to verify backend actually saved the data
+            console.log('🔄 Reloading profile from backend to verify persistence...')
+            setTimeout(async () => {
+                const freshData = await userApi.getUserProfile()
+                console.log('📥 Fresh data from backend:', freshData)
+                console.log('🔍 Persistence check:')
+                console.log('Expected short_bio:', updateData.short_bio)
+                console.log('Actual short_bio:', freshData.speaker?.short_bio)
+                console.log('Was it saved?', updateData.short_bio === freshData.speaker?.short_bio)
+                
+                if (updateData.short_bio !== freshData.speaker?.short_bio) {
+                    console.error('❌ BACKEND DID NOT SAVE THE CHANGES!')
+                    console.error('The backend serializer is likely read-only for these fields')
+                    toast.error("Warning: Changes may not have been saved by the backend")
+                } else {
+                    console.log('✅ Changes were persisted successfully!')
+                }
+                
+                setProfileData(freshData)
+            }, 1000)
+        } catch (error: any) {
             console.error('Failed to update profile:', error)
-            toast.error("Failed to update profile")
+            console.error('Error response:', error.response?.data)
+            const errorMessage = error.response?.data?.detail 
+                || error.response?.data?.message 
+                || error.message 
+                || "Failed to update profile"
+            toast.error(errorMessage)
         }
     }
 
@@ -163,6 +222,10 @@ export default function ProfilePage() {
 
     const handleCreateOrganization = () => {
         setIsCreateOrgDialogOpen(true)
+    }
+
+    const handleOrganizationSuccess = () => {
+        loadOrganizations()
     }
 
     if (isLoadingProfile) {
@@ -443,28 +506,63 @@ export default function ProfilePage() {
                         </Card>
                     )}
 
-                    {/* Organization Management */}
+                    {/* Organization Summary */}
                     <Card>
                         <CardHeader>
-                            <CardTitle>Organization</CardTitle>
-                            <CardDescription>Create and manage your organization</CardDescription>
+                            <CardTitle>Organizations</CardTitle>
+                            <CardDescription>Your organization memberships</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="space-y-4">
-                                <p className="text-sm text-muted-foreground">
-                                    Create an organization to manage events and invite team members as organizers.
-                                </p>
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border rounded-lg bg-muted/50">
-                                    <div className="flex-1">
-                                        <h4 className="font-medium text-base">No Organization Yet</h4>
-                                        <p className="text-sm text-muted-foreground mt-1">You haven&apos;t created an organization yet.</p>
-                                    </div>
-                                    <Button onClick={handleCreateOrganization} className="w-full sm:w-auto shrink-0">
-                                        <Building2 className="w-4 h-4 mr-2" />
-                                        Create Organization
-                                    </Button>
+                            {isLoadingOrgs ? (
+                                <div className="text-center py-6 text-muted-foreground">
+                                    Loading organizations...
                                 </div>
-                            </div>
+                            ) : organizations.length > 0 ? (
+                                <div className="space-y-4">
+                                    <div className="flex flex-wrap items-center gap-4">
+                                        {organizations.filter(org => org.is_approved).length > 0 && (
+                                            <div className="flex items-center gap-2">
+                                                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                                <span className="text-sm font-medium">
+                                                    {organizations.filter(org => org.is_approved).length} Approved
+                                                </span>
+                                            </div>
+                                        )}
+                                        {organizations.filter(org => !org.is_approved).length > 0 && (
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="w-4 h-4 text-yellow-600" />
+                                                <span className="text-sm font-medium">
+                                                    {organizations.filter(org => !org.is_approved).length} Pending Approval
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                        <Link href="/organizations" className="flex-1">
+                                            <Button variant="outline" className="w-full">
+                                                View All Organizations
+                                                <ArrowRight className="w-4 h-4 ml-2" />
+                                            </Button>
+                                        </Link>
+                                        <Button onClick={handleCreateOrganization} className="w-full sm:w-auto">
+                                            <Building2 className="w-4 h-4 mr-2" />
+                                            Create New
+                                        </Button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <p className="text-sm text-muted-foreground">
+                                        Create an organization to manage events and invite team members as organizers.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                        <Button onClick={handleCreateOrganization} className="w-full sm:w-auto">
+                                            <Building2 className="w-4 h-4 mr-2" />
+                                            Create Organization
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -490,6 +588,7 @@ export default function ProfilePage() {
             <CreateOrganizationDialog
                 open={isCreateOrgDialogOpen}
                 onOpenChange={setIsCreateOrgDialogOpen}
+                onSuccess={handleOrganizationSuccess}
             />
         </ProtectedRoute>
     )
