@@ -1,13 +1,13 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
-
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Icons } from "@/components/icons"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -82,25 +82,25 @@ export function SignInForm() {
   }
 
   return (
-    <Card>
+    <div className="grid gap-6">
       <form onSubmit={handleSubmit}>
-        <CardHeader>
-          <CardTitle>Sign In</CardTitle>
-          <CardDescription>Enter your credentials to access your account</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
+        <div className="grid gap-4">
+          <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
               placeholder="name@example.com"
+              autoCapitalize="none"
+              autoComplete="email"
+              autoCorrect="off"
+              disabled={isLoading}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
-          <div className="space-y-2">
+          <div className="grid gap-2">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
               <Link
@@ -113,19 +113,28 @@ export function SignInForm() {
             <Input
               id="password"
               type="password"
+              autoComplete="current-password"
+              disabled={isLoading}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
-          {error && <div className="text-sm font-medium text-red-500">{error}</div>}
-        </CardContent>
-        <CardFooter>
-          <Button className="w-full" type="submit" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
-          </Button>
-        </CardFooter>
+          {error && (
+            <p className="px-1 text-xs text-red-600">{error}</p>
+          )}
+          <button
+            className={cn(buttonVariants())}
+            disabled={isLoading}
+            type="submit"
+          >
+            {isLoading && (
+              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            Sign In
+          </button>
+        </div>
       </form>
-    </Card>
+    </div>
   )
 }

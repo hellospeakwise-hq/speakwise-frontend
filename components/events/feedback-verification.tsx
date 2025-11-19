@@ -5,7 +5,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { feedbackAPI } from "@/lib/api/feedbackApi"
@@ -21,7 +20,6 @@ export function FeedbackVerification({ eventId, speakerId, onVerificationComplet
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationResult, setVerificationResult] = useState<"success" | "error" | null>(null)
   const [errorMessage, setErrorMessage] = useState<string>("")
-  const [activeTab, setActiveTab] = useState("in-person")
 
   const handleVerify = async () => {
     if (!email.trim()) {
@@ -33,16 +31,20 @@ export function FeedbackVerification({ eventId, speakerId, onVerificationComplet
     setErrorMessage("")
 
     try {
-      const result = await feedbackAPI.verifyAttendee(email.trim(), parseInt(eventId))
+      // Call verification endpoint with email and event ID
+      // Backend checks if this email is in the attendance list for this specific event
+      const result = await feedbackAPI.verifyAttendeeEmail(email.trim(), eventId)
 
-      if (result.verified) {
+      console.log('🔍 Verification result:', result)
+
+      if (result.verified && result.is_attendee) {
         setVerificationResult("success")
         setTimeout(() => {
           onVerificationComplete(true, email.trim())
         }, 1500)
       } else {
         setVerificationResult("error")
-        setErrorMessage(result.message || "Attendee verification failed")
+        setErrorMessage(result.message || "You are not registered as an attendee for this event. Please check your email or contact the event organizer.")
       }
     } catch (error) {
       console.error('Verification error:', error)
@@ -53,89 +55,79 @@ export function FeedbackVerification({ eventId, speakerId, onVerificationComplet
     }
   }
 
-  const handleVirtualAttendee = () => {
-    // For virtual attendees, we skip verification but still pass a flag
-    onVerificationComplete(true, "virtual-attendee")
-  }
-
   return (
     <Card>
       <CardHeader>
         <CardTitle>Verify Your Attendance</CardTitle>
-        <CardDescription>Before providing feedback, we need to verify your attendance</CardDescription>
+        <CardDescription>
+          Before providing feedback, please verify that you attended this event
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Tabs defaultValue="in-person" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="in-person">In-Person Attendee</TabsTrigger>
-            <TabsTrigger value="virtual">Virtual Attendee</TabsTrigger>
-          </TabsList>
-          <TabsContent value="in-person" className="space-y-4 mt-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter the email you used for registration"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isVerifying || verificationResult === "success"}
-              />
-              <p className="text-xs text-muted-foreground">
-                We'll check this against the attendance list provided by the event organizer.
-              </p>
-            </div>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email Address</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="Enter the email you used to register for the event"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isVerifying || verificationResult === "success"}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && email.trim() && !isVerifying && verificationResult !== "success") {
+                handleVerify()
+              }
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            Enter the email address you used when registering for this event. We&apos;ll verify it against the attendance list.
+          </p>
+        </div>
 
-            {verificationResult === "success" && (
-              <Alert
-                variant="default"
-                className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-900/30"
-              >
-                <CheckCircle2 className="h-4 w-4" />
-                <AlertTitle>Verification Successful</AlertTitle>
-                <AlertDescription>Your attendance has been verified. You can now provide feedback.</AlertDescription>
-              </Alert>
-            )}
+        {verificationResult === "success" && (
+          <Alert
+            variant="default"
+            className="bg-green-50 text-green-800 dark:bg-green-900/20 dark:text-green-400 border-green-200 dark:border-green-900/30"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            <AlertTitle>Attendance Verified! ✓</AlertTitle>
+            <AlertDescription>
+              Your attendance has been confirmed. You can now provide anonymous feedback for this speaker.
+            </AlertDescription>
+          </Alert>
+        )}
 
-            {verificationResult === "error" && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Verification Failed</AlertTitle>
-                <AlertDescription>
-                  {errorMessage || "We couldn't verify your attendance. Please check your email or contact the event organizer."}
-                </AlertDescription>
-              </Alert>
-            )}
-          </TabsContent>
-          <TabsContent value="virtual" className="space-y-4 mt-4">
-            <p className="text-sm text-muted-foreground">
-              As a virtual attendee, you can provide feedback without email verification. Your feedback will be marked
-              as coming from a virtual attendee.
-            </p>
-            <div className="bg-orange-50 border border-orange-100 p-4 rounded-md dark:bg-orange-900/10 dark:border-orange-900/20">
-              <p className="text-sm font-medium text-orange-800 dark:text-orange-300">Note:</p>
-              <p className="text-sm text-orange-700 dark:text-orange-400">
-                By continuing, you confirm that you attended this session virtually and are providing honest feedback
-                based on your experience.
-              </p>
-            </div>
-          </TabsContent>
-        </Tabs>
+        {verificationResult === "error" && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Verification Failed</AlertTitle>
+            <AlertDescription>
+              <p>{errorMessage || "We couldn&apos;t verify your attendance. Please ensure you&apos;re using the email address you registered with."}</p>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        <div className="bg-blue-50 border border-blue-100 p-4 rounded-md dark:bg-blue-900/10 dark:border-blue-900/20">
+          <p className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-1">📝 Note on Anonymous Feedback</p>
+          <p className="text-xs text-blue-700 dark:text-blue-400">
+            Your feedback will remain completely anonymous. We only verify your attendance to ensure feedback comes from actual event attendees.
+          </p>
+        </div>
+
+        <div className="bg-gray-50 border border-gray-200 p-3 rounded-md dark:bg-gray-900/20 dark:border-gray-800">
+          <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+            <strong>Virtual/Online attendees:</strong> Feedback feature coming soon! We&apos;re working on a verification system for virtual attendees.
+          </p>
+        </div>
       </CardContent>
       <CardFooter>
-        {activeTab === "in-person" ? (
-          <Button
-            onClick={handleVerify}
-            disabled={!email || isVerifying || verificationResult === "success"}
-            className="w-full"
-          >
-            {isVerifying ? "Verifying..." : "Verify Attendance"}
-          </Button>
-        ) : (
-          <Button onClick={handleVirtualAttendee} className="w-full">
-            Continue as Virtual Attendee
-          </Button>
-        )}
+        <Button
+          onClick={handleVerify}
+          disabled={!email || isVerifying || verificationResult === "success"}
+          className="w-full"
+        >
+          {isVerifying ? "Verifying..." : "Verify Attendance"}
+        </Button>
       </CardFooter>
     </Card>
   )

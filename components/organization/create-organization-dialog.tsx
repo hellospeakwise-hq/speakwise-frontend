@@ -12,9 +12,10 @@ import { Building2, Loader2 } from "lucide-react"
 interface CreateOrganizationDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
+    onSuccess?: () => void
 }
 
-export function CreateOrganizationDialog({ open, onOpenChange }: CreateOrganizationDialogProps) {
+export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: CreateOrganizationDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [formData, setFormData] = useState({
         name: "",
@@ -84,8 +85,8 @@ export function CreateOrganizationDialog({ open, onOpenChange }: CreateOrganizat
             toast.success(
                 "Organization request submitted successfully! 🎉",
                 {
-                    description: "Your request is waiting approval from the admin. Keep an eye on your email for approval or rejection notice.",
-                    duration: 8000,
+                    description: "Your request is pending admin approval. You'll receive an email notification.",
+                    duration: 5000,
                 }
             )
 
@@ -99,10 +100,10 @@ export function CreateOrganizationDialog({ open, onOpenChange }: CreateOrganizat
             })
             onOpenChange(false)
 
-            // Optional: Trigger a page refresh or data refetch
-            setTimeout(() => {
-                window.location.reload()
-            }, 2000)
+            // Trigger success callback to refresh organization list
+            if (onSuccess) {
+                onSuccess()
+            }
 
         } catch (error: any) {
             console.error('Error creating organization:', error)
