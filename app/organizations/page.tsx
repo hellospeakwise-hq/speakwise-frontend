@@ -10,11 +10,17 @@ import { CreateOrganizationDialog } from "@/components/organization/create-organ
 import { Building2, Plus, CheckCircle2, Clock, XCircle, ArrowRight } from "lucide-react"
 import { toast } from "sonner"
 import Link from "next/link"
+import { OnboardingTour } from "@/components/onboarding/onboarding-tour"
+import { organizationsOnboardingSteps } from "@/components/onboarding/onboarding-steps"
+import { useOnboarding } from "@/hooks/use-onboarding"
 
 export default function OrganizationsPage() {
     const [organizations, setOrganizations] = useState<Organization[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+
+    // Onboarding
+    const { shouldShowOnboarding, completeOnboarding } = useOnboarding('ORGANIZATIONS')
 
     useEffect(() => {
         loadOrganizations()
@@ -81,7 +87,7 @@ export default function OrganizationsPage() {
                                 Manage your organizations and event hosting
                             </p>
                         </div>
-                        <Button onClick={() => setIsCreateDialogOpen(true)} size="lg">
+                        <Button onClick={() => setIsCreateDialogOpen(true)} size="lg" data-tour="create-organization">
                             <Plus className="w-4 h-4 mr-2" />
                             Create Organization
                         </Button>
@@ -89,7 +95,7 @@ export default function OrganizationsPage() {
 
                     {/* Approved Organizations */}
                     {approvedOrgs.length > 0 && (
-                        <div className="space-y-4">
+                        <div className="space-y-4" data-tour="approved-orgs">
                             <div className="flex items-center gap-2">
                                 <CheckCircle2 className="w-5 h-5 text-green-600" />
                                 <h2 className="text-2xl font-semibold">Active Organizations</h2>
@@ -98,21 +104,25 @@ export default function OrganizationsPage() {
                                 {approvedOrgs.map((org) => (
                                     <Card key={org.id} className="hover:shadow-lg transition-shadow">
                                         <CardHeader>
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-start gap-3 flex-1">
-                                                    <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                                        {org.logo ? (
-                                                            <img src={org.logo} alt={org.name} className="w-full h-full rounded-lg object-cover" />
-                                                        ) : (
-                                                            <Building2 className="w-6 h-6 text-primary" />
-                                                        )}
+                                            <div className="flex flex-col gap-3">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                                                        <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                                            {org.logo ? (
+                                                                <img src={org.logo} alt={org.name} className="w-full h-full rounded-lg object-cover" />
+                                                            ) : (
+                                                                <Building2 className="w-6 h-6 text-primary" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <CardTitle className="text-lg truncate">{org.name}</CardTitle>
+                                                            <CardDescription className="text-sm truncate">{org.email}</CardDescription>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <CardTitle className="text-lg truncate">{org.name}</CardTitle>
-                                                        <CardDescription className="text-sm">{org.email}</CardDescription>
+                                                    <div className="flex-shrink-0">
+                                                        {getStatusBadge(org)}
                                                     </div>
                                                 </div>
-                                                {getStatusBadge(org)}
                                             </div>
                                         </CardHeader>
                                         <CardContent>
@@ -129,7 +139,7 @@ export default function OrganizationsPage() {
                                                     {org.website}
                                                 </a>
                                             )}
-                                            <Link href={`/dashboard/organizer?org=${org.id}`}>
+                                            <Link href={`/dashboard/organizer?org=${org.id}`} data-tour="org-dashboard-button">
                                                 <Button className="w-full" variant="default">
                                                     Go to Organization Dashboard
                                                     <ArrowRight className="w-4 h-4 ml-2" />
@@ -144,7 +154,7 @@ export default function OrganizationsPage() {
 
                     {/* Pending Organizations */}
                     {pendingOrgs.length > 0 && (
-                        <div className="space-y-4">
+                        <div className="space-y-4" data-tour="pending-orgs">
                             <div className="flex items-center gap-2">
                                 <Clock className="w-5 h-5 text-yellow-600" />
                                 <h2 className="text-2xl font-semibold">Pending Approval</h2>
@@ -153,21 +163,25 @@ export default function OrganizationsPage() {
                                 {pendingOrgs.map((org) => (
                                     <Card key={org.id} className="border-dashed">
                                         <CardHeader>
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-start gap-3 flex-1">
-                                                    <div className="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
-                                                        {org.logo ? (
-                                                            <img src={org.logo} alt={org.name} className="w-full h-full rounded-lg object-cover opacity-50" />
-                                                        ) : (
-                                                            <Building2 className="w-6 h-6 text-yellow-600" />
-                                                        )}
+                                            <div className="flex flex-col gap-3">
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                                                        <div className="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
+                                                            {org.logo ? (
+                                                                <img src={org.logo} alt={org.name} className="w-full h-full rounded-lg object-cover opacity-50" />
+                                                            ) : (
+                                                                <Building2 className="w-6 h-6 text-yellow-600" />
+                                                            )}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <CardTitle className="text-lg truncate">{org.name}</CardTitle>
+                                                            <CardDescription className="text-sm truncate">{org.email}</CardDescription>
+                                                        </div>
                                                     </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <CardTitle className="text-lg truncate">{org.name}</CardTitle>
-                                                        <CardDescription className="text-sm">{org.email}</CardDescription>
+                                                    <div className="flex-shrink-0">
+                                                        {getStatusBadge(org)}
                                                     </div>
                                                 </div>
-                                                {getStatusBadge(org)}
                                             </div>
                                         </CardHeader>
                                         <CardContent>
@@ -213,6 +227,13 @@ export default function OrganizationsPage() {
                 open={isCreateDialogOpen}
                 onOpenChange={setIsCreateDialogOpen}
                 onSuccess={handleCreateSuccess}
+            />
+
+            {/* Onboarding Tour */}
+            <OnboardingTour
+                steps={organizationsOnboardingSteps}
+                run={shouldShowOnboarding && !isLoading}
+                onComplete={completeOnboarding}
             />
         </ProtectedRoute>
     )

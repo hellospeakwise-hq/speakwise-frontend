@@ -41,7 +41,7 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
 
   const activeEvents = events.filter(event => event.is_active)
   const selectedEvent = activeEvents.find(e => e.id === selectedEventId)
-  
+
   const {
     attendees,
     uploads,
@@ -62,14 +62,14 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
         toast.error('Invalid file type. Please select a CSV file.')
         return
       }
-      
+
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         setUploadError('File size must be less than 5MB')
         toast.error('File size must be less than 5MB')
         return
       }
-      
+
       setSelectedFile(file)
       setUploadError(null)
     }
@@ -77,42 +77,42 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
 
   const handleUpload = async () => {
     if (!selectedFile || !selectedEventId) return
-    
+
     setUploading(true)
-    
+
     // Show uploading toast
     const uploadingToast = toast.loading('Uploading attendees...', {
       description: 'Please wait while we process your CSV file'
     })
-    
+
     try {
       const result = await uploadCSV(selectedFile)
-      
+
       // Dismiss uploading toast
       toast.dismiss(uploadingToast)
-      
+
       // Close dialog and reset state
       setUploadDialogOpen(false)
       setSelectedFile(null)
       setUploadError(null)
-      
+
       // Force refresh the data
       await refreshData()
-      
+
       // Show success toast
       toast.success('Attendees uploaded successfully!', {
         description: `File processed successfully. Refreshing attendee list...`,
         duration: 4000,
       })
-      
+
     } catch (err) {
       // Dismiss uploading toast
       toast.dismiss(uploadingToast)
-      
+
       console.error('Error uploading file:', err)
       const errorMessage = 'Failed to upload file. Please check the format and try again.'
       setUploadError(errorMessage)
-      
+
       toast.error('Upload failed', {
         description: errorMessage,
         duration: 5000,
@@ -264,7 +264,7 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
                 </div>
                 <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
                   <DialogTrigger asChild>
-                    <Button>
+                    <Button data-tour="upload-attendees">
                       <Upload className="h-4 w-4 mr-2" />
                       Upload Attendees
                     </Button>
@@ -276,7 +276,7 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
                         Upload a CSV file with attendee information for {selectedEvent.title}
                       </DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="space-y-4">
                       <div>
                         <p className="text-sm font-medium mb-2">CSV Format Required:</p>
@@ -293,7 +293,7 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
                           Download Sample CSV
                         </Button>
                       </div>
-                      
+
                       <div>
                         <Input
                           type="file"
@@ -307,7 +307,7 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
                           </p>
                         )}
                       </div>
-                      
+
                       {uploadError && (
                         <Alert>
                           <AlertCircle className="h-4 w-4" />
@@ -315,7 +315,7 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
                         </Alert>
                       )}
                     </div>
-                    
+
                     <DialogFooter>
                       <Button
                         variant="outline"

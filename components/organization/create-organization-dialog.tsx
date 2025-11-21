@@ -59,7 +59,7 @@ export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: Crea
                 email: formData.email.trim(),
                 website: formData.website.trim() || undefined,
                 logo: formData.logo.trim() || undefined,
-                is_active: true, // Default to true as per API schema
+                is_active: false, // Default to false, requires admin approval
             }
 
             const token = localStorage.getItem('accessToken')

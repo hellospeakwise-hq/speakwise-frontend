@@ -69,16 +69,16 @@ export function OrganizerDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-    
-        <Button variant="outline" onClick={handleRefreshStats} disabled={loading || refreshing}>
+
+        <Button variant="outline" onClick={handleRefreshStats} disabled={loading || refreshing} data-tour="refresh-stats">
           <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'Refreshing...' : 'Refresh Stats'}
         </Button>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Organizer Stats */}
-        <Card>
+        <Card data-tour="stats-total-events">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Events</CardTitle>
             <Calendar className="h-4 w-4 text-primary" />
@@ -94,7 +94,7 @@ export function OrganizerDashboard() {
             <p className="text-xs text-muted-foreground">Organized events</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card data-tour="stats-attendees">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Attendees</CardTitle>
             <Users className="h-4 w-4 text-primary" />
@@ -110,7 +110,7 @@ export function OrganizerDashboard() {
             <p className="text-xs text-muted-foreground">Across all events</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card data-tour="stats-feedback">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Feedback Rate</CardTitle>
             <BarChart className="h-4 w-4 text-primary" />
@@ -126,7 +126,7 @@ export function OrganizerDashboard() {
             <p className="text-xs text-muted-foreground">Of attendees provided feedback</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card data-tour="stats-rating">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg. Speaker Rating</CardTitle>
             <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />
@@ -146,9 +146,9 @@ export function OrganizerDashboard() {
 
       <Tabs defaultValue="events" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="events">Manage Events</TabsTrigger>
+          <TabsTrigger value="events" data-tour="manage-events-tab">Manage Events</TabsTrigger>
           <TabsTrigger value="speakers">Speakers</TabsTrigger>
-          <TabsTrigger value="attendees">Attendees</TabsTrigger>
+          <TabsTrigger value="attendees" data-tour="attendees-tab">Attendees</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
         </TabsList>
         <TabsContent value="events">
