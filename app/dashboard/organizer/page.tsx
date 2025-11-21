@@ -9,6 +9,9 @@ import { toast } from "sonner"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Building2 } from "lucide-react"
+import { OnboardingTour } from "@/components/onboarding/onboarding-tour"
+import { organizerDashboardSteps } from "@/components/onboarding/onboarding-steps"
+import { useOnboarding } from "@/hooks/use-onboarding"
 
 export default function OrganizerDashboardPage() {
   const [isOrgApproved, setIsOrgApproved] = useState<boolean | null>(null)
@@ -16,6 +19,9 @@ export default function OrganizerDashboardPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const orgId = searchParams.get('org')
+
+  // Onboarding
+  const { shouldShowOnboarding, completeOnboarding } = useOnboarding('ORGANIZER_DASHBOARD')
 
   useEffect(() => {
     const checkOrganization = async () => {
@@ -28,14 +34,14 @@ export default function OrganizerDashboardPage() {
 
         // Get the specific organization
         const org = await organizationApi.getOrganization(parseInt(orgId))
-        
+
         // Check if this specific organization is approved
         if (!org.is_active) {
           toast.error("This organization is not approved yet")
           router.push('/organizations')
           return
         }
-        
+
         setIsOrgApproved(true)
       } catch (error) {
         console.error('Error checking organization:', error)
@@ -93,6 +99,13 @@ export default function OrganizerDashboardPage() {
           <OrganizerDashboard />
         </div>
       </div>
+
+      {/* Onboarding Tour */}
+      <OnboardingTour
+        steps={organizerDashboardSteps}
+        run={shouldShowOnboarding && !isLoading && isOrgApproved === true}
+        onComplete={completeOnboarding}
+      />
     </ProtectedRoute>
   )
 }

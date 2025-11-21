@@ -16,6 +16,9 @@ import { Upload, X, Building2, ArrowRight, CheckCircle2, Clock } from "lucide-re
 import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
 import { organizationApi, Organization } from "@/lib/api/organizationApi"
 import Link from "next/link"
+import { OnboardingTour } from "@/components/onboarding/onboarding-tour"
+import { profileOnboardingSteps } from "@/components/onboarding/onboarding-steps"
+import { useOnboarding } from "@/hooks/use-onboarding"
 
 export default function ProfilePage() {
     const { user } = useAuth()
@@ -25,6 +28,9 @@ export default function ProfilePage() {
     const [isLoadingProfile, setIsLoadingProfile] = useState(true)
     const [organizations, setOrganizations] = useState<Organization[]>([])
     const [isLoadingOrgs, setIsLoadingOrgs] = useState(false)
+
+    // Onboarding
+    const { shouldShowOnboarding, completeOnboarding } = useOnboarding('PROFILE')
 
     // Form state
     const [firstName, setFirstName] = useState('')
@@ -50,13 +56,13 @@ export default function ProfilePage() {
     useEffect(() => {
         if (profileData) {
             const { user: userData, speaker } = profileData
-            
+
             // User data
             setFirstName(userData.first_name || '')
             setLastName(userData.last_name || '')
             setUsername(userData.username || '')
             setNationality(userData.nationality || '')
-            
+
             // Speaker data
             if (speaker) {
                 setOrganization(speaker.organization || "")
@@ -132,19 +138,19 @@ export default function ProfilePage() {
             console.log('📤 Sending update with data:', updateData)
             const updatedProfile = await userApi.updateUserProfile(updateData)
             console.log('📥 Received updated profile:', updatedProfile)
-            
+
             // Update state with new data
             setProfileData(updatedProfile)
-            
+
             // Verify the changes by comparing
             console.log('🔍 Verification:')
             console.log('Sent short_bio:', updateData.short_bio)
             console.log('Received short_bio:', updatedProfile.speaker?.short_bio)
             console.log('Match?', updateData.short_bio === updatedProfile.speaker?.short_bio)
-            
+
             toast.success("Profile updated successfully")
             setIsEditing(false)
-            
+
             // Force reload to verify backend actually saved the data
             console.log('🔄 Reloading profile from backend to verify persistence...')
             setTimeout(async () => {
@@ -154,7 +160,7 @@ export default function ProfilePage() {
                 console.log('Expected short_bio:', updateData.short_bio)
                 console.log('Actual short_bio:', freshData.speaker?.short_bio)
                 console.log('Was it saved?', updateData.short_bio === freshData.speaker?.short_bio)
-                
+
                 if (updateData.short_bio !== freshData.speaker?.short_bio) {
                     console.error('❌ BACKEND DID NOT SAVE THE CHANGES!')
                     console.error('The backend serializer is likely read-only for these fields')
@@ -162,15 +168,15 @@ export default function ProfilePage() {
                 } else {
                     console.log('✅ Changes were persisted successfully!')
                 }
-                
+
                 setProfileData(freshData)
             }, 1000)
         } catch (error: any) {
             console.error('Failed to update profile:', error)
             console.error('Error response:', error.response?.data)
-            const errorMessage = error.response?.data?.detail 
-                || error.response?.data?.message 
-                || error.message 
+            const errorMessage = error.response?.data?.detail
+                || error.response?.data?.message
+                || error.message
                 || "Failed to update profile"
             toast.error(errorMessage)
         }
@@ -240,8 +246,6 @@ export default function ProfilePage() {
         )
     }
 
-    const hasSpeakerProfile = profileData?.speaker !== null && profileData?.speaker !== undefined
-
     return (
         <ProtectedRoute>
             <div className="container py-10">
@@ -252,64 +256,60 @@ export default function ProfilePage() {
                     </div>
 
                     {/* Profile Picture - First */}
-                    {hasSpeakerProfile && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Profile Picture</CardTitle>
-                                <CardDescription>Upload your profile picture</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="flex items-center space-x-4">
-                                    {profileData.speaker.avatar && (
-                                        <div className="relative">
-                                            <img
-                                                src={profileData.speaker.avatar.startsWith('http') 
-                                                    ? profileData.speaker.avatar 
-                                                    : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${profileData.speaker.avatar}`
-                                                }
-                                                alt="Profile"
-                                                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                                                onError={(e) => {
-                                                    e.currentTarget.style.display = 'none';
-                                                }}
-                                            />
-                                        </div>
-                                    )}
-                                    <div className="flex flex-col space-y-2">
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleAvatarUpload}
-                                            className="hidden"
-                                            id="avatar-upload"
-                                            disabled={isEditing}
+                    <Card data-tour="profile-picture">
+                        <CardHeader>
+                            <CardTitle>Profile Picture</CardTitle>
+                            <CardDescription>Upload your profile picture</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center space-x-4">
+                                {profileData?.speaker?.avatar && (
+                                    <div className="relative">
+                                        <img
+                                            src={profileData.speaker.avatar.startsWith('http')
+                                                ? profileData.speaker.avatar
+                                                : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${profileData.speaker.avatar}`
+                                            }
+                                            alt="Profile"
+                                            className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                                            onError={(e) => {
+                                                e.currentTarget.style.display = 'none';
+                                            }}
                                         />
-                                        <label htmlFor="avatar-upload">
-                                            <Button 
-                                                variant="outline" 
-                                                className="cursor-pointer" 
-                                                asChild
-                                                disabled={isEditing}
-                                            >
-                                                <span>
-                                                    <Upload className="w-4 h-4 mr-2" />
-                                                    {profileData.speaker.avatar ? 'Change Picture' : 'Upload Picture'}
-                                                </span>
-                                            </Button>
-                                        </label>
-                                        {profileData.speaker.avatar && (
-                                            <p className="text-xs text-muted-foreground">
-                                                Current image: {profileData.speaker.avatar.split('/').pop()}
-                                            </p>
-                                        )}
                                     </div>
+                                )}
+                                <div className="flex flex-col space-y-2">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleAvatarUpload}
+                                        className="hidden"
+                                        id="avatar-upload"
+                                        disabled={isEditing}
+                                    />
+                                    <label htmlFor="avatar-upload">
+                                        <Button
+                                            variant="outline"
+                                            className="cursor-pointer"
+                                            asChild
+                                            disabled={isEditing}
+                                        >
+                                            <span>
+                                                <Upload className="w-4 h-4 mr-2" />
+                                                {profileData?.speaker?.avatar ? 'Change Picture' : 'Upload Picture'}
+                                            </span>
+                                        </Button>
+                                    </label>
+                                    {profileData?.speaker?.avatar && (
+                                        <p className="text-xs text-muted-foreground">
+                                            Current image: {profileData.speaker.avatar.split('/').pop()}
+                                        </p>
+                                    )}
                                 </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {/* Personal Information */}
-                    <Card>
+                            </div>
+                        </CardContent>
+                    </Card>                    {/* Personal Information */}
+                    <Card data-tour="personal-info">
                         <CardHeader>
                             <CardTitle>Personal Information</CardTitle>
                             <CardDescription>Your basic account information</CardDescription>
@@ -375,139 +375,136 @@ export default function ProfilePage() {
                         </CardContent>
                     </Card>
 
-                    {/* Speaker Details */}
-                    {hasSpeakerProfile && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Speaker Profile</CardTitle>
-                                <CardDescription>Professional information and bio</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="organization">Organization</Label>
-                                            <Input
-                                                id="organization"
-                                                value={organization}
-                                                onChange={(e) => setOrganization(e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="Your company or organization"
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="country">Country</Label>
-                                            <Input
-                                                id="country"
-                                                value={country}
-                                                onChange={(e) => setCountry(e.target.value)}
-                                                disabled={!isEditing}
-                                                placeholder="Your country"
-                                            />
-                                        </div>
-                                    </div>
-
+                    {/* Speaker Profile */}
+                    <Card data-tour="speaker-profile">
+                        <CardHeader>
+                            <CardTitle>Speaker Profile</CardTitle>
+                            <CardDescription>Professional information and bio</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="shortBio">Short Bio</Label>
+                                        <Label htmlFor="organization">Organization</Label>
                                         <Input
-                                            id="shortBio"
-                                            value={shortBio}
-                                            onChange={(e) => setShortBio(e.target.value)}
+                                            id="organization"
+                                            value={organization}
+                                            onChange={(e) => setOrganization(e.target.value)}
                                             disabled={!isEditing}
-                                            placeholder="A brief description (255 characters max)"
-                                            maxLength={255}
+                                            placeholder="Your company or organization"
                                         />
                                     </div>
-
                                     <div className="space-y-2">
-                                        <Label htmlFor="longBio">Biography</Label>
-                                        <Textarea
-                                            id="longBio"
-                                            value={longBio}
-                                            onChange={(e) => setLongBio(e.target.value)}
+                                        <Label htmlFor="country">Country</Label>
+                                        <Input
+                                            id="country"
+                                            value={country}
+                                            onChange={(e) => setCountry(e.target.value)}
                                             disabled={!isEditing}
-                                            placeholder="Tell us about yourself, your experience, and expertise..."
-                                            rows={6}
+                                            placeholder="Your country"
                                         />
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    )}
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="shortBio">Short Bio</Label>
+                                    <Input
+                                        id="shortBio"
+                                        value={shortBio}
+                                        onChange={(e) => setShortBio(e.target.value)}
+                                        disabled={!isEditing}
+                                        placeholder="A brief description (255 characters max)"
+                                        maxLength={255}
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="longBio">Biography</Label>
+                                    <Textarea
+                                        id="longBio"
+                                        value={longBio}
+                                        onChange={(e) => setLongBio(e.target.value)}
+                                        disabled={!isEditing}
+                                        placeholder="Tell us about yourself, your experience, and expertise..."
+                                        rows={6}
+                                    />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
 
                     {/* Skills Management */}
-                    {hasSpeakerProfile && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle>Skills & Expertise</CardTitle>
-                                <CardDescription>Add your skills and areas of expertise</CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {/* Current Skills */}
-                                    <div className="space-y-2">
-                                        <Label>Your Skills</Label>
+                    <Card data-tour="skills">
+                        <CardHeader>
+                            <CardTitle>Skills & Expertise</CardTitle>
+                            <CardDescription>Add your skills and areas of expertise</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {/* Current Skills */}
+                                <div className="space-y-2">
+                                    <Label>Your Skills</Label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {skillTags.map((skill) => (
+                                            <Badge key={skill.id} variant="secondary" className="text-sm">
+                                                {skill.name}
+                                                {isEditing && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="ml-2 h-auto p-0"
+                                                        onClick={() => removeSkillTag(skill.id)}
+                                                    >
+                                                        <X className="w-3 h-3" />
+                                                    </Button>
+                                                )}
+                                            </Badge>
+                                        ))}
+                                        {skillTags.length === 0 && (
+                                            <p className="text-muted-foreground">No skills added yet</p>
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Add Skills */}
+                                {isEditing && (
+                                    <div className="space-y-3">
+                                        <Label>Available Skills</Label>
                                         <div className="flex flex-wrap gap-2">
-                                            {skillTags.map((skill) => (
-                                                <Badge key={skill.id} variant="secondary" className="text-sm">
-                                                    {skill.name}
-                                                    {isEditing && (
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            className="ml-2 h-auto p-0"
-                                                            onClick={() => removeSkillTag(skill.id)}
-                                                        >
-                                                            <X className="w-3 h-3" />
-                                                        </Button>
-                                                    )}
-                                                </Badge>
-                                            ))}
-                                            {skillTags.length === 0 && (
-                                                <p className="text-muted-foreground">No skills added yet</p>
-                                            )}
+                                            {availableSkills
+                                                .filter(skill => !skillTags.find(tag => tag.id === skill.id))
+                                                .map((skill) => (
+                                                    <Badge
+                                                        key={skill.id}
+                                                        variant="outline"
+                                                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+                                                        onClick={() => toggleSkillTag(skill)}
+                                                    >
+                                                        {skill.name}
+                                                    </Badge>
+                                                ))}
+                                        </div>
+
+                                        <div className="flex space-x-2">
+                                            <Input
+                                                value={newSkillName}
+                                                onChange={(e) => setNewSkillName(e.target.value)}
+                                                placeholder="Add a new skill"
+                                                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkillTag())}
+                                            />
+                                            <Button onClick={addSkillTag} disabled={!newSkillName.trim()}>
+                                                Add Skill
+                                            </Button>
                                         </div>
                                     </div>
-
-                                    {/* Add Skills */}
-                                    {isEditing && (
-                                        <div className="space-y-3">
-                                            <Label>Available Skills</Label>
-                                            <div className="flex flex-wrap gap-2">
-                                                {availableSkills
-                                                    .filter(skill => !skillTags.find(tag => tag.id === skill.id))
-                                                    .map((skill) => (
-                                                        <Badge
-                                                            key={skill.id}
-                                                            variant="outline"
-                                                            className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-                                                            onClick={() => toggleSkillTag(skill)}
-                                                        >
-                                                            {skill.name}
-                                                        </Badge>
-                                                    ))}
-                                            </div>
-
-                                            <div className="flex space-x-2">
-                                                <Input
-                                                    value={newSkillName}
-                                                    onChange={(e) => setNewSkillName(e.target.value)}
-                                                    placeholder="Add a new skill"
-                                                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkillTag())}
-                                                />
-                                                <Button onClick={addSkillTag} disabled={!newSkillName.trim()}>
-                                                    Add Skill
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
 
                     {/* Organization Summary */}
-                    <Card>
+                    <Card data-tour="organizations">
                         <CardHeader>
                             <CardTitle>Organizations</CardTitle>
                             <CardDescription>Your organization memberships</CardDescription>
@@ -538,13 +535,13 @@ export default function ProfilePage() {
                                         )}
                                     </div>
                                     <div className="flex flex-col sm:flex-row gap-2">
-                                        <Link href="/organizations" className="flex-1">
+                                        <Link href="/organizations" className="flex-1" data-tour="view-orgs">
                                             <Button variant="outline" className="w-full">
                                                 View All Organizations
                                                 <ArrowRight className="w-4 h-4 ml-2" />
                                             </Button>
                                         </Link>
-                                        <Button onClick={handleCreateOrganization} className="w-full sm:w-auto">
+                                        <Button onClick={handleCreateOrganization} className="w-full sm:w-auto" data-tour="create-org-button">
                                             <Building2 className="w-4 h-4 mr-2" />
                                             Create New
                                         </Button>
@@ -589,6 +586,13 @@ export default function ProfilePage() {
                 open={isCreateOrgDialogOpen}
                 onOpenChange={setIsCreateOrgDialogOpen}
                 onSuccess={handleOrganizationSuccess}
+            />
+
+            {/* Onboarding Tour */}
+            <OnboardingTour
+                steps={profileOnboardingSteps}
+                run={shouldShowOnboarding && !isLoadingProfile}
+                onComplete={completeOnboarding}
             />
         </ProtectedRoute>
     )

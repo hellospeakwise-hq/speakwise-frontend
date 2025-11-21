@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
+import { OrganizationBadge } from "@/components/organization-badge"
 import { Menu, X, LogOut, User } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import {
@@ -60,7 +61,7 @@ export function MainNav() {
     // Add dashboard link based on user role
     if (isAuthenticated && user?.role?.role) {
       let dashboardRoute = "/dashboard";
-      
+
       switch (user.role.role) {
         case "speaker":
           dashboardRoute = "/dashboard/speaker";
@@ -74,7 +75,7 @@ export function MainNav() {
         default:
           dashboardRoute = "/dashboard/attendee";
       }
-      
+
       baseRoutes.splice(3, 0, {
         href: dashboardRoute,
         label: "Dashboard",
@@ -111,6 +112,7 @@ export function MainNav() {
           </nav>
         </div>
         <div className="hidden md:flex items-center gap-4">
+          {isAuthenticated && <OrganizationBadge />}
           <ModeToggle />
           {isAuthenticated ? (
             <DropdownMenu>
@@ -150,6 +152,7 @@ export function MainNav() {
           )}
         </div>
         <div className="md:hidden flex items-center gap-4">
+          {isAuthenticated && <OrganizationBadge />}
           <ModeToggle />
           <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

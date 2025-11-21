@@ -106,7 +106,7 @@ export function EventSpeakers({ eventId, isManagement = false }: EventSpeakersPr
                                 </Link>
                                 <Link href={`/events/${eventId}/speakers/${speaker.id}/feedback`} passHref>
                                     <Button size="sm" variant="secondary">
-                                        Feedback
+                                        Give Feedback
                                     </Button>
                                 </Link>
                                 {isManagement && (

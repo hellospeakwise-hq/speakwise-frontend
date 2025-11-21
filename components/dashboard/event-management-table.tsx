@@ -4,28 +4,28 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table"
-import { 
-  Users, 
-  MoreHorizontal, 
-  Edit, 
-  Eye, 
-  Trash2, 
-  Settings, 
+import {
+  Users,
+  MoreHorizontal,
+  Edit,
+  Eye,
+  Trash2,
+  Settings,
   Upload,
   BarChart3,
   Calendar,
@@ -97,7 +97,7 @@ export function EventManagementTable({
 
   const confirmDelete = async () => {
     if (!eventToDelete) return
-    
+
     try {
       setActionLoading(`delete-${eventToDelete.id}`)
       await onEventDelete(eventToDelete.id)
@@ -148,10 +148,10 @@ export function EventManagementTable({
 
   return (
     <>
-      <Card>
+      <Card data-tour="event-table">
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Event Management</CardTitle>
-          <Button onClick={handleCreateEvent} className="flex items-center gap-2">
+          <Button onClick={handleCreateEvent} className="flex items-center gap-2" data-tour="create-event-button">
             <Plus className="h-4 w-4" />
             Create Event
           </Button>
@@ -187,7 +187,7 @@ export function EventManagementTable({
                     const status = getEventStatus(event)
                     const upcoming = isEventUpcoming(event)
                     const past = isEventPast(event)
-                    
+
                     return (
                       <TableRow key={event.id}>
                         <TableCell>
@@ -202,8 +202,8 @@ export function EventManagementTable({
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <Badge 
-                              variant="secondary" 
+                            <Badge
+                              variant="secondary"
                               className={getEventStatusColor(status)}
                             >
                               {getEventStatusText(status)}
@@ -230,8 +230,8 @@ export function EventManagementTable({
                           {event.location ? (
                             <div className="flex items-center gap-1 text-sm">
                               <MapPin className="h-3 w-3 text-muted-foreground" />
-                              {typeof event.location === 'string' 
-                                ? event.location 
+                              {typeof event.location === 'string'
+                                ? event.location
                                 : event.location?.venue || 'Location TBD'}
                             </div>
                           ) : (
@@ -258,46 +258,46 @@ export function EventManagementTable({
                                   View Event
                                 </Link>
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuItem onClick={() => handleEditEvent(event)}>
                                 <Edit className="mr-2 h-4 w-4" />
                                 Edit Event
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuItem asChild>
                                 <Link href={`/events/${event.id}/manage`}>
                                   <Settings className="mr-2 h-4 w-4" />
                                   Manage Event
                                 </Link>
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuItem asChild>
                                 <Link href={`/events/${event.id}/manage-speakers`}>
                                   <Users className="mr-2 h-4 w-4" />
                                   Manage Speakers
                                 </Link>
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuItem asChild>
                                 <Link href={`/events/${event.id}/manage-sessions`}>
                                   <Calendar className="mr-2 h-4 w-4" />
                                   Manage Sessions
                                 </Link>
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuSeparator />
-                              
-                              <DropdownMenuItem 
+
+                              <DropdownMenuItem
                                 onClick={() => handleStatusToggle(event)}
                                 disabled={actionLoading === `status-${event.id}`}
                               >
                                 <BarChart3 className="mr-2 h-4 w-4" />
                                 {event.is_active ? 'Unpublish' : 'Publish'}
                               </DropdownMenuItem>
-                              
+
                               <DropdownMenuSeparator />
-                              
-                              <DropdownMenuItem 
+
+                              <DropdownMenuItem
                                 onClick={() => handleDeleteEvent(event)}
                                 className="text-red-600"
                                 disabled={actionLoading === `delete-${event.id}`}

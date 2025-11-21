@@ -47,7 +47,7 @@ class FeedbackAPI {
             // Response: { is_attendee: boolean, message: string }
             // This endpoint should NOT require authentication
 
-            const response = await fetch(`${API_BASE_URL}/attendees/verify-email/`, {
+            const response = await fetch(`${API_BASE_URL}/attendees/verify/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -71,15 +71,15 @@ class FeedbackAPI {
             return {
                 verified: isAttendee,
                 is_attendee: isAttendee,
-                message: data.message || (isAttendee 
-                    ? "Your attendance has been verified successfully." 
+                message: data.message || (isAttendee
+                    ? "Your attendance has been verified successfully."
                     : "Email not found in attendance list for this event.")
             };
         } catch (error) {
             console.error('Error verifying attendee email:', error);
-            
+
             const errorMessage = error instanceof Error ? error.message : 'Failed to verify attendance. Please try again.';
-            
+
             return {
                 verified: false,
                 is_attendee: false,
@@ -103,7 +103,7 @@ class FeedbackAPI {
             });
 
             console.log('✅ Verification response:', response.data);
-            
+
             return {
                 verified: response.data.verified || false,
                 message: response.data.message
@@ -257,9 +257,9 @@ class FeedbackAPI {
     async getTalkDetails(talkId: number): Promise<{ title: string; eventName: string; eventDate?: string }> {
         try {
             const token = localStorage.getItem('accessToken');
-            
+
             const response = await fetch(`${API_BASE_URL}/talks/${talkId}/`, {
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 }
@@ -274,12 +274,12 @@ class FeedbackAPI {
             }
 
             const talkData = await response.json();
-            
+
             // Handle event name and date - fetch event details using the event ID
             console.log(`Talk data event field:`, talkData.event, typeof talkData.event);
             let eventName = `Event ${talkId}`;
             let eventDate = talkData.event?.date || talkData.event_date || talkData.date;
-            
+
             if (talkData.event && typeof talkData.event === 'number') {
                 // Event is just an ID, fetch the event details (name and date)
                 console.log(`Attempting to fetch event details for ID: ${talkData.event}`);
@@ -303,7 +303,7 @@ class FeedbackAPI {
                 eventName = talkData.event_name;
                 console.log(`Using event_name from talk data: ${eventName}`);
             }
-            
+
             return {
                 title: talkData.title || talkData.name || `Talk ${talkId}`,
                 eventName: eventName,
@@ -314,7 +314,7 @@ class FeedbackAPI {
             if (error instanceof Error && !error.message.includes('404')) {
                 console.error(`Error fetching talk ${talkId} details:`, error);
             }
-            
+
             // Return sample data instead of generic placeholders
             return this.getSampleSessionData(talkId);
         }
@@ -325,9 +325,9 @@ class FeedbackAPI {
         try {
             const token = localStorage.getItem('accessToken');
             console.log(`Fetching event details for event ID: ${eventId}`);
-            
+
             const response = await fetch(`${API_BASE_URL}/events/detail/${eventId}/`, {
-                headers: { 
+                headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 }
@@ -341,7 +341,7 @@ class FeedbackAPI {
 
             const eventData = await response.json();
             console.log(`Event data for ID ${eventId}:`, eventData);
-            
+
             return {
                 name: eventData.name || eventData.title || `Event ${eventId}`,
                 date: eventData.date || eventData.start_date || eventData.created_at
@@ -357,7 +357,7 @@ class FeedbackAPI {
     private getSampleSessionData(sessionId: number): { title: string; eventName: string; eventDate?: string } {
         const sampleTitles = [
             "Introduction to Modern Web Development",
-            "Building Scalable React Applications", 
+            "Building Scalable React Applications",
             "The Future of JavaScript Frameworks",
             "API Design Best Practices",
             "Database Optimization Strategies",
@@ -367,12 +367,12 @@ class FeedbackAPI {
             "Microservices Architecture",
             "DevOps Best Practices"
         ];
-        
+
         const sampleEvents = [
             "TechConf 2024",
             "React Summit",
             "Web Dev Meetup",
-            "Developer Conference", 
+            "Developer Conference",
             "CodeCamp NYC",
             "Frontend Masters",
             "Tech Talk Tuesday",
@@ -383,12 +383,12 @@ class FeedbackAPI {
 
         const sampleDates = [
             "October 15, 2024",
-            "September 22, 2024", 
+            "September 22, 2024",
             "November 5, 2024",
             "August 18, 2024",
             "December 3, 2024"
         ];
-        
+
         return {
             title: sampleTitles[(sessionId - 1) % sampleTitles.length] || `Talk #${sessionId}`,
             eventName: sampleEvents[(sessionId - 1) % sampleEvents.length] || `Event #${sessionId}`,
@@ -406,23 +406,23 @@ class FeedbackAPI {
             });
 
             const results = await Promise.all(sessionPromises);
-            
+
             // Convert results to Map
             const sessionDetailsMap = new Map<number, { title: string; eventName: string; eventDate?: string }>();
             results.forEach(({ sessionId, details }) => {
                 sessionDetailsMap.set(sessionId, details);
             });
-            
+
             return sessionDetailsMap;
         } catch (error) {
             console.error('Error fetching multiple session details:', error);
-            
+
             // Return map with sample data
             const fallbackMap = new Map<number, { title: string; eventName: string; eventDate?: string }>();
             sessionIds.forEach(sessionId => {
                 fallbackMap.set(sessionId, this.getSampleSessionData(sessionId));
             });
-            
+
             return fallbackMap;
         }
     }
@@ -437,23 +437,23 @@ class FeedbackAPI {
             });
 
             const results = await Promise.all(talkPromises);
-            
+
             // Convert results to Map
             const talkDetailsMap = new Map<number, { title: string; eventName: string; eventDate?: string }>();
             results.forEach(({ talkId, details }) => {
                 talkDetailsMap.set(talkId, details);
             });
-            
+
             return talkDetailsMap;
         } catch (error) {
             console.error('Error fetching multiple talk details:', error);
-            
+
             // Return map with sample data
             const fallbackMap = new Map<number, { title: string; eventName: string; eventDate?: string }>();
             talkIds.forEach(talkId => {
                 fallbackMap.set(talkId, this.getSampleSessionData(talkId));
             });
-            
+
             return fallbackMap;
         }
     }

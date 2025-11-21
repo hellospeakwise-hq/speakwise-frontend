@@ -24,7 +24,7 @@ export default function Home() {
             Elevate Your Speaking Career with SpeakWise
           </h1>
           <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-            Manage speaking engagements, collect feedback, and connect with event organizers 
+            Manage speaking engagements, collect feedback, and connect with event organizers
             all in one place. Built for speakers, organizers, and attendees.
           </p>
           <div className="space-x-4">
@@ -50,7 +50,7 @@ export default function Home() {
             Features
           </h2>
           <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-            SpeakWise provides everything you need to manage your speaking career, 
+            SpeakWise provides everything you need to manage your speaking career,
             organize events, and engage with audiences effectively.
           </p>
         </div>
@@ -135,7 +135,7 @@ export default function Home() {
             Built for Everyone
           </h2>
           <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-            Whether you&apos;re a speaker looking to grow your career, an organizer managing events, 
+            Whether you&apos;re a speaker looking to grow your career, an organizer managing events,
             or an attendee seeking great content, SpeakWise has you covered.
           </p>
           <div className="mt-8 grid gap-6 sm:grid-cols-3">

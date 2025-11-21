@@ -10,6 +10,7 @@ import { type Event } from "@/lib/types/api"
 import { EventSessions } from "./event-sessions"
 import { useAuth } from "@/contexts/auth-context"
 import { useEvents } from "@/hooks/use-events"
+import { apiClient } from "@/lib/api/base"
 import Link from "next/link"
 
 interface EventDetailsProps {
@@ -20,6 +21,8 @@ export function EventDetails({ id }: EventDetailsProps) {
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [speakersCount, setSpeakersCount] = useState<number>(0)
+  const [attendeesCount, setAttendeesCount] = useState<number>(0)
   const { user } = useAuth()
   const { events: allEvents, loading: eventsLoading } = useEvents()
 
@@ -31,10 +34,10 @@ export function EventDetails({ id }: EventDetailsProps) {
       try {
         setLoading(true)
         setError(null)
-        
+
         // First, try to find the event in the already loaded events list
         const eventFromList = allEvents.find(e => e.id.toString() === id)
-        
+
         if (eventFromList && !eventsLoading) {
           // If we found the event in the list, use it directly
           console.log('Using event from events list:', eventFromList)
@@ -42,7 +45,7 @@ export function EventDetails({ id }: EventDetailsProps) {
           setLoading(false)
           return
         }
-        
+
         // If not found in list or list is still loading, try API call
         if (!eventsLoading) {
           console.log('Event not found in list, trying API call...')
@@ -53,7 +56,7 @@ export function EventDetails({ id }: EventDetailsProps) {
       } catch (err) {
         console.error('Error fetching event:', err)
         setEvent(null)
-        
+
         // Handle 401 errors gracefully for event details
         if (err instanceof Error && err.message.includes('401')) {
           setError('Event details are not available. The event may require authentication to view.')
@@ -71,6 +74,41 @@ export function EventDetails({ id }: EventDetailsProps) {
       loadEvent()
     }
   }, [id, allEvents, eventsLoading])
+
+  // Load speakers and attendees counts
+  useEffect(() => {
+    const loadEventStats = async () => {
+      try {
+        // Fetch talks to count unique speakers
+        const talksResponse = await apiClient.get<any[]>('/talks/')
+        const eventTalks = talksResponse.data.filter((talk: any) => talk.event.toString() === id)
+        const uniqueSpeakers = new Set(eventTalks.map((talk: any) => talk.speaker))
+        setSpeakersCount(uniqueSpeakers.size)
+
+        // Fetch attendees for this event
+        try {
+          const attendeesResponse = await apiClient.get(`/events/${id}/attendees/`)
+          setAttendeesCount(attendeesResponse.data.length || 0)
+        } catch (err) {
+          // If attendees endpoint doesn't exist or returns error, check event.attendees
+          if (event?.attendees) {
+            setAttendeesCount(event.attendees)
+          } else {
+            setAttendeesCount(0)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading event stats:', error)
+        // Set to 0 on error
+        setSpeakersCount(0)
+        setAttendeesCount(0)
+      }
+    }
+
+    if (id && !loading) {
+      loadEventStats()
+    }
+  }, [id, loading, event])
 
   if (loading) {
     return (
@@ -92,11 +130,11 @@ export function EventDetails({ id }: EventDetailsProps) {
   return (
     <div className="container mx-auto px-4 py-6 space-y-6">
       {/* Hero Banner Section - Contained with rounded borders */}
-      <div 
+      <div
         className="relative h-64 md:h-80 w-full rounded-2xl overflow-hidden"
         style={{
-          backgroundImage: event.event_image 
-            ? `url(${event.event_image})` 
+          backgroundImage: event.event_image
+            ? `url(${event.event_image})`
             : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -105,7 +143,7 @@ export function EventDetails({ id }: EventDetailsProps) {
       >
         {/* Overlay for better text readability */}
         <div className="absolute inset-0 bg-black/50"></div>
-        
+
         {/* Content */}
         <div className="relative h-full flex flex-col justify-end p-6 md:p-8">
           {/* Management buttons - top right */}
@@ -123,13 +161,13 @@ export function EventDetails({ id }: EventDetailsProps) {
               </Link>
             </div>
           )}
-          
+
           {/* Event Title and Info */}
           <div className="space-y-4">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
               {event.name || event.title}
             </h1>
-            
+
             {/* Event Tags */}
             <div className="flex flex-wrap gap-2">
               {event.tags && event.tags.length > 0 ? (
@@ -153,11 +191,11 @@ export function EventDetails({ id }: EventDetailsProps) {
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4" />
                 <span>
-                  {event.date_range ? 
-                    (event.date_range.same_day ? 
-                      event.date_range.start?.date : 
+                  {event.date_range ?
+                    (event.date_range.same_day ?
+                      event.date_range.start?.date :
                       `${event.date_range.start?.date} - ${event.date_range.end?.date}`
-                    ) : 
+                    ) :
                     (event.date || 'TBA')
                   }
                 </span>
@@ -165,8 +203,8 @@ export function EventDetails({ id }: EventDetailsProps) {
               <div className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
                 <span>
-                  {event.location 
-                    ? typeof event.location === 'string' 
+                  {event.location
+                    ? typeof event.location === 'string'
                       ? event.location
                       : `${event.location.city || ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'TBA'
                     : 'TBA'
@@ -236,8 +274,8 @@ export function EventDetails({ id }: EventDetailsProps) {
                   <div>
                     <p className="font-medium">Location</p>
                     <p className="text-sm text-muted-foreground">
-                      {event.location 
-                        ? typeof event.location === 'string' 
+                      {event.location
+                        ? typeof event.location === 'string'
                           ? event.location
                           : `${event.location.venue || ''}${event.location.city ? `, ${event.location.city}` : ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'TBA'
                         : 'TBA'
@@ -276,7 +314,7 @@ export function EventDetails({ id }: EventDetailsProps) {
                 <Users className="h-5 w-5 mr-2 text-orange-500" />
                 <span className="font-medium">Attendees</span>
               </div>
-              <span className="text-lg font-bold">TBA</span>
+              <span className="text-lg font-bold">{attendeesCount}</span>
             </div>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
@@ -299,7 +337,7 @@ export function EventDetails({ id }: EventDetailsProps) {
                 </svg>
                 <span className="font-medium">Speakers</span>
               </div>
-              <span className="text-lg font-bold">TBA</span>
+              <span className="text-lg font-bold">{speakersCount}</span>
             </div>
           </CardContent>
         </Card>
