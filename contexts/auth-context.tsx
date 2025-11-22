@@ -44,13 +44,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check if user is already logged in on initial load
     useEffect(() => {
         if (!isClient) return; // Don't run on server
-        
+
         const checkAuth = async () => {
             setLoading(true);
             if (authApi.isAuthenticated()) {
                 // Initialize automatic token refresh for existing session
                 initializeTokenRefresh();
-                
+
                 // Always use stored user data first
                 const storedUser = localStorage.getItem('user');
                 if (storedUser) {
@@ -61,14 +61,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         console.error('Error parsing stored user', parseError);
                     }
                 }
-                
+
                 // Try to get fresh user profile from API in the background
                 try {
                     const userProfile = await authApi.getProfile();
-                    const userWithType = { ...userProfile, userType: userProfile.role.role };
+                    // Safely handle missing role property
+                    const userWithType = {
+                        ...userProfile,
+                        userType: userProfile.role?.role || 'speaker'
+                    };
                     setUser(userWithType);
                     setIsAuthenticated(true);
-                    localStorage.setItem('user', JSON.stringify(userProfile));
+                    localStorage.setItem('user', JSON.stringify(userWithType));
                 } catch (error: any) {
                     // Silently handle 404 - endpoint not implemented yet
                     // Only log unexpected errors
@@ -96,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             const response = await authApi.login({ email, password });
             console.log('Login API Response:', response);
             setIsAuthenticated(true);
-            
+
             // Store tokens from the response (access and refresh)
             if (response.access_token || response.access) {
                 const accessToken = response.access_token || response.access;
@@ -104,14 +108,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     localStorage.setItem('accessToken', accessToken);
                 }
             }
-            
+
             if (response.refresh_token || response.refresh) {
                 const refreshToken = response.refresh_token || response.refresh;
                 if (refreshToken && typeof window !== 'undefined') {
                     localStorage.setItem('refreshToken', refreshToken);
                 }
             }
-            
+
             // Create user data from response - use the actual role from backend
             // Default to speaker role if not provided by backend
             const userData: User = {
@@ -122,13 +126,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 role: response.role || { id: 2, role: 'speaker' }, // Default to speaker if role not provided
                 userType: response.role?.role || 'speaker' // Default to speaker
             };
-            
+
             setUser(userData);
             localStorage.setItem('user', JSON.stringify(userData));
-            
+
             // Start automatic token refresh
             scheduleTokenRefresh();
-            
+
             return getRoleBasedRedirectPath(userData);
         } finally {
             setLoading(false);
@@ -179,7 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             });
 
             console.log("Registration response:", response);
-            
+
             // Use the response data directly as it matches our User type
             // All new users default to speaker role
             const userData: User = {
@@ -213,7 +217,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
             // Cancel automatic token refresh
             cancelTokenRefresh();
-            
+
             await authApi.logout();
             setUser(null);
             setIsAuthenticated(false);

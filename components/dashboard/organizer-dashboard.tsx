@@ -7,6 +7,7 @@ import { Calendar, Users, BarChart, Loader2, Star, RefreshCw } from "lucide-reac
 import { useOrganizerEvents } from "@/hooks/use-organizer-events"
 import { EventManagementTable } from "@/components/dashboard/event-management-table"
 import { AttendeeManagement } from "@/components/dashboard/attendee-management"
+import { OrganizerSpeakerRequests } from "@/components/dashboard/organizer-speaker-requests"
 
 export function OrganizerDashboard() {
   const {
@@ -147,6 +148,7 @@ export function OrganizerDashboard() {
       <Tabs defaultValue="events" className="space-y-4">
         <TabsList>
           <TabsTrigger value="events" data-tour="manage-events-tab">Manage Events</TabsTrigger>
+          <TabsTrigger value="speaker-requests">Speaker Requests</TabsTrigger>
           <TabsTrigger value="speakers">Speakers</TabsTrigger>
           <TabsTrigger value="attendees" data-tour="attendees-tab">Attendees</TabsTrigger>
           <TabsTrigger value="feedback">Feedback</TabsTrigger>
@@ -160,6 +162,9 @@ export function OrganizerDashboard() {
             onEventDelete={handleEventDelete}
             onEventStatusToggle={handleEventStatusToggle}
           />
+        </TabsContent>
+        <TabsContent value="speaker-requests">
+          <OrganizerSpeakerRequests />
         </TabsContent>
         <TabsContent value="speakers">
           <Card>
