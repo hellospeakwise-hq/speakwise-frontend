@@ -54,7 +54,7 @@ export const authApi = {
     };
 
     console.log('Registration request:', { ...payload, password: '[HIDDEN]' });
-    
+
     const response = await apiClient.post<AuthResponse>('users/auth/register/', payload);
     return response.data;
   },
@@ -64,18 +64,18 @@ export const authApi = {
    */
   async login(data: LoginRequest): Promise<LoginResponse> {
     console.log(`Login request:`, { ...data, password: '[HIDDEN]' });
-    
+
     try {
       const response = await apiClient.post<LoginResponse>(`users/auth/login/`, data);
 
       // Store tokens if provided - handle both old and new token formats
       const accessToken = response.data.access_token || response.data.access || response.data.token;
       const refreshToken = response.data.refresh_token || response.data.refresh;
-      
+
       if (accessToken && typeof window !== 'undefined') {
         localStorage.setItem('accessToken', accessToken);
       }
-      
+
       if (refreshToken && typeof window !== 'undefined') {
         localStorage.setItem('refreshToken', refreshToken);
       }
@@ -84,11 +84,11 @@ export const authApi = {
       return response.data;
     } catch (error: any) {
       console.log('Auth error details:', error.response?.data);
-      
+
       // Handle authentication-specific errors
       if (error.response?.status === 400 || error.response?.status === 401) {
         const errorData = error.response?.data;
-        
+
         // Check for various error message formats from the backend
         if (errorData?.non_field_errors && Array.isArray(errorData.non_field_errors)) {
           // Backend returns non_field_errors as an array
@@ -107,7 +107,7 @@ export const authApi = {
           throw new Error('Incorrect email or password');
         }
       }
-      
+
       // Re-throw other errors as-is
       throw error;
     }
@@ -119,7 +119,7 @@ export const authApi = {
   async logout(): Promise<void> {
     try {
       const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
-      
+
       if (refreshToken) {
         console.log('Sending logout request with refresh token');
         // Send refresh token to backend for proper logout
@@ -136,11 +136,11 @@ export const authApi = {
       console.error('Logout request failed:', error);
       console.error('Logout error response:', error?.response?.data);
       console.error('Logout error status:', error?.response?.status);
-      
+
       // Log the refresh token being sent for debugging
       const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
       console.log('Refresh token being sent:', refreshToken ? 'Token exists' : 'No token');
-      
+
       // Continue with local cleanup even if server request fails
     } finally {
       // Always clear local storage
@@ -156,7 +156,7 @@ export const authApi = {
    * Get user profile
    */
   async getProfile(): Promise<AuthResponse> {
-    const response = await apiClient.get<AuthResponse>('/auth/profile/');
+    const response = await apiClient.get<AuthResponse>('/users/me/');
     return response.data;
   },
 
@@ -178,7 +178,7 @@ export const authApi = {
     if (typeof window !== 'undefined') {
       localStorage.setItem('accessToken', response.data.access_token);
     }
-    
+
     return response.data;
   },
 
@@ -187,7 +187,7 @@ export const authApi = {
    */
   isAuthenticated(): boolean {
     if (typeof window === 'undefined') return false;
-    
+
     const token = localStorage.getItem('accessToken');
     return !!token;
   },
@@ -197,7 +197,7 @@ export const authApi = {
    */
   getToken(): string | null {
     if (typeof window === 'undefined') return null;
-    
+
     return localStorage.getItem('accessToken');
   },
 };

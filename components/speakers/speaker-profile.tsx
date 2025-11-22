@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Star, MapPin, Calendar, MessageSquare, Globe, Twitter, Linkedin, Github, Loader2, Mail, ExternalLink } from "lucide-react"
+import { Star, MapPin, Calendar, MessageSquare, Globe, Twitter, Linkedin, Github, Loader2, Mail, ExternalLink, Building2 } from "lucide-react"
 import { speakerApi, type Speaker } from '@/lib/api/speakerApi';
+import { organizationApi } from '@/lib/api/organizationApi';
+import { useAuth } from '@/contexts/auth-context';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -17,9 +19,31 @@ interface SpeakerProfileProps {
 }
 
 export function SpeakerProfile({ id }: SpeakerProfileProps) {
+  const { isAuthenticated } = useAuth();
   const [speaker, setSpeaker] = useState<Speaker | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [hasApprovedOrg, setHasApprovedOrg] = useState(false);
+
+  useEffect(() => {
+    const checkOrganizations = async () => {
+      if (!isAuthenticated) {
+        setHasApprovedOrg(false);
+        return;
+      }
+
+      try {
+        const orgs = await organizationApi.getUserOrganizations();
+        const approved = orgs.some(org => org.is_active === true);
+        setHasApprovedOrg(approved);
+      } catch (error) {
+        console.error('Error checking organizations:', error);
+        setHasApprovedOrg(false);
+      }
+    };
+
+    checkOrganizations();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const loadSpeaker = async () => {
@@ -175,9 +199,38 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                 </div>
 
                 <div className="w-full mt-6 space-y-2">
-                  <Link href={`/speakers/${id}/request`}>
-                    <Button className="w-full">Request as Speaker</Button>
-                  </Link>
+                  {isAuthenticated ? (
+                    hasApprovedOrg ? (
+                      <Link href={`/speakers/${id}/request`}>
+                        <Button className="w-full">
+                          Request as Speaker
+                        </Button>
+                      </Link>
+                    ) : (
+                      <div className="relative">
+                        <Button className="w-full" disabled>
+                          Request as Speaker
+                        </Button>
+                        <div className="mt-2 p-3 bg-muted rounded-md">
+                          <p className="text-xs text-muted-foreground flex items-start gap-2">
+                            <Building2 className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                            <span>
+                              You need an approved organization to request speakers.
+                              <Link href="/organizations" className="text-orange-500 hover:underline ml-1">
+                                Create or view your organizations
+                              </Link>
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  ) : (
+                    <div className="space-y-2">
+                      <Link href="/signin">
+                        <Button className="w-full">Sign in to Request Speaker</Button>
+                      </Link>
+                    </div>
+                  )}
                   <div className="relative">
                     <Button variant="outline" className="w-full" disabled>
                       Gift Speaker
@@ -256,7 +309,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                {(speaker as any).long_bio || speaker.short_bio || 'No bio available yet.'}
+                {speaker.short_bio || 'No bio available yet.'}
               </p>
             </CardContent>
           </Card>
@@ -276,31 +329,21 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {(speaker as any).long_bio && (
+                    {(speaker as any).long_bio ? (
                       <div>
                         <h4 className="font-medium mb-2">Detailed Bio</h4>
                         <p className="text-sm text-muted-foreground whitespace-pre-wrap">
                           {(speaker as any).long_bio}
                         </p>
                       </div>
-                    )}
-                    {speaker.short_bio && speaker.short_bio !== (speaker as any).long_bio && (
+                    ) : speaker.short_bio ? (
                       <div>
-                        <h4 className="font-medium mb-2">Summary</h4>
+                        <h4 className="font-medium mb-2">Bio</h4>
                         <p className="text-sm text-muted-foreground">
                           {speaker.short_bio}
                         </p>
                       </div>
-                    )}
-                    {speaker.organization && (
-                      <div>
-                        <h4 className="font-medium mb-2">Organization</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {speaker.organization}
-                        </p>
-                      </div>
-                    )}
-                    {!(speaker as any).long_bio && !speaker.short_bio && (
+                    ) : (
                       <p className="text-sm text-muted-foreground italic">
                         No biography available yet. This speaker profile is still being updated.
                       </p>
