@@ -129,7 +129,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       }
 
       await speakerRequestApi.createSpeakerRequest({
-        organization: Number(selectedOrgId),
+        organizer: Number(selectedOrgId),
         speaker: Number(id),
         event: Number(selectedEventId),
         message: fullMessage,

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { organizationApi, Organization } from "@/lib/api/organizationApi"
 import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
 import { Building2, Plus, CheckCircle2, Clock, XCircle, ArrowRight } from "lucide-react"
+import { getEventImageUrl } from '@/lib/utils/event-utils'
 import { toast } from "sonner"
 import Link from "next/link"
 import { OnboardingTour } from "@/components/onboarding/onboarding-tour"
@@ -109,7 +110,7 @@ export default function OrganizationsPage() {
                                                     <div className="flex items-start gap-3 flex-1 min-w-0">
                                                         <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
                                                             {org.logo ? (
-                                                                <img src={org.logo} alt={org.name} className="w-full h-full rounded-lg object-cover" />
+                                                                <img src={getEventImageUrl(org.logo)} alt={org.name} className="w-full h-full rounded-lg object-cover" />
                                                             ) : (
                                                                 <Building2 className="w-6 h-6 text-primary" />
                                                             )}

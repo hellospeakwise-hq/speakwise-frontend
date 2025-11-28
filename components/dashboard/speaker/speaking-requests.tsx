@@ -57,10 +57,14 @@ export function SpeakingRequests() {
         const enrichedRequests: EnrichedSpeakerRequest[] = await Promise.all(
           speakerRequests.map(async (req) => {
             let organizationDetails
-            try {
-              organizationDetails = await organizationApi.getOrganization(req.organization)
-            } catch (error) {
-              console.error(`Error loading organization ${req.organization}:`, error)
+            if (req.organization) {
+              try {
+                organizationDetails = await organizationApi.getOrganization(req.organization)
+              } catch (error) {
+                console.error(`Error loading organization ${req.organization}:`, error)
+              }
+            } else {
+              console.warn('Speaker request missing organization field:', req)
             }
 
             return {
@@ -128,10 +132,17 @@ export function SpeakingRequests() {
       const requestDetail = await speakerRequestApi.getSpeakerRequestDetails(requestId)
 
       // Enrich with organization and event details
-      const [organization, eventsResponse] = await Promise.all([
-        organizationApi.getOrganization(requestDetail.organization),
-        eventsApi.getEvents()
-      ])
+      let organization
+      const eventsResponse = await eventsApi.getEvents()
+
+      if (requestDetail.organization) {
+        try {
+          organization = await organizationApi.getOrganization(requestDetail.organization)
+        } catch (error) {
+          console.error(`Error loading organization ${requestDetail.organization}:`, error)
+          toast.error('Failed to load organization details')
+        }
+      }
 
       const events = Array.isArray(eventsResponse) ? eventsResponse : eventsResponse.results || []
       const event = events.find((e: any) => e.id === requestDetail.event)
@@ -267,8 +278,8 @@ export function SpeakingRequests() {
           <button
             onClick={() => setStatusFilter('all')}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'all'
-                ? 'bg-orange-500 text-white'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              ? 'bg-orange-500 text-white'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
           >
             All <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.all}</span>
@@ -276,8 +287,8 @@ export function SpeakingRequests() {
           <button
             onClick={() => setStatusFilter('pending')}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'pending'
-                ? 'bg-orange-500 text-white'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              ? 'bg-orange-500 text-white'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
           >
             Pending <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.pending}</span>
@@ -285,8 +296,8 @@ export function SpeakingRequests() {
           <button
             onClick={() => setStatusFilter('approved')}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'approved'
-                ? 'bg-green-600 text-white'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              ? 'bg-green-600 text-white'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
           >
             Accepted <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.approved}</span>
@@ -294,8 +305,8 @@ export function SpeakingRequests() {
           <button
             onClick={() => setStatusFilter('rejected')}
             className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'rejected'
-                ? 'bg-red-600 text-white'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+              ? 'bg-red-600 text-white'
+              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
           >
             Declined <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.rejected}</span>

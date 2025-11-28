@@ -3,9 +3,13 @@ import Link from "next/link"
 import Image from "next/image"
 import { Calendar, MapPin, Users, ImageIcon, Loader2 } from "lucide-react"
 import { useMemo } from "react"
+import type { DateTimeInfo } from "@/lib/types/api"
+import { formatDateFromMaybe } from '@/lib/utils/event-utils'
+import { getEventImageUrl } from '@/lib/utils/event-utils'
 import { useEvents } from "@/hooks/use-events"
 import { useAuth } from "@/contexts/auth-context"
 import type { Event } from "@/lib/types/api"
+
 
 interface EventsListProps {
     countryFilter?: number[]
@@ -14,6 +18,8 @@ interface EventsListProps {
 
 export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
     const { events, loading, error } = useEvents()
+
+    // Helper to ensure absolute image URL
 
     // Filter events based on country and tags
     const filteredEvents = useMemo(() => {
@@ -38,6 +44,8 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
             return matchesCountry && matchesTag;
         })
     }, [events, countryFilter, tagFilter])
+
+    const getDateString = (val?: string | DateTimeInfo | null) => formatDateFromMaybe(val as any)
 
     if (loading) {
         return (
@@ -81,7 +89,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                             <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-800">
                                 {event.event_image ? (
                                     <Image
-                                        src={event.event_image}
+                                        src={getEventImageUrl(event.event_image) || '/fallback.jpg'}
                                         alt={`${event.name || event.title} flyer`}
                                         fill
                                         className="object-cover"
@@ -105,16 +113,16 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                                         <span className="text-xs">
                                             {event.date_range ? (
                                                 event.date_range.same_day ?
-                                                    `${event.date_range.start?.date}` :
-                                                    `${event.date_range.start?.date} - ${event.date_range.end?.date}`
+                                                    getDateString(event.date_range.start) :
+                                                    `${getDateString(event.date_range.start)} - ${getDateString(event.date_range.end)}`
                                             ) : (event.date || 'Date TBD')}
                                         </span>
                                     </div>
                                     <div className="flex items-center mt-1">
                                         <MapPin className="h-4 w-4 mr-2 text-orange-500" />
                                         <span className="text-xs">
-                                            {event.location 
-                                                ? typeof event.location === 'string' 
+                                            {event.location
+                                                ? typeof event.location === 'string'
                                                     ? event.location
                                                     : `${event.location.venue || ''}${event.location.city ? `, ${event.location.city}` : ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'Location TBD'
                                                 : 'Location TBD'

@@ -1,6 +1,10 @@
 import { NextResponse, NextRequest } from "next/server"
 
 export function middleware(req: NextRequest) {
+  // In development, do not enforce waitlist redirects to avoid auth disruptions
+  if (process.env.NODE_ENV !== "production") {
+    return NextResponse.next()
+  }
   const { pathname, searchParams } = req.nextUrl
   
   // Skip static files and API routes
@@ -34,7 +38,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Redirect everything else to waitlist
+  // Redirect everything else to waitlist (production only)
   return NextResponse.redirect(new URL("/waitlist", req.url))
 }
 

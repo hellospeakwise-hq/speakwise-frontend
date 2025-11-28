@@ -1,13 +1,16 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, Users, BarChart, Loader2, Star, RefreshCw } from "lucide-react"
+import { Calendar, Users, BarChart, Loader2, Star, RefreshCw, Building2 } from "lucide-react"
 import { useOrganizerEvents } from "@/hooks/use-organizer-events"
 import { EventManagementTable } from "@/components/dashboard/event-management-table"
 import { AttendeeManagement } from "@/components/dashboard/attendee-management"
 import { OrganizerSpeakerRequests } from "@/components/dashboard/organizer-speaker-requests"
+import { OrganizationMembersManager } from "@/components/organization/organization-members-manager"
+import { organizationApi, type Organization } from "@/lib/api/organizationApi"
+import { toast } from "sonner"
 
 export function OrganizerDashboard() {
   const {
@@ -24,6 +27,26 @@ export function OrganizerDashboard() {
   } = useOrganizerEvents()
 
   const [refreshing, setRefreshing] = useState(false)
+  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [loadingOrgs, setLoadingOrgs] = useState(true)
+
+  useEffect(() => {
+    loadOrganizations()
+  }, [])
+
+  const loadOrganizations = async () => {
+    try {
+      setLoadingOrgs(true)
+      const orgs = await organizationApi.getUserOrganizations()
+      const activeOrgs = orgs.filter(org => org.is_active)
+      setOrganizations(activeOrgs)
+    } catch (error) {
+      console.error('Error loading organizations:', error)
+      toast.error('Failed to load organizations')
+    } finally {
+      setLoadingOrgs(false)
+    }
+  }
 
   const handleEventCreate = (event: any) => {
     refetch() // Refresh the events list
@@ -148,6 +171,7 @@ export function OrganizerDashboard() {
       <Tabs defaultValue="events" className="space-y-4">
         <TabsList>
           <TabsTrigger value="events" data-tour="manage-events-tab">Manage Events</TabsTrigger>
+          <TabsTrigger value="organization">Organization</TabsTrigger>
           <TabsTrigger value="speaker-requests">Speaker Requests</TabsTrigger>
           <TabsTrigger value="speakers">Speakers</TabsTrigger>
           <TabsTrigger value="attendees" data-tour="attendees-tab">Attendees</TabsTrigger>
@@ -162,6 +186,39 @@ export function OrganizerDashboard() {
             onEventDelete={handleEventDelete}
             onEventStatusToggle={handleEventStatusToggle}
           />
+        </TabsContent>
+        <TabsContent value="organization">
+          {loadingOrgs ? (
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+                  <span className="ml-2 text-muted-foreground">Loading organizations...</span>
+                </div>
+              </CardContent>
+            </Card>
+          ) : organizations.length > 0 ? (
+            <OrganizationMembersManager organizations={organizations} />
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Organization Management
+                </CardTitle>
+                <CardDescription>Manage your organization members</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="text-center py-8">
+                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground mb-2">You don't have any active organizations</p>
+                  <p className="text-sm text-muted-foreground">
+                    Create an organization to start managing team members
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
         <TabsContent value="speaker-requests">
           <OrganizerSpeakerRequests />
