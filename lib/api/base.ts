@@ -84,6 +84,7 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+      console.log('[API] 401 on', url, 'refreshToken?', !!refreshToken);
       
       if (!refreshToken) {
         // No refresh token, logout user
@@ -91,7 +92,11 @@ apiClient.interceptors.response.use(
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
-          window.location.href = '/signin';
+          if (process.env.NODE_ENV === 'production') {
+            window.location.href = '/signin';
+          } else {
+            console.warn('[API] Missing refresh token in dev; not forcing redirect');
+          }
         }
         return Promise.reject(error);
       }
@@ -103,6 +108,7 @@ apiClient.interceptors.response.use(
         });
 
         const { access } = response.data;
+        console.log('[API] token refreshed');
         
         if (typeof window !== 'undefined') {
           localStorage.setItem('accessToken', access);
@@ -118,6 +124,7 @@ apiClient.interceptors.response.use(
         return apiClient(originalRequest);
       } catch (refreshError) {
         // Refresh failed, logout user
+        console.error('[API] token refresh failed', (refreshError as any)?.response?.status, (refreshError as any)?.response?.data);
         processQueue(refreshError, null);
         isRefreshing = false;
         
@@ -125,7 +132,11 @@ apiClient.interceptors.response.use(
           localStorage.removeItem('accessToken');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('user');
-          window.location.href = '/signin';
+          if (process.env.NODE_ENV === 'production') {
+            window.location.href = '/signin';
+          } else {
+            console.warn('[API] Refresh failed in dev; not forcing redirect');
+          }
         }
         return Promise.reject(refreshError);
       }

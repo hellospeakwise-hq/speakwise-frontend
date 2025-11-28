@@ -26,9 +26,9 @@ export interface DateTimeInfo {
 }
 
 export interface DateRange {
-  start: DateTimeInfo;
-  end: DateTimeInfo;
-  same_day: boolean;
+  start: string | DateTimeInfo;
+  end: string | DateTimeInfo;
+  same_day?: boolean;
 }
 
 export interface Tag {

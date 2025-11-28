@@ -23,53 +23,51 @@ export interface CreateOrganizationData {
     is_active?: boolean;
 }
 
+export interface OrganizationMember {
+    id: number;
+    organization: number;
+    user: string;
+    username: string;
+    role: 'ADMIN' | 'MEMBER' | 'MODERATOR';
+    is_active: boolean;
+    added_by: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface AddMemberData {
+    username: string;
+    role?: 'ADMIN' | 'MEMBER' | 'MODERATOR';
+}
+
 export const organizationApi = {
-    // Get user's organizations (GET /api/organizations/ returns organizations for authenticated user)
+    // Get user's organizations (backend returns organizations for authenticated user)
     async getUserOrganizations(): Promise<Organization[]> {
         const response = await apiClient.get('/organizations/');
-        const allOrgs: Organization[] = response.data;
-        
-        // Get current user ID from localStorage
-        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-        if (!userStr) return [];
-        
-        try {
-            const user = JSON.parse(userStr);
-            const currentUserId = user.id;
-            
-            // Filter organizations where user is creator or member
-            const userOrgs = allOrgs.filter(org => 
-                org.created_by === currentUserId || 
-                (org.members && org.members.includes(currentUserId))
-            );
-            
-            return userOrgs;
-        } catch (error) {
-            console.error('Error filtering user organizations:', error);
-            return [];
-        }
+        // Rely on backend filtering; avoid client-side filtering dependent on localStorage
+        return response.data as Organization[];
     },
 
     // Get single organization
     async getOrganization(id: number): Promise<Organization> {
         const response = await apiClient.get(`/organizations/${id}/`);
         const org: Organization = response.data;
-        
+
         // Get current user ID from localStorage
         const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
         if (!userStr) {
             throw new Error('User not authenticated');
         }
-        
+
         try {
             const user = JSON.parse(userStr);
             const currentUserId = user.id;
-            
+
             // Check if user has access to this organization
             if (org.created_by !== currentUserId && (!org.members || !org.members.includes(currentUserId))) {
                 throw new Error('You do not have access to this organization');
             }
-            
+
             return org;
         } catch (error: any) {
             throw error;
@@ -91,5 +89,28 @@ export const organizationApi = {
     // Delete organization
     async deleteOrganization(id: number): Promise<void> {
         await apiClient.delete(`/organizations/${id}/`);
+    },
+
+    // Get organization members
+    async getOrganizationMembers(organizationId: number): Promise<OrganizationMember[]> {
+        const response = await apiClient.get(`/organizations/${organizationId}/members/`);
+        return response.data;
+    },
+
+    // Add member to organization
+    async addOrganizationMember(organizationId: number, data: AddMemberData): Promise<OrganizationMember> {
+        const response = await apiClient.post(`/organizations/${organizationId}/members/`, data);
+        return response.data;
+    },
+
+    // Remove member from organization
+    async removeOrganizationMember(organizationId: number, memberId: number): Promise<void> {
+        await apiClient.delete(`/organizations/${organizationId}/members/${memberId}/`);
+    },
+
+    // Update member role
+    async updateMemberRole(organizationId: number, memberId: number, role: 'ADMIN' | 'MEMBER' | 'MODERATOR'): Promise<OrganizationMember> {
+        const response = await apiClient.patch(`/organizations/${organizationId}/members/${memberId}/`, { role });
+        return response.data;
     }
 };

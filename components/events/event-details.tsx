@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
+import type { DateTimeInfo } from "@/lib/types/api"
+import { formatDateFromMaybe, formatTimeFromMaybe } from '@/lib/utils/event-utils'
+import { getEventImageUrl } from '@/lib/utils/event-utils'
 import { eventsApi } from "@/lib/api/events"
 import { type Event } from "@/lib/types/api"
 import { EventSessions } from "./event-sessions"
@@ -25,6 +28,14 @@ export function EventDetails({ id }: EventDetailsProps) {
   const [attendeesCount, setAttendeesCount] = useState<number>(0)
   const { user } = useAuth()
   const { events: allEvents, loading: eventsLoading } = useEvents()
+
+
+  // Helpers to handle both string ISO values and the older object shape
+  // Use shared helpers from utils
+  const getDateString = (v?: string | DateTimeInfo | null) => formatDateFromMaybe(v as any)
+  const getTimeString = (v?: string | DateTimeInfo | null) => formatTimeFromMaybe(v as any)
+
+  // Helper to ensure absolute image URL
 
   // Only show management buttons to organizers
   const canManageEvent = user?.userType === 'organizer'
@@ -134,7 +145,7 @@ export function EventDetails({ id }: EventDetailsProps) {
         className="relative h-64 md:h-80 w-full rounded-2xl overflow-hidden"
         style={{
           backgroundImage: event.event_image
-            ? `url(${event.event_image})`
+            ? `url(${getEventImageUrl(event.event_image)})`
             : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -193,8 +204,9 @@ export function EventDetails({ id }: EventDetailsProps) {
                 <span>
                   {event.date_range ?
                     (event.date_range.same_day ?
-                      event.date_range.start?.date :
-                      `${event.date_range.start?.date} - ${event.date_range.end?.date}`
+                      (getDateString(event.date_range.start))
+                      :
+                      `${getDateString(event.date_range.start)} - ${getDateString(event.date_range.end)}`
                     ) :
                     (event.date || 'TBA')
                   }
@@ -233,11 +245,11 @@ export function EventDetails({ id }: EventDetailsProps) {
                     <p className="font-medium">Date</p>
                     {event.date_range ? (
                       event.date_range.same_day ? (
-                        <p className="text-sm text-muted-foreground">{event.date_range.start?.date}</p>
+                        <p className="text-sm text-muted-foreground">{getDateString(event.date_range.start)}</p>
                       ) : (
                         <p className="text-sm text-muted-foreground">
-                          From: {event.date_range.start?.date}<br />
-                          To: {event.date_range.end?.date}
+                          From: {getDateString(event.date_range.start)}<br />
+                          To: {getDateString(event.date_range.end)}
                         </p>
                       )
                     ) : (
@@ -252,12 +264,12 @@ export function EventDetails({ id }: EventDetailsProps) {
                     {event.date_range ? (
                       event.date_range.same_day ? (
                         <p className="text-sm text-muted-foreground">
-                          {event.date_range.start?.time} - {event.date_range.end?.time}
+                          {getTimeString(event.date_range.start)} - {getTimeString(event.date_range.end)}
                         </p>
                       ) : (
                         <p className="text-sm text-muted-foreground">
-                          Start: {event.date_range.start?.time}<br />
-                          End: {event.date_range.end?.time}
+                          Start: {getTimeString(event.date_range.start)}<br />
+                          End: {getTimeString(event.date_range.end)}
                         </p>
                       )
                     ) : (

@@ -4,6 +4,7 @@ export interface SpeakerRequest {
     id?: number;
     status: 'pending' | 'approved' | 'rejected';
     message: string;
+    organizer: number; // Organizer ID (User)
     organization: number; // Organization ID
     speaker: number; // Speaker ID
     event: number; // Event ID
@@ -14,7 +15,7 @@ export interface SpeakerRequest {
 export interface CreateSpeakerRequestData {
     status?: 'pending';
     message: string;
-    organization: number;  // Backend expects 'organization' for POST
+    organizer: number;  // Backend expects 'organizer' for POST
     speaker: number;
     event: number;
 }
@@ -40,17 +41,14 @@ export const speakerRequestApi = {
     // Create a new speaker request (organizer invites speaker)
     async createSpeakerRequest(data: CreateSpeakerRequestData): Promise<SpeakerRequest> {
         const requestData = {
+            organizer: data.organizer,
             speaker: data.speaker,
             event: data.event,
             message: data.message,
             status: data.status || 'pending'
         };
-        console.log('Sending speaker request with data:', requestData);
-        console.log('Organization ID as query param:', data.organization);
-        // Backend requires organization ID as query parameter for POST
-        const response = await apiClient.post('/speaker-requests/', requestData, {
-            params: { organization: data.organization }
-        });
+        console.log('Sending speaker request with data (body):', requestData);
+        const response = await apiClient.post('/speaker-requests/', requestData);
         return response.data;
     },
 

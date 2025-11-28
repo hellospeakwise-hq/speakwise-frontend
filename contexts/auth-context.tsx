@@ -47,6 +47,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         const checkAuth = async () => {
             setLoading(true);
+            const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
+            const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+            console.log('[Auth] checkAuth start', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
             if (authApi.isAuthenticated()) {
                 // Initialize automatic token refresh for existing session
                 initializeTokenRefresh();
@@ -74,6 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setIsAuthenticated(true);
                     localStorage.setItem('user', JSON.stringify(userWithType));
                 } catch (error: any) {
+                    console.warn('[Auth] getProfile failed', error?.response?.status, error?.response?.data);
                     // Silently handle 404 - endpoint not implemented yet
                     // Only log unexpected errors
                     if (error?.response?.status !== 404) {
@@ -87,9 +91,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Otherwise, continue with stored user data (404 is expected during development)
                 }
             } else {
+                console.log('[Auth] not authenticated (no access token)');
                 setIsAuthenticated(false);
             }
             setLoading(false);
+            console.log('[Auth] checkAuth end', { isAuthenticated });
         };
         checkAuth();
     }, [isClient]);
@@ -106,6 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const accessToken = response.access_token || response.access;
                 if (accessToken && typeof window !== 'undefined') {
                     localStorage.setItem('accessToken', accessToken);
+                    console.log('[Auth] stored accessToken');
                 }
             }
 
@@ -113,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const refreshToken = response.refresh_token || response.refresh;
                 if (refreshToken && typeof window !== 'undefined') {
                     localStorage.setItem('refreshToken', refreshToken);
+                    console.log('[Auth] stored refreshToken');
                 }
             }
 
@@ -132,6 +140,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Start automatic token refresh
             scheduleTokenRefresh();
+            console.log('[Auth] scheduled token refresh');
 
             return getRoleBasedRedirectPath(userData);
         } finally {
