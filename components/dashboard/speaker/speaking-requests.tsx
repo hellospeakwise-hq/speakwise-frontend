@@ -107,12 +107,31 @@ export function SpeakingRequests() {
   const handleAccept = async (requestId: number) => {
     try {
       setActionLoading(true)
-      // Use speaker-specific accept endpoint
+
+      // Find the request to get the event ID
+      const request = requests.find(r => r.id === requestId)
+
+      if (!request) {
+        toast.error('Request not found')
+        return
+      }
+
+      // Accept the speaking request
       await speakerRequestApi.acceptSpeakerRequest(requestId)
+
+      // Update local state
       setRequests(prev => prev.map(req =>
         req.id === requestId ? { ...req, status: 'accepted' as const } : req
       ))
-      toast.success('Request accepted!')
+
+      // Show success message with event name
+      const eventName = request.eventDetails?.name || request.eventDetails?.title || 'the event'
+      toast.success(`Request accepted! ${eventName} has been added to your upcoming events.`)
+
+      // Note: The backend should automatically add the event to the speaker's events_spoken array
+      // when they accept the request. If not, we would need to call:
+      // await speakerApi.addEventToProfile(request.event)
+
       setConfirmAcceptRequest(null)
     } catch (error) {
       console.error('Error accepting request:', error)
