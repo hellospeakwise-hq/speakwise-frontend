@@ -22,7 +22,7 @@ export function OrganizerSpeakerRequests() {
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [userOrgs, setUserOrgs] = useState<Organization[]>([])
-    const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+    const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all')
 
     useEffect(() => {
         const loadRequests = async () => {
@@ -48,6 +48,14 @@ export function OrganizerSpeakerRequests() {
                 const requestsArrays = await Promise.all(allRequestsPromises)
                 const allRequests = requestsArrays.flat()
 
+                // Remove duplicates by ID
+                const uniqueRequests = allRequests.filter((request, index, self) =>
+                    index === self.findIndex((r) => r.id === request.id)
+                )
+
+                console.log('Total requests fetched:', allRequests.length)
+                console.log('Unique requests after deduplication:', uniqueRequests.length)
+
                 // Enrich with speaker and event details
                 const [speakers, eventsResponse] = await Promise.all([
                     speakerApi.getSpeakers(),
@@ -57,7 +65,7 @@ export function OrganizerSpeakerRequests() {
                 // Handle both array and paginated response
                 const events = Array.isArray(eventsResponse) ? eventsResponse : eventsResponse.results || []
 
-                const enrichedRequests: EnrichedOrganizerRequest[] = allRequests.map(req => ({
+                const enrichedRequests: EnrichedOrganizerRequest[] = uniqueRequests.map(req => ({
                     ...req,
                     speakerDetails: speakers.find((speaker: Speaker) => speaker.id === req.speaker),
                     eventDetails: events.find((event: Event) => event.id === req.event)
@@ -68,6 +76,17 @@ export function OrganizerSpeakerRequests() {
                     if (!a.created_at || !b.created_at) return 0
                     return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
                 })
+
+                console.log('Organizer requests with status:', enrichedRequests.map(r => ({
+                    id: r.id,
+                    status: r.status,
+                    statusType: typeof r.status,
+                    speaker: r.speakerDetails?.speaker_name
+                })))
+
+                // Debug: Log unique status values
+                const uniqueStatuses = [...new Set(enrichedRequests.map(r => r.status))]
+                console.log('Unique status values found in organizer:', uniqueStatuses)
 
                 setRequests(enrichedRequests)
             } catch (err) {
@@ -139,11 +158,19 @@ export function OrganizerSpeakerRequests() {
         return request.status === statusFilter
     })
 
+    // Debug filtering
+    console.log('Organizer Filter Debug:', {
+        statusFilter,
+        totalRequests: requests.length,
+        filteredCount: filteredRequests.length,
+        requestStatuses: requests.map(r => ({ id: r.id, status: r.status }))
+    })
+
     // Count requests by status
     const counts = {
         all: requests.length,
         pending: requests.filter(r => r.status === 'pending').length,
-        approved: requests.filter(r => r.status === 'approved').length,
+        accepted: requests.filter(r => r.status === 'accepted').length,
         rejected: requests.filter(r => r.status === 'rejected').length,
     }
 
@@ -161,8 +188,8 @@ export function OrganizerSpeakerRequests() {
                     <button
                         onClick={() => setStatusFilter('all')}
                         className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'all'
-                                ? 'bg-orange-500 text-white'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            ? 'bg-orange-500 text-white'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                             }`}
                     >
                         All <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.all}</span>
@@ -170,26 +197,26 @@ export function OrganizerSpeakerRequests() {
                     <button
                         onClick={() => setStatusFilter('pending')}
                         className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'pending'
-                                ? 'bg-orange-500 text-white'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            ? 'bg-orange-500 text-white'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                             }`}
                     >
                         Pending <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.pending}</span>
                     </button>
                     <button
-                        onClick={() => setStatusFilter('approved')}
-                        className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'approved'
-                                ? 'bg-green-600 text-white'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                        onClick={() => setStatusFilter('accepted')}
+                        className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'accepted'
+                            ? 'bg-green-600 text-white'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                             }`}
                     >
-                        Accepted <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.approved}</span>
+                        Accepted <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.accepted}</span>
                     </button>
                     <button
                         onClick={() => setStatusFilter('rejected')}
                         className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'rejected'
-                                ? 'bg-red-600 text-white'
-                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            ? 'bg-red-600 text-white'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                             }`}
                     >
                         Declined <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.rejected}</span>
@@ -237,13 +264,20 @@ export function OrganizerSpeakerRequests() {
                                                         Pending
                                                     </Badge>
                                                 )}
-                                                {request.status === "approved" && (
-                                                    <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                                                        Approved
+                                                {request.status === "accepted" && (
+                                                    <Badge className="bg-green-600 text-white hover:bg-green-700">
+                                                        Accepted
                                                     </Badge>
                                                 )}
                                                 {request.status === "rejected" && (
-                                                    <Badge variant="secondary">Rejected</Badge>
+                                                    <Badge className="bg-red-600 text-white hover:bg-red-700">
+                                                        Declined
+                                                    </Badge>
+                                                )}
+                                                {!['pending', 'accepted', 'rejected'].includes(request.status) && (
+                                                    <Badge variant="secondary">
+                                                        {request.status}
+                                                    </Badge>
                                                 )}
                                             </div>
                                         </div>
@@ -313,7 +347,7 @@ export function OrganizerSpeakerRequests() {
                                     </p>
                                     <p className="text-sm text-muted-foreground mt-2">
                                         {statusFilter === 'pending' && 'No pending responses from speakers'}
-                                        {statusFilter === 'approved' && 'No speakers have accepted your invitations yet'}
+                                        {statusFilter === 'accepted' && 'No speakers have accepted your invitations yet'}
                                         {statusFilter === 'rejected' && 'No speakers have declined your invitations'}
                                     </p>
                                 </>

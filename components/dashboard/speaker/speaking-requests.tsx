@@ -33,7 +33,7 @@ export function SpeakingRequests() {
   const [confirmAcceptRequest, setConfirmAcceptRequest] = useState<EnrichedSpeakerRequest | null>(null)
   const [confirmDeclineRequest, setConfirmDeclineRequest] = useState<EnrichedSpeakerRequest | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all')
 
   useEffect(() => {
     const loadRequests = async () => {
@@ -75,6 +75,23 @@ export function SpeakingRequests() {
           })
         )
 
+        // Sort by created date (newest first)
+        enrichedRequests.sort((a, b) => {
+          if (!a.created_at || !b.created_at) return 0
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        })
+
+        console.log('Requests with status values:', enrichedRequests.map(r => ({
+          id: r.id,
+          status: r.status,
+          statusType: typeof r.status,
+          event: r.eventDetails?.name || r.eventDetails?.title
+        })))
+
+        // Debug: Log unique status values
+        const uniqueStatuses = [...new Set(enrichedRequests.map(r => r.status))]
+        console.log('Unique status values found:', uniqueStatuses)
+
         setRequests(enrichedRequests)
       } catch (err) {
         console.error('Error loading speaking requests:', err)
@@ -90,12 +107,31 @@ export function SpeakingRequests() {
   const handleAccept = async (requestId: number) => {
     try {
       setActionLoading(true)
-      // Use speaker-specific accept endpoint
+
+      // Find the request to get the event ID
+      const request = requests.find(r => r.id === requestId)
+
+      if (!request) {
+        toast.error('Request not found')
+        return
+      }
+
+      // Accept the speaking request
       await speakerRequestApi.acceptSpeakerRequest(requestId)
+
+      // Update local state
       setRequests(prev => prev.map(req =>
-        req.id === requestId ? { ...req, status: 'approved' as const } : req
+        req.id === requestId ? { ...req, status: 'accepted' as const } : req
       ))
-      toast.success('Request accepted!')
+
+      // Show success message with event name
+      const eventName = request.eventDetails?.name || request.eventDetails?.title || 'the event'
+      toast.success(`Request accepted! ${eventName} has been added to your upcoming events.`)
+
+      // Note: The backend should automatically add the event to the speaker's events_spoken array
+      // when they accept the request. If not, we would need to call:
+      // await speakerApi.addEventToProfile(request.event)
+
       setConfirmAcceptRequest(null)
     } catch (error) {
       console.error('Error accepting request:', error)
@@ -246,7 +282,7 @@ export function SpeakingRequests() {
       location: "Singapore",
       suggestedTopic: "AI and the Future of Work",
       audienceSize: "1000+",
-      status: "declined",
+      status: "rejected",
       receivedDate: "April 15, 2025",
       isNew: false,
     },
@@ -262,7 +298,7 @@ export function SpeakingRequests() {
   const counts = {
     all: requests.length,
     pending: requests.filter(r => r.status === 'pending').length,
-    approved: requests.filter(r => r.status === 'approved').length,
+    accepted: requests.filter(r => r.status === 'accepted').length,
     rejected: requests.filter(r => r.status === 'rejected').length,
   }
 
@@ -294,13 +330,13 @@ export function SpeakingRequests() {
             Pending <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.pending}</span>
           </button>
           <button
-            onClick={() => setStatusFilter('approved')}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'approved'
+            onClick={() => setStatusFilter('accepted')}
+            className={`px-4 py-2 text-sm font-medium rounded-t-lg transition-colors whitespace-nowrap ${statusFilter === 'accepted'
               ? 'bg-green-600 text-white'
               : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
           >
-            Accepted <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.approved}</span>
+            Accepted <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs bg-black/10">{counts.accepted}</span>
           </button>
           <button
             onClick={() => setStatusFilter('rejected')}
@@ -330,14 +366,19 @@ export function SpeakingRequests() {
                           Pending Response
                         </Badge>
                       )}
-                      {request.status === "approved" && (
-                        <Badge className="bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400">
+                      {request.status === "accepted" && (
+                        <Badge className="bg-green-600 text-white hover:bg-green-700">
                           Accepted
                         </Badge>
                       )}
                       {request.status === "rejected" && (
-                        <Badge variant="outline" className="bg-red-500/10 border-red-500/20 text-red-600 dark:text-red-400">
+                        <Badge className="bg-red-600 text-white hover:bg-red-700">
                           Declined
+                        </Badge>
+                      )}
+                      {!['pending', 'accepted', 'rejected'].includes(request.status) && (
+                        <Badge variant="secondary">
+                          {request.status}
                         </Badge>
                       )}
                     </div>
@@ -466,9 +507,9 @@ export function SpeakingRequests() {
                   <h3 className="text-lg font-medium mb-2">
                     No {statusFilter === 'all' ? '' : statusFilter} requests
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mt-2">
                     {statusFilter === 'pending' && 'You have no pending requests at the moment'}
-                    {statusFilter === 'approved' && 'You have not accepted any requests yet'}
+                    {statusFilter === 'accepted' && 'You have not accepted any requests yet'}
                     {statusFilter === 'rejected' && 'You have not declined any requests yet'}
                   </p>
                 </>
@@ -503,12 +544,16 @@ export function SpeakingRequests() {
                     Pending
                   </Badge>
                 )}
-                {selectedRequest.status === "approved" && (
-                  <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                    Approved
+                {selectedRequest.status === "accepted" && (
+                  <Badge className="bg-green-600 text-white hover:bg-green-700">
+                    Accepted
                   </Badge>
                 )}
-                {selectedRequest.status === "rejected" && <Badge variant="secondary">Rejected</Badge>}
+                {selectedRequest.status === "rejected" && (
+                  <Badge className="bg-red-600 text-white hover:bg-red-700">
+                    Declined
+                  </Badge>
+                )}
               </div>
 
               {/* Event Information */}

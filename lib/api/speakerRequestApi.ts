@@ -2,7 +2,7 @@ import apiClient from './base';
 
 export interface SpeakerRequest {
     id?: number;
-    status: 'pending' | 'approved' | 'rejected';
+    status: 'pending' | 'accepted' | 'rejected';
     message: string;
     organizer: number; // Organizer ID (User)
     organization: number; // Organization ID
@@ -71,10 +71,10 @@ export const speakerRequestApi = {
         return response.data;
     },
 
-    // Accept a speaker request (respond with status: 'approved')
+    // Accept a speaker request (respond with status: 'accepted')
     async acceptSpeakerRequest(id: number): Promise<SpeakerRequest> {
         const response = await apiClient.patch(`/speaker-requests/${id}/respond/`, {
-            status: 'approved'
+            status: 'accepted'
         });
         return response.data;
     },
