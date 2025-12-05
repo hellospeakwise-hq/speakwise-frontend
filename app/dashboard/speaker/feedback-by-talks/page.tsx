@@ -45,13 +45,13 @@ export default function SpeakerFeedbackByTalksPage() {
     const fetchGroupedFeedback = async () => {
       try {
         const data = await feedbackAPI.getCurrentSpeakerFeedback()
-        
+
         // Transform and group feedback by session
         const sessionMap = new Map<number, SessionGroup>()
-        
+
         data.forEach((item: ApiFeedback) => {
           const sessionId = item.session
-          
+
           // Transform feedback item
           const feedbackItem: FeedbackDisplay = {
             id: item.id,
@@ -67,7 +67,7 @@ export default function SpeakerFeedbackByTalksPage() {
             isAnonymous: item.is_anonymous || false,
             sessionId: sessionId
           }
-          
+
           if (!sessionMap.has(sessionId)) {
             // Create new session group with placeholder data
             sessionMap.set(sessionId, {
@@ -80,30 +80,38 @@ export default function SpeakerFeedbackByTalksPage() {
               eventDate: formatDate(item.created_at)
             })
           }
-          
+
           const sessionGroup = sessionMap.get(sessionId)!
           sessionGroup.feedback.push(feedbackItem)
           sessionGroup.feedbackCount = sessionGroup.feedback.length
           sessionGroup.averageRating = sessionGroup.feedback.reduce((sum, f) => sum + f.rating, 0) / sessionGroup.feedback.length
         })
-        
+
         // Get unique session IDs
         const sessionIds = Array.from(sessionMap.keys())
-        
+
         // Fetch session details for all sessions
         try {
           const sessionDetails = await feedbackAPI.getMultipleSessionDetails(sessionIds)
-          
+
           // Update session groups with real details
           sessionIds.forEach(sessionId => {
             const sessionGroup = sessionMap.get(sessionId)!
             const details = sessionDetails.get(sessionId)
             if (details) {
+              console.log(`📋 Session ${sessionId} details:`, details)
               sessionGroup.sessionTitle = details.title
               sessionGroup.eventName = details.eventName
+              console.log(`📅 eventDate from details:`, details.eventDate, typeof details.eventDate)
               if (details.eventDate) {
-                sessionGroup.eventDate = formatDate(details.eventDate)
+                const formattedDate = formatDate(details.eventDate)
+                console.log(`📅 Formatted date:`, formattedDate)
+                sessionGroup.eventDate = formattedDate
+              } else {
+                console.warn(`⚠️ No eventDate for session ${sessionId}`)
+                sessionGroup.eventDate = 'Date not available'
               }
+              console.log(`✅ Final sessionGroup eventDate:`, sessionGroup.eventDate)
             }
           })
         } catch (error) {
@@ -122,7 +130,7 @@ export default function SpeakerFeedbackByTalksPage() {
             "Security in Modern Web Apps",
             "Performance Optimization Techniques"
           ]
-          
+
           const sampleEvents = [
             "TechConf 2024",
             "React Summit",
@@ -133,14 +141,14 @@ export default function SpeakerFeedbackByTalksPage() {
             "Tech Talk Tuesday",
             "Innovation Summit"
           ]
-          
+
           sessionIds.forEach((sessionId, index) => {
             const sessionGroup = sessionMap.get(sessionId)!
             sessionGroup.sessionTitle = sampleTitles[index % sampleTitles.length] || `Talk #${sessionId}`
             sessionGroup.eventName = sampleEvents[index % sampleEvents.length] || `Event #${sessionId}`
           })
         }
-        
+
         // Convert to array and sort by average rating (best first)
         const sessionGroups = Array.from(sessionMap.values()).sort((a, b) => b.averageRating - a.averageRating)
         setSessions(sessionGroups)
@@ -166,6 +174,25 @@ export default function SpeakerFeedbackByTalksPage() {
 
   const formatDate = (dateString: string): string => {
     if (!dateString) return 'Date not available'
+
+    // If it's already a formatted date range (like "2025-11-26 to 2025-11-27"), return it as is
+    if (dateString.includes(' to ')) {
+      try {
+        const [startDate, endDate] = dateString.split(' to ')
+        const start = new Date(startDate)
+        const end = new Date(endDate)
+
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+          const startFormatted = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          const endFormatted = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+          return `${startFormatted} - ${endFormatted}`
+        }
+      } catch (e) {
+        console.error('Date range parsing error:', e)
+      }
+    }
+
+    // Try to parse as a single date
     try {
       const dateObj = new Date(dateString)
       if (!isNaN(dateObj.getTime())) {
@@ -178,6 +205,7 @@ export default function SpeakerFeedbackByTalksPage() {
     } catch (e) {
       console.error('Date parsing error:', e)
     }
+
     return 'Date not available'
   }
 
@@ -197,8 +225,8 @@ export default function SpeakerFeedbackByTalksPage() {
       <div className="min-h-screen bg-background">
         {/* Back Button */}
         <div className="container mx-auto px-6 pt-6">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="sm"
             onClick={() => setSelectedSession(null)}
             className="mb-4"
@@ -219,11 +247,11 @@ export default function SpeakerFeedbackByTalksPage() {
                     Speaker Feedback
                   </span>
                 </div>
-                
+
                 <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 leading-tight">
                   {selectedSession.sessionTitle}
                 </h1>
-                
+
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6 text-white/90 mb-6">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -253,11 +281,10 @@ export default function SpeakerFeedbackByTalksPage() {
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`h-4 w-4 sm:h-6 sm:w-6 ${
-                            i < Math.round(selectedSession.averageRating / 2)
+                          className={`h-4 w-4 sm:h-6 sm:w-6 ${i < Math.round(selectedSession.averageRating / 2)
                               ? 'fill-yellow-300 text-yellow-300'
                               : 'fill-white/20 text-white/20'
-                          }`}
+                            }`}
                         />
                       ))}
                     </div>
@@ -271,253 +298,251 @@ export default function SpeakerFeedbackByTalksPage() {
 
         <div className="container mx-auto p-6 space-y-6">
 
-        {/* Talk Analytics - Carousel/Slider */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Talk Analytics</h2>
-          <div className="relative">
-            <div 
-              className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-6 px-6"
-              onScroll={(e) => {
-                const container = e.currentTarget
-                const cardWidth = 280 + 16 // card width + gap
-                const scrollPosition = container.scrollLeft
-                const activeIndex = Math.round(scrollPosition / cardWidth)
-                setActiveAnalyticsCard(activeIndex)
-              }}
-            >
-              {/* Average Rating by Category */}
-              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-orange-100 dark:border-orange-900/20">
+          {/* Talk Analytics - Carousel/Slider */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Talk Analytics</h2>
+            <div className="relative">
+              <div
+                className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide -mx-6 px-6"
+                onScroll={(e) => {
+                  const container = e.currentTarget
+                  const cardWidth = 280 + 16 // card width + gap
+                  const scrollPosition = container.scrollLeft
+                  const activeIndex = Math.round(scrollPosition / cardWidth)
+                  setActiveAnalyticsCard(activeIndex)
+                }}
+              >
+                {/* Average Rating by Category */}
+                <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-orange-100 dark:border-orange-900/20">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Engagement</CardTitle>
+                    <Users className="h-4 w-4 text-orange-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {(selectedSession.feedback.reduce((sum, f) => sum + f.engagement, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Avg. engagement score
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-blue-100 dark:border-blue-900/20">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Clarity</CardTitle>
+                    <Eye className="h-4 w-4 text-blue-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {(selectedSession.feedback.reduce((sum, f) => sum + f.clarity, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Avg. clarity score
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-purple-100 dark:border-purple-900/20">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Content Depth</CardTitle>
+                    <MessageSquare className="h-4 w-4 text-purple-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {(selectedSession.feedback.reduce((sum, f) => sum + f.contentDepth, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Avg. content score
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-green-100 dark:border-green-900/20">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Knowledge</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-green-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {(selectedSession.feedback.reduce((sum, f) => sum + f.speakerKnowledge, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Avg. knowledge score
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-yellow-100 dark:border-yellow-900/20">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">Practical</CardTitle>
+                    <Star className="h-4 w-4 text-yellow-500" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {(selectedSession.feedback.reduce((sum, f) => sum + f.practicalRelevance, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Avg. practical score
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+              {/* Scroll indicator */}
+              <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1.5 lg:hidden">
+                {[0, 1, 2, 3, 4].map((index) => (
+                  <div
+                    key={index}
+                    className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${activeAnalyticsCard === index ? 'bg-orange-500' : 'bg-muted'
+                      }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Session Stats */}
+          <div>
+            <h2 className="text-xl font-semibold mb-4">Quick Stats</h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Engagement</CardTitle>
-                  <Users className="h-4 w-4 text-orange-500" />
+                  <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
+                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {(selectedSession.feedback.reduce((sum, f) => sum + f.engagement, 0) / selectedSession.feedbackCount).toFixed(1)}/10
-                  </div>
+                  <div className="text-2xl font-bold">{selectedSession.feedbackCount}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Avg. engagement score
+                    Responses received
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-blue-100 dark:border-blue-900/20">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Clarity</CardTitle>
-                  <Eye className="h-4 w-4 text-blue-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {(selectedSession.feedback.reduce((sum, f) => sum + f.clarity, 0) / selectedSession.feedbackCount).toFixed(1)}/10
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Avg. clarity score
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-purple-100 dark:border-purple-900/20">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Content Depth</CardTitle>
-                  <MessageSquare className="h-4 w-4 text-purple-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {(selectedSession.feedback.reduce((sum, f) => sum + f.contentDepth, 0) / selectedSession.feedbackCount).toFixed(1)}/10
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Avg. content score
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-green-100 dark:border-green-900/20">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Knowledge</CardTitle>
+                  <CardTitle className="text-sm font-medium">Highest Rating</CardTitle>
                   <TrendingUp className="h-4 w-4 text-green-500" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {(selectedSession.feedback.reduce((sum, f) => sum + f.speakerKnowledge, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                    {Math.max(...selectedSession.feedback.map(f => f.rating)).toFixed(1)}/10
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Avg. knowledge score
+                    Best overall score
                   </p>
                 </CardContent>
               </Card>
 
-              <Card className="min-w-[280px] sm:min-w-[300px] flex-shrink-0 snap-start border-yellow-100 dark:border-yellow-900/20">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Practical</CardTitle>
-                  <Star className="h-4 w-4 text-yellow-500" />
+                  <CardTitle className="text-sm font-medium">Lowest Rating</CardTitle>
+                  <TrendingUp className="h-4 w-4 text-red-500 rotate-180" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {(selectedSession.feedback.reduce((sum, f) => sum + f.practicalRelevance, 0) / selectedSession.feedbackCount).toFixed(1)}/10
+                    {Math.min(...selectedSession.feedback.map(f => f.rating)).toFixed(1)}/10
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Avg. practical score
+                    Needs improvement
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Event Date</CardTitle>
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-sm font-medium">{selectedSession.eventDate}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Talk delivered
                   </p>
                 </CardContent>
               </Card>
             </div>
-            {/* Scroll indicator */}
-            <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 flex gap-1.5 lg:hidden">
-              {[0, 1, 2, 3, 4].map((index) => (
-                <div
-                  key={index}
-                  className={`w-1.5 h-1.5 rounded-full transition-colors duration-300 ${
-                    activeAnalyticsCard === index ? 'bg-orange-500' : 'bg-muted'
-                  }`}
-                />
-              ))}
-            </div>
           </div>
-        </div>
 
-        {/* Session Stats */}
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Quick Stats</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Feedback</CardTitle>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{selectedSession.feedbackCount}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Responses received
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Highest Rating</CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {Math.max(...selectedSession.feedback.map(f => f.rating)).toFixed(1)}/10
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Best overall score
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Lowest Rating</CardTitle>
-                <TrendingUp className="h-4 w-4 text-red-500 rotate-180" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {Math.min(...selectedSession.feedback.map(f => f.rating)).toFixed(1)}/10
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Needs improvement
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Event Date</CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-sm font-medium">{selectedSession.eventDate}</div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Talk delivered
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-
-        {/* Individual Feedback */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Individual Feedback</CardTitle>
-            <CardDescription>All feedback for this specific talk</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              {selectedSession.feedback.map((item) => (
-                <div key={item.id} className="border-b pb-6 last:border-0 last:pb-0">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
-                    <div className="flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                        <h3 className="font-medium">Feedback #{item.id}</h3>
-                        {item.isAnonymous && (
-                          <Badge variant="secondary" className="text-xs w-fit">Anonymous</Badge>
-                        )}
+          {/* Individual Feedback */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Individual Feedback</CardTitle>
+              <CardDescription>All feedback for this specific talk</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {selectedSession.feedback.map((item) => (
+                  <div key={item.id} className="border-b pb-6 last:border-0 last:pb-0">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
+                      <div className="flex-1">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <h3 className="font-medium">Feedback #{item.id}</h3>
+                          {item.isAnonymous && (
+                            <Badge variant="secondary" className="text-xs w-fit">Anonymous</Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">{item.date}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">{item.date}</p>
-                    </div>
-                    <div className="flex items-center gap-1 justify-between sm:justify-end">
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`h-4 w-4 ${
-                              i < Math.round(item.rating / 2)
-                                ? "text-yellow-500 fill-yellow-500"
-                                : "text-gray-300 dark:text-gray-600"
-                            }`}
-                          />
-                        ))}
+                      <div className="flex items-center gap-1 justify-between sm:justify-end">
+                        <div className="flex items-center gap-1">
+                          {[...Array(5)].map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`h-4 w-4 ${i < Math.round(item.rating / 2)
+                                  ? "text-yellow-500 fill-yellow-500"
+                                  : "text-gray-300 dark:text-gray-600"
+                                }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="ml-2 text-sm font-semibold">{item.rating}/10</span>
                       </div>
-                      <span className="ml-2 text-sm font-semibold">{item.rating}/10</span>
                     </div>
-                  </div>
 
-                  {/* Individual Rating Criteria */}
-                  <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Engagement</p>
-                      <p className="text-sm font-semibold">{item.engagement}/10</p>
+                    {/* Individual Rating Criteria */}
+                    <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">Engagement</p>
+                        <p className="text-sm font-semibold">{item.engagement}/10</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">Clarity</p>
+                        <p className="text-sm font-semibold">{item.clarity}/10</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">Content</p>
+                        <p className="text-sm font-semibold">{item.contentDepth}/10</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted/50 rounded-lg">
+                        <p className="text-xs text-muted-foreground mb-1">Knowledge</p>
+                        <p className="text-sm font-semibold">{item.speakerKnowledge}/10</p>
+                      </div>
+                      <div className="text-center p-3 bg-muted/50 rounded-lg col-span-2 sm:col-span-1">
+                        <p className="text-xs text-muted-foreground mb-1">Practical</p>
+                        <p className="text-sm font-semibold">{item.practicalRelevance}/10</p>
+                      </div>
                     </div>
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Clarity</p>
-                      <p className="text-sm font-semibold">{item.clarity}/10</p>
-                    </div>
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Content</p>
-                      <p className="text-sm font-semibold">{item.contentDepth}/10</p>
-                    </div>
-                    <div className="text-center p-3 bg-muted/50 rounded-lg">
-                      <p className="text-xs text-muted-foreground mb-1">Knowledge</p>
-                      <p className="text-sm font-semibold">{item.speakerKnowledge}/10</p>
-                    </div>
-                    <div className="text-center p-3 bg-muted/50 rounded-lg col-span-2 sm:col-span-1">
-                      <p className="text-xs text-muted-foreground mb-1">Practical</p>
-                      <p className="text-sm font-semibold">{item.practicalRelevance}/10</p>
-                    </div>
-                  </div>
 
-                  <div className="mb-3">
-                    <p className="text-sm text-muted-foreground">{item.comment}</p>
-                  </div>
+                    <div className="mb-3">
+                      <p className="text-sm text-muted-foreground">{item.comment}</p>
+                    </div>
 
-                  <div className="flex flex-wrap gap-2">
-                    {item.categories.map((category) => (
-                      <Badge
-                        key={category}
-                        variant="outline"
-                        className="bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/30"
-                      >
-                        {category}
-                      </Badge>
-                    ))}
+                    <div className="flex flex-wrap gap-2">
+                      {item.categories.map((category) => (
+                        <Badge
+                          key={category}
+                          variant="outline"
+                          className="bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/30"
+                        >
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
@@ -527,7 +552,7 @@ export default function SpeakerFeedbackByTalksPage() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <FeedbackNavigation />
-      
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -575,7 +600,7 @@ export default function SpeakerFeedbackByTalksPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {sessions.length > 0 
+              {sessions.length > 0
                 ? (sessions.reduce((sum, s) => sum + s.averageRating, 0) / sessions.length).toFixed(1)
                 : "0.0"}/10
             </div>
@@ -614,17 +639,16 @@ export default function SpeakerFeedbackByTalksPage() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="text-right">
                       <div className="flex items-center gap-1 mb-1">
                         {[...Array(5)].map((_, i) => (
                           <Star
                             key={i}
-                            className={`h-4 w-4 ${
-                              i < Math.round(session.averageRating / 2)
+                            className={`h-4 w-4 ${i < Math.round(session.averageRating / 2)
                                 ? "text-yellow-500 fill-yellow-500"
                                 : "text-gray-300 dark:text-gray-600"
-                            }`}
+                              }`}
                           />
                         ))}
                       </div>
