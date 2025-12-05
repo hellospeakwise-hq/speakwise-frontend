@@ -7,10 +7,11 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Star, MapPin, Calendar, MessageSquare, Globe, Twitter, Linkedin, Github, Loader2, Mail, ExternalLink, Building2 } from "lucide-react"
+import { Star, MapPin, Calendar, MessageSquare, Globe, Twitter, Linkedin, Github, Loader2, Mail, ExternalLink, Building2, Award } from "lucide-react"
 import { speakerApi, type Speaker } from '@/lib/api/speakerApi';
 import { organizationApi } from '@/lib/api/organizationApi';
 import { useAuth } from '@/contexts/auth-context';
+import { ExperiencesList } from './experiences-list';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -315,8 +316,9 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
           </Card>
 
           <Tabs defaultValue="bio">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="bio">Biography</TabsTrigger>
+              <TabsTrigger value="experiences">Speaking Experience</TabsTrigger>
               <TabsTrigger value="contact">Contact</TabsTrigger>
             </TabsList>
             <TabsContent value="bio" className="mt-4">
@@ -349,6 +351,22 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                       </p>
                     )}
                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="experiences" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Award className="h-5 w-5" />
+                    Conference Talks & Presentations
+                  </CardTitle>
+                  <CardDescription>
+                    Past speaking engagements and conference presentations
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ExperiencesList speakerId={parseInt(id)} />
                 </CardContent>
               </Card>
             </TabsContent>
