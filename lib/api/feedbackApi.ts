@@ -324,32 +324,72 @@ class FeedbackAPI {
     async getEventDetails(eventId: number): Promise<{ name: string; date?: string }> {
         try {
             const token = localStorage.getItem('accessToken');
-            console.log(`Fetching event details for event ID: ${eventId}`);
+            console.log(`🎪 Fetching event details for event ID: ${eventId}`);
 
-            const response = await fetch(`${API_BASE_URL}/events/detail/${eventId}/`, {
+            const response = await fetch(`${API_BASE_URL}/events/${eventId}/`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 }
             });
 
-            console.log(`Event API response for ${eventId}:`, response.status);
+            console.log(`📡 Event API response for ${eventId}:`, response.status);
 
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const eventData = await response.json();
-            console.log(`Event data for ID ${eventId}:`, eventData);
+            console.log(`✅ Event data for ID ${eventId}:`, eventData);
+
+            // Extract the date from the event data - check all possible date fields
+            let eventDate;
+
+            // First, check if there's a formatted 'date' field (the display date)
+            if (eventData.date) {
+                eventDate = eventData.date;
+                console.log(`📅 Using eventData.date: ${eventDate}`);
+            }
+            // Check date_range structure
+            else if (eventData.date_range) {
+                if (typeof eventData.date_range.start === 'string') {
+                    eventDate = eventData.date_range.start;
+                    console.log(`📅 Using date_range.start (string): ${eventDate}`);
+                } else if (eventData.date_range.start?.date) {
+                    eventDate = eventData.date_range.start.date;
+                    console.log(`📅 Using date_range.start.date: ${eventDate}`);
+                } else if (eventData.date_range.start?.datetime) {
+                    eventDate = eventData.date_range.start.datetime;
+                    console.log(`📅 Using date_range.start.datetime: ${eventDate}`);
+                }
+            }
+            // Fallback to raw datetime fields
+            else if (eventData.start_date_time) {
+                eventDate = eventData.start_date_time;
+                console.log(`📅 Using start_date_time: ${eventDate}`);
+            }
+            else if (eventData.start_date) {
+                eventDate = eventData.start_date;
+                console.log(`📅 Using start_date: ${eventDate}`);
+            }
+            else if (eventData.created_at) {
+                eventDate = eventData.created_at;
+                console.log(`📅 Using created_at: ${eventDate}`);
+            }
+
+            console.log(`📅 Final eventDate value: ${eventDate}`);
 
             return {
                 name: eventData.name || eventData.title || `Event ${eventId}`,
-                date: eventData.date || eventData.start_date || eventData.created_at
+                date: eventDate
             };
         } catch (error) {
-            console.log(`Failed to fetch event ${eventId} details:`, error);
-            // If event API fails, return fallback
-            throw error;
+            console.error(`❌ Failed to fetch event ${eventId} details:`, error);
+            // Return a fallback instead of throwing
+            return {
+                name: `Event ${eventId}`,
+                date: undefined
+            };
         }
     }
 
