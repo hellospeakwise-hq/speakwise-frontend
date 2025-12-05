@@ -7,6 +7,7 @@ import { scheduleTokenRefresh, cancelTokenRefresh, initializeTokenRefresh } from
 
 type User = {
     id: string;
+    speaker_id?: number;
     first_name: string;
     last_name: string;
     email: string;
@@ -128,6 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Default to speaker role if not provided by backend
             const userData: User = {
                 id: response.id,
+                speaker_id: response.speaker_id,
                 first_name: response.first_name,
                 last_name: response.last_name,
                 email: response.email,
@@ -197,6 +199,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // All new users default to speaker role
             const userData: User = {
                 id: response.id,
+                speaker_id: response.speaker_id,
                 first_name: response.first_name,
                 last_name: response.last_name,
                 email: response.email,
