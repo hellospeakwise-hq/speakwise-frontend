@@ -12,13 +12,15 @@ import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { userApi, UserProfileResponse, SkillTag } from "@/lib/api/userApi"
 import { speakerApi } from "@/lib/api/speakerApi"
-import { Upload, X, Building2, ArrowRight, CheckCircle2, Clock } from "lucide-react"
+import { Upload, X, Building2, ArrowRight, CheckCircle2, Clock, Award } from "lucide-react"
 import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
 import { organizationApi, Organization } from "@/lib/api/organizationApi"
 import Link from "next/link"
 import { OnboardingTour } from "@/components/onboarding/onboarding-tour"
 import { profileOnboardingSteps } from "@/components/onboarding/onboarding-steps"
 import { useOnboarding } from "@/hooks/use-onboarding"
+import { AddExperienceDialog } from "@/components/speakers/add-experience-dialog"
+import { ExperiencesList } from "@/components/speakers/experiences-list"
 
 export default function ProfilePage() {
     const { user } = useAuth()
@@ -502,6 +504,35 @@ export default function ProfilePage() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Speaking Experiences Summary - Only show if user has speaker profile */}
+                    {profileData?.speaker && (
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Award className="w-5 h-5" />
+                                    Speaking Experiences
+                                </CardTitle>
+                                <CardDescription>Manage your conference talks and presentations</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    <p className="text-sm text-muted-foreground">
+                                        Track your speaking engagements, conference talks, and presentations to showcase your expertise.
+                                    </p>
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                        <Link href="/dashboard/speaker/experiences" className="flex-1">
+                                            <Button variant="outline" className="w-full">
+                                                Manage Experiences
+                                                <ArrowRight className="w-4 h-4 ml-2" />
+                                            </Button>
+                                        </Link>
+                                        <AddExperienceDialog onSuccess={loadProfile} />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Organization Summary */}
                     <Card data-tour="organizations">

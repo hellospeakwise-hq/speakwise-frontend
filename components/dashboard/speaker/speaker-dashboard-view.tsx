@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { SpeakerStats } from "@/components/dashboard/speaker/speaker-stats"
 import { UpcomingEvents } from "@/components/dashboard/speaker/upcoming-events"
 import { RecentFeedback } from "@/components/dashboard/speaker/recent-feedback"
@@ -8,6 +9,8 @@ import { SpeakingRequests } from "@/components/dashboard/speaker/speaking-reques
 import { FeedbackTrends } from "@/components/dashboard/speaker/feedback-trends"
 import { Notifications } from "@/components/dashboard/speaker/notifications"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Award } from "lucide-react"
 
 export function SpeakerDashboardView() {
   const [activeTab, setActiveTab] = useState("overview")
@@ -15,6 +18,16 @@ export function SpeakerDashboardView() {
   return (
     <div className="space-y-6">
       <Notifications />
+
+      {/* Quick Actions */}
+      <div className="flex justify-end">
+        <Button asChild variant="outline" className="gap-2">
+          <Link href="/dashboard/speaker/experiences">
+            <Award className="h-4 w-4" />
+            Manage Speaking Experiences
+          </Link>
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <SpeakerStats />

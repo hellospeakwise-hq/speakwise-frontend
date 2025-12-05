@@ -9,10 +9,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Plus, X, Upload, Save, Edit, User } from "lucide-react"
+import { Plus, X, Upload, Save, Edit, User, Award } from "lucide-react"
 import { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { speakerApi, SpeakerProfile, SkillTag } from "@/lib/api/speakerApi"
+import { AddExperienceDialog } from "@/components/speakers/add-experience-dialog"
+import { ExperiencesList } from "@/components/speakers/experiences-list"
 
 export default function SpeakerProfilePage() {
     const { user } = useAuth()
@@ -20,12 +22,12 @@ export default function SpeakerProfilePage() {
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [uploading, setUploading] = useState(false)
-    
+
     // Profile state
     const [profile, setProfile] = useState<SpeakerProfile | null>(null)
     const [availableSkills, setAvailableSkills] = useState<SkillTag[]>([])
     const [newSkillName, setNewSkillName] = useState("")
-    
+
     // Form state
     const [organization, setOrganization] = useState("")
     const [shortBio, setShortBio] = useState("")
@@ -45,10 +47,10 @@ export default function SpeakerProfilePage() {
                 speakerApi.getProfile(),
                 speakerApi.getSkillTags()
             ])
-            
+
             setProfile(profileData)
             setAvailableSkills(skillsData)
-            
+
             // Set form values
             setOrganization(profileData.organization || "")
             setShortBio(profileData.short_bio || "")
@@ -73,7 +75,7 @@ export default function SpeakerProfilePage() {
                 country,
                 skill_tags: selectedSkills
             })
-            
+
             setProfile(updatedProfile)
             setIsEditing(false)
             toast.success("Profile updated successfully")
@@ -118,8 +120,8 @@ export default function SpeakerProfilePage() {
     }
 
     const toggleSkill = (skillId: number) => {
-        setSelectedSkills(prev => 
-            prev.includes(skillId) 
+        setSelectedSkills(prev =>
+            prev.includes(skillId)
                 ? prev.filter(id => id !== skillId)
                 : [...prev, skillId]
         )
@@ -160,9 +162,9 @@ export default function SpeakerProfilePage() {
                             <div className="flex items-start space-x-6">
                                 <div className="flex flex-col items-center space-y-4">
                                     <Avatar className="w-24 h-24">
-                                        <AvatarImage 
-                                            src={profile?.avatar} 
-                                            alt={user?.first_name || "Speaker"} 
+                                        <AvatarImage
+                                            src={profile?.avatar}
+                                            alt={user?.first_name || "Speaker"}
                                         />
                                         <AvatarFallback>
                                             <User className="w-12 h-12" />
@@ -357,6 +359,23 @@ export default function SpeakerProfilePage() {
                                     </div>
                                 </div>
                             )}
+                        </CardContent>
+                    </Card>
+
+                    {/* Speaking Experiences */}
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Award className="w-5 h-5" />
+                                    Speaking Experiences
+                                </CardTitle>
+                                <CardDescription>Your conference talks and presentations</CardDescription>
+                            </div>
+                            <AddExperienceDialog onSuccess={loadProfileData} />
+                        </CardHeader>
+                        <CardContent>
+                            {profile?.id && <ExperiencesList speakerId={profile.id} />}
                         </CardContent>
                     </Card>
                 </div>
