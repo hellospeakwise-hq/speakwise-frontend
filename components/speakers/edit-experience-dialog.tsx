@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
+import { RichTextEditor } from "@/components/ui/rich-text-editor"
 import { experiencesApi, type SpeakerExperience, type CreateExperienceData } from "@/lib/api/experiencesApi"
 import { toast } from "sonner"
 import { Calendar } from "@/components/ui/calendar"
@@ -154,13 +154,11 @@ export function EditExperienceDialog({ experience, open, onOpenChange, onSuccess
                             <Label htmlFor="description" className="text-sm font-medium">
                                 Description <span className="text-red-500">*</span>
                             </Label>
-                            <Textarea
-                                id="description"
-                                placeholder="Describe what you talked about, key takeaways, and audience size..."
-                                value={formData.description}
-                                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                                className="w-full min-h-[100px]"
-                                required
+                            <RichTextEditor
+                                content={formData.description}
+                                onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
+                                placeholder="Describe what you talked about, key takeaways, audience size, and any notable moments..."
+                                className="w-full"
                             />
                         </div>
 

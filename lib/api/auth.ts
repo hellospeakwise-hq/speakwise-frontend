@@ -19,6 +19,7 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   id: string;
+  speaker_id?: number;
   first_name: string;
   last_name: string;
   email: string;
