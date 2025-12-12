@@ -129,7 +129,7 @@ export function MainNav() {
                   <Link href="/dashboard" className="w-full">Dashboard</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Link href="/profile" className="w-full">Profile</Link>
+                  <Link href="/profile" className="w-full">Settings</Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="text-red-600 cursor-pointer">
