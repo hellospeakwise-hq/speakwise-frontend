@@ -18,7 +18,7 @@ export default function Home() {
             href="/waitlist"
             className="rounded-2xl bg-muted px-4 py-1.5 text-sm font-medium"
           >
-            Join the Waitlist
+            Become a Global Speaker
           </Link>
           <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl">
             Elevate Your Speaking Career with SpeakWise

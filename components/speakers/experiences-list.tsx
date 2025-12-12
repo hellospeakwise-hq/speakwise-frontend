@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card"
 import { experiencesApi, type SpeakerExperience } from "@/lib/api/experiencesApi"
 import { format } from "date-fns"
+import { ExperienceDetailModal } from "./experience-detail-modal"
 
 interface ExperiencesListProps {
     speakerId: number
@@ -20,6 +21,7 @@ interface ExperiencesListProps {
 export function ExperiencesList({ speakerId }: ExperiencesListProps) {
     const [experiences, setExperiences] = useState<SpeakerExperience[]>([])
     const [loading, setLoading] = useState(true)
+    const [selectedExperience, setSelectedExperience] = useState<SpeakerExperience | null>(null)
 
     useEffect(() => {
         const fetchExperiences = async () => {
@@ -93,51 +95,73 @@ export function ExperiencesList({ speakerId }: ExperiencesListProps) {
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                            {experience.description}
-                        </p>
+                        {/* Truncated description with HTML rendering */}
+                        <div
+                            className="text-sm line-clamp-3 prose prose-sm max-w-none dark:prose-invert prose-strong:text-foreground prose-strong:font-bold"
+                            dangerouslySetInnerHTML={{
+                                __html: experience.description.length > 200
+                                    ? experience.description.substring(0, 200) + '...'
+                                    : experience.description
+                            }}
+                        />
 
-                        {(experience.presentation_link || experience.video_recording_link) && (
-                            <div className="flex flex-wrap gap-2 pt-2">
-                                {experience.presentation_link && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        asChild
-                                        className="text-xs h-8"
+                        <div className="flex flex-wrap gap-2 pt-2">
+                            <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => setSelectedExperience(experience)}
+                                className="text-xs h-8"
+                            >
+                                Read More
+                            </Button>
+
+                            {experience.presentation_link && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    asChild
+                                    className="text-xs h-8"
+                                >
+                                    <a
+                                        href={experience.presentation_link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                     >
-                                        <a
-                                            href={experience.presentation_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            <ExternalLink className="mr-1.5 h-3 w-3" />
-                                            View Slides
-                                        </a>
-                                    </Button>
-                                )}
-                                {experience.video_recording_link && (
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        asChild
-                                        className="text-xs h-8"
+                                        <ExternalLink className="mr-1.5 h-3 w-3" />
+                                        View Slides
+                                    </a>
+                                </Button>
+                            )}
+                            {experience.video_recording_link && (
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    asChild
+                                    className="text-xs h-8"
+                                >
+                                    <a
+                                        href={experience.video_recording_link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                     >
-                                        <a
-                                            href={experience.video_recording_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                        >
-                                            <Video className="mr-1.5 h-3 w-3" />
-                                            Watch Talk
-                                        </a>
-                                    </Button>
-                                )}
-                            </div>
-                        )}
+                                        <Video className="mr-1.5 h-3 w-3" />
+                                        Watch Talk
+                                    </a>
+                                </Button>
+                            )}
+                        </div>
                     </CardContent>
                 </Card>
             ))}
+
+            {/* Detail Modal */}
+            {selectedExperience && (
+                <ExperienceDetailModal
+                    experience={selectedExperience}
+                    open={!!selectedExperience}
+                    onOpenChange={(open) => !open && setSelectedExperience(null)}
+                />
+            )}
         </div>
     )
 }
