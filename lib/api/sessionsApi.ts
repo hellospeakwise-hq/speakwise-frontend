@@ -1,6 +1,6 @@
 // API client for SpeakWise backend - Sessions endpoints
 import { Speaker } from './speakerApi';
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api`;
 
 // Location interface to match the actual backend response
 export interface Location {
