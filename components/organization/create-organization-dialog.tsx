@@ -27,7 +27,7 @@ export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: Crea
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        
+
         // Validation
         if (!formData.name.trim()) {
             toast.error("Organization name is required")
@@ -63,8 +63,9 @@ export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: Crea
             }
 
             const token = localStorage.getItem('accessToken')
-            
-            const response = await fetch('http://127.0.0.1:8000/api/organizations/', {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+
+            const response = await fetch(`${apiUrl}/api/organizations/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

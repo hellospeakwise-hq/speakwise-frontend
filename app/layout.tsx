@@ -84,9 +84,9 @@ export default function RootLayout({
           data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
           strategy="afterInteractive"
         />
-        
-        {/* Chatwoot */}
-        <Script
+
+        {/* Chatwoot - Disabled for now */}
+        {/* <Script
           id="chatwoot-script"
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
@@ -106,7 +106,7 @@ export default function RootLayout({
               })(document,"script");
             `,
           }}
-        />
+        /> */}
       </head>
       <body
         className={cn(
