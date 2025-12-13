@@ -89,9 +89,10 @@ export function AddExperienceDialog({ onSuccess }: AddExperienceDialogProps) {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button className="bg-orange-600 hover:bg-orange-700 text-white">
+                <Button>
                     <Plus className="mr-2 h-4 w-4" />
-                    Add Talk/Conference Experience
+                    <span className="hidden sm:inline">Add Talk/Conference Experience</span>
+                    <span className="sm:hidden">Add Experience</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
