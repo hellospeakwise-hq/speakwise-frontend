@@ -95,12 +95,15 @@ export function ExperiencesList({ speakerId }: ExperiencesListProps) {
                         </div>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                        {/* Truncated description - strip HTML and limit characters */}
-                        <div className="text-sm text-muted-foreground line-clamp-3">
-                            <div dangerouslySetInnerHTML={{
-                                __html: experience.description.substring(0, 200) + (experience.description.length > 200 ? '...' : '')
-                            }} />
-                        </div>
+                        {/* Truncated description with HTML rendering */}
+                        <div
+                            className="text-sm line-clamp-3 prose prose-sm max-w-none dark:prose-invert prose-strong:text-foreground prose-strong:font-bold"
+                            dangerouslySetInnerHTML={{
+                                __html: experience.description.length > 200
+                                    ? experience.description.substring(0, 200) + '...'
+                                    : experience.description
+                            }}
+                        />
 
                         <div className="flex flex-wrap gap-2 pt-2">
                             <Button

@@ -147,9 +147,10 @@ export function ManageExperiences() {
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <p className="text-sm text-muted-foreground line-clamp-3">
-                                    {experience.description}
-                                </p>
+                                <div
+                                    className="text-sm line-clamp-3 prose prose-sm max-w-none dark:prose-invert prose-strong:text-foreground prose-strong:font-bold"
+                                    dangerouslySetInnerHTML={{ __html: experience.description }}
+                                />
 
                                 {(experience.presentation_link || experience.video_recording_link) && (
                                     <div className="flex flex-wrap gap-2">

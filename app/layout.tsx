@@ -1,4 +1,5 @@
 import type React from "react"
+import Script from "next/script"
 import { Inter } from "next/font/google"
 import localFont from "next/font/local"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -20,10 +21,52 @@ const fontHeading = localFont({
 })
 
 export const metadata = {
-  title: "SpeakWise - Speaker Feedback Platform",
+  title: "SpeakWise - GitHub for Speakers | Showcase Your Talks & Get Feedback",
   description:
-    "Anonymous feedback for conference speakers, portfolios for speakers, and management tools for organizers",
-  generator: 'v0.dev'
+    "The GitHub for speakers. Build your speaking portfolio, showcase your conference talks, and receive anonymous feedback from attendees. The ultimate platform for speakers to grow and event organizers to manage.",
+  keywords: [
+    "speaker portfolio",
+    "github for speakers",
+    "showcase talks",
+    "conference talks",
+    "speaker feedback",
+    "anonymous feedback",
+    "speaking portfolio",
+    "event management",
+    "conference speakers",
+    "presentation feedback",
+    "public speaking",
+    "talk showcase",
+    "speaker profile",
+    "event organizers"
+  ],
+  authors: [{ name: "SpeakWise" }],
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://speak-wise.live",
+    title: "SpeakWise - GitHub for Speakers",
+    description:
+      "Build your speaking portfolio, showcase your conference talks, and get anonymous feedback from attendees. The GitHub for speakers.",
+    siteName: "SpeakWise",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SpeakWise - GitHub for Speakers",
+    description:
+      "Build your speaking portfolio, showcase your conference talks, and get anonymous feedback from attendees.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
 }
 
 export default function RootLayout({
@@ -33,6 +76,38 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Umami Analytics */}
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+          strategy="afterInteractive"
+        />
+        
+        {/* Chatwoot */}
+        <Script
+          id="chatwoot-script"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(d,t) {
+                var BASE_URL="https://app.chatwoot.com";
+                var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+                g.src=BASE_URL+"/packs/js/sdk.js";
+                g.async = true;
+                s.parentNode.insertBefore(g,s);
+                g.onload=function(){
+                  window.chatwootSDK.run({
+                    websiteToken: '${process.env.NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN}',
+                    baseUrl: BASE_URL
+                  })
+                }
+              })(document,"script");
+            `,
+          }}
+        />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",

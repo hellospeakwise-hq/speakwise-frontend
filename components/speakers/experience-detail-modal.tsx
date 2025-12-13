@@ -48,7 +48,7 @@ export function ExperienceDetailModal({ experience, open, onOpenChange }: Experi
                     <div className="space-y-3">
                         <h3 className="font-semibold text-lg">About this Talk</h3>
                         <div
-                            className="prose prose-sm max-w-none dark:prose-invert"
+                            className="prose prose-sm max-w-none dark:prose-invert prose-strong:text-foreground prose-strong:font-bold prose-p:text-foreground"
                             dangerouslySetInnerHTML={{ __html: experience.description }}
                         />
                     </div>
