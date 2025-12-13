@@ -85,16 +85,16 @@ export function ManageExperiences() {
     if (loading) {
         return (
             <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-orange-600" />
+                <Loader2 className="h-8 w-8 animate-spin" />
             </div>
         )
     }
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold">Manage Speaking Experiences</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold">Manage Speaking Experiences</h2>
                     <p className="text-muted-foreground mt-2">
                         Track your conference talks, presentations, and speaking engagements
                     </p>
@@ -114,11 +114,11 @@ export function ManageExperiences() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid gap-6 md:grid-cols-2">
+                <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
                     {experiences.map((experience) => (
                         <Card key={experience.id} className="hover:shadow-lg transition-shadow">
                             <CardHeader>
-                                <div className="flex items-start justify-between">
+                                <div className="flex items-start justify-between gap-2">
                                     <div className="flex-1">
                                         <CardTitle className="text-xl">{experience.topic}</CardTitle>
                                         <CardDescription className="mt-1 flex items-center gap-2">
@@ -126,7 +126,7 @@ export function ManageExperiences() {
                                             {formatDate(experience.event_date)} • {experience.event_name}
                                         </CardDescription>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-1 flex-shrink-0">
                                         <Button
                                             variant="ghost"
                                             size="icon"
