@@ -31,26 +31,34 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [user, setUser] = useState<User | null>(null);
-    const [loading, setLoading] = useState<boolean>(true);
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-    const [isClient, setIsClient] = useState<boolean>(false);
-    const router = useRouter();
+    // Initialize state from localStorage immediately (before render)
+    const [user, setUser] = useState<User | null>(() => {
+        if (typeof window === 'undefined') return null;
+        const storedUser = localStorage.getItem('user');
+        try {
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch {
+            return null;
+        }
+    });
 
-    // Mark component as client-side after hydration
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+        if (typeof window === 'undefined') return false;
+        const hasToken = !!localStorage.getItem('accessToken');
+        const hasUser = !!localStorage.getItem('user');
+        return hasToken && hasUser;
+    });
+
+    const [loading, setLoading] = useState<boolean>(false);
+    const router = useRouter();
 
     // Check if user is already logged in on initial load
     useEffect(() => {
-        if (!isClient) return; // Don't run on server
-
         const checkAuth = async () => {
-            setLoading(true);
             const accessToken = typeof window !== 'undefined' ? localStorage.getItem('accessToken') : null;
             const refreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
             console.log('[Auth] checkAuth start', { hasAccess: !!accessToken, hasRefresh: !!refreshToken });
+            
             if (authApi.isAuthenticated()) {
                 // Initialize automatic token refresh for existing session
                 initializeTokenRefresh();
@@ -59,7 +67,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 const storedUser = localStorage.getItem('user');
                 if (storedUser) {
                     try {
-                        setUser(JSON.parse(storedUser));
+                        const userData = JSON.parse(storedUser);
+                        setUser(userData);
                         setIsAuthenticated(true);
                     } catch (parseError) {
                         console.error('Error parsing stored user', parseError);
@@ -85,21 +94,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         console.error('Error validating authentication', error);
                     }
                     // If no stored user exists, logout
+                    const storedUser = localStorage.getItem('user');
                     if (!storedUser) {
                         await authApi.logout();
                         setIsAuthenticated(false);
+                        setUser(null);
                     }
                     // Otherwise, continue with stored user data (404 is expected during development)
                 }
             } else {
                 console.log('[Auth] not authenticated (no access token)');
                 setIsAuthenticated(false);
+                setUser(null);
             }
-            setLoading(false);
             console.log('[Auth] checkAuth end', { isAuthenticated });
         };
+        
         checkAuth();
-    }, [isClient]);
+    }, []);
 
     const login = async (email: string, password: string) => {
         setLoading(true);

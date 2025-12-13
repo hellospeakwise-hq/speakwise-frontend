@@ -7,17 +7,9 @@ import { MainNav } from "@/components/main-nav"
 import { Footer } from "@/components/footer"
 import { Toaster } from "sonner"
 import { AuthProvider } from "@/contexts/auth-context"
+import { DisableConsole } from "@/components/disable-console"
 import { cn } from "@/lib/utils"
 import "./globals.css"
-
-// Disable console logs in production
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'production') {
-  console.log = () => { }
-  console.error = () => { }
-  console.warn = () => { }
-  console.info = () => { }
-  console.debug = () => { }
-}
 
 const fontSans = Inter({
   subsets: ["latin"],
@@ -125,6 +117,7 @@ export default function RootLayout({
         )}
         suppressHydrationWarning
       >
+        <DisableConsole />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <div className="flex min-h-screen flex-col">
