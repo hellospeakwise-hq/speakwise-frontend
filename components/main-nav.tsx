@@ -1,8 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { useState, useMemo } from "react"
+import Image from "next/image"
+import { useState, useMemo, useEffect } from "react"
 import { usePathname } from "next/navigation"
+import { useTheme } from "next-themes"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
@@ -21,7 +23,17 @@ import {
 export function MainNav() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
   const { user, logout, isAuthenticated } = useAuth()
+  const { theme, systemTheme } = useTheme()
+
+  // Mark component as mounted
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Determine current theme (default to light if not mounted)
+  const currentTheme = mounted ? (theme === 'system' ? systemTheme : theme) : 'light'
 
   // Dynamic routes based on authentication state and user role
   const routes = useMemo(() => {
@@ -90,11 +102,14 @@ export function MainNav() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6 md:gap-10">
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="font-bold text-xl md:text-2xl">
-              <span className="text-orange-500">Speak</span>
-              <span className="text-foreground">Wise</span>
-            </div>
+          <Link href="/" className="flex items-center">
+            <Image
+              src={currentTheme === 'dark' ? '/logo-white.png' : '/logo-black.png'}
+              alt="SpeakWise"
+              width={80}
+              height={80}
+              className="h-16 w-auto"
+            />
           </Link>
           <nav className="hidden md:flex gap-6">
             {routes.map((route) => (
