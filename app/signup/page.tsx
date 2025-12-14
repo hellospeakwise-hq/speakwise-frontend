@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Metadata } from "next"
 import { SignUpForm } from "@/components/auth/sign-up-form"
 import { Icons } from "@/components/icons"
@@ -25,7 +26,20 @@ export default function SignUpPage() {
       </Link>
       <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
         <div className="flex flex-col space-y-2 text-center">
-          <Icons.logo className="mx-auto h-6 w-6" />
+          <Image
+            src="/logo-black.png"
+            alt="SpeakWise"
+            width={120}
+            height={120}
+            className="mx-auto h-24 w-auto dark:hidden"
+          />
+          <Image
+            src="/logo-white.png"
+            alt="SpeakWise"
+            width={120}
+            height={120}
+            className="mx-auto h-24 w-auto hidden dark:block"
+          />
           <h1 className="text-2xl font-semibold tracking-tight">
             Create an account
           </h1>

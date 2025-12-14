@@ -25,6 +25,9 @@ export const metadata = {
   title: "SpeakWise - GitHub for Speakers | Showcase Your Talks & Get Feedback",
   description:
     "The GitHub for speakers. Build your speaking portfolio, showcase your conference talks, and receive anonymous feedback from attendees. The ultimate platform for speakers to grow and event organizers to manage.",
+  icons: {
+    icon: "/logo-black.png",
+  },
   keywords: [
     "speaker portfolio",
     "github for speakers",
