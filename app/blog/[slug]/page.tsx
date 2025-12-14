@@ -9,13 +9,13 @@ import { buttonVariants } from "@/components/ui/button"
 const blogPosts = {
   "introducing-speakwise": {
     title: "Introducing SpeakWise: The Future of Speaker Management",
-    date: "2024-01-15",
+    date: "2025-12-14",
     author: "SpeakWise Team",
-    image: "/placeholder.svg",
+    image: "/speakwise-intro.png",
     content: `
 # Welcome to SpeakWise
 
-We're thrilled to introduce **SpeakWise**, a comprehensive platform designed to revolutionize how speakers, organizers, and attendees connect and collaborate.
+We're thrilled to introduce SpeakWise, a comprehensive platform designed to revolutionize how speakers, organizers, and attendees connect and collaborate.
 
 ## Our Mission
 
@@ -24,111 +24,132 @@ At SpeakWise, we believe that every speaker deserves the tools to manage their e
 ## Key Features
 
 ### For Speakers
-- **Professional Profiles**: Showcase your expertise with comprehensive speaker profiles
-- **Feedback Collection**: Gather valuable insights from your audiences
-- **Engagement Tracking**: Monitor your speaking career growth with detailed analytics
+- Professional Profiles: Showcase your expertise with comprehensive speaker profiles
+- Feedback Collection: Gather valuable insights from your audiences
+- Engagement Tracking: Monitor your speaking career growth with detailed analytics
 
 ### For Organizers
-- **Event Management**: Streamline conference planning and speaker coordination
-- **Speaker Discovery**: Find the perfect speakers for your events
-- **Attendee Engagement**: Facilitate connections between speakers and attendees
+- Event Management: Streamline conference planning and speaker coordination
+- Speaker Discovery: Find the perfect speakers for your events
+- Attendee Engagement: Facilitate connections between speakers and attendees
 
 ### For Attendees
-- **Event Discovery**: Find talks and conferences that match your interests
-- **Feedback Submission**: Share your thoughts and help speakers improve
-- **Networking**: Connect with speakers and fellow attendees
+- Event Discovery: Find talks and conferences that match your interests
+- Feedback Submission: Share your thoughts and help speakers improve
+- Networking: Connect with speakers and fellow attendees
+
+## The SpeakWise Difference
+
+Unlike traditional speaker management tools, SpeakWise brings together all three stakeholders in one unified platform. Speakers can build their portfolios, collect feedback, and track their growth. Organizers can discover talent and manage events seamlessly. Attendees can engage with content and speakers they're passionate about.
 
 ## Getting Started
 
-Ready to elevate your speaking career or organize your next event? [Sign up today](/signup) and join the SpeakWise community!
+Ready to elevate your speaking career or organize your next event? Contact us at [your-email@speakwise.com] and join the SpeakWise community today!
+
+Thank you for being part of our journey!
     `,
   },
   "speaker-feedback-best-practices": {
     title: "Best Practices for Collecting Speaker Feedback",
-    date: "2024-01-10",
+    date: "2025-12-14",
     author: "SpeakWise Team",
-    image: "/placeholder.svg",
+    image: "/best-practices.png",
     content: `
 # Best Practices for Collecting Speaker Feedback
 
-Feedback is essential for growth as a speaker. Here's how to collect and utilize feedback effectively.
+Feedback is essential for growth as a speaker. Here's how to collect and utilize feedback effectively using modern tools and strategies.
 
 ## Why Feedback Matters
 
 Constructive feedback helps you:
 - Identify strengths and areas for improvement
-- Understand audience preferences
-- Refine your presentation style
-- Build confidence
-
-## Effective Feedback Collection
-
-1. **Make it Easy**: Use simple forms with clear questions
-2. **Ask Specific Questions**: Focus on actionable areas
-3. **Timing is Key**: Collect feedback immediately after your talk
-4. **Be Open**: Welcome all types of feedback
-
-## Utilizing Feedback
-
-- Review patterns across multiple talks
-- Set specific improvement goals
+- Understand audience preferences and expectations
+- Refine your presentation style and delivery
+- Build confidence and credibility as a speaker
 - Track progress over time
-- Celebrate improvements
 
-With SpeakWise, feedback collection and analysis is built right into the platform!
+## Effective Feedback Collection Strategies
+
+1. Make it Easy: Use simple forms with clear questions so attendees can provide feedback without friction
+
+2. Ask Specific Questions: Focus on actionable areas rather than vague inquiries about overall satisfaction
+
+3. Timing is Key: Collect feedback immediately after your talk when the content is fresh in attendees' minds
+
+4. Be Open: Welcome all types of feedback, both positive and constructive criticism
+
+5. Use Multiple Formats: Consider surveys, open-ended responses, and rating scales
+
+## Utilizing Feedback for Improvement
+
+- Review patterns across multiple talks to identify consistent themes
+- Set specific improvement goals based on feedback received
+- Track progress over time and celebrate improvements
+- Share successes with your network
+- Continuously iterate and evolve your presentations
+
+## With SpeakWise
+
+Our platform makes feedback collection and analysis seamless. Attendees can provide feedback instantly, and you get access to detailed analytics and insights to help you grow as a speaker.
+
+Start collecting meaningful feedback today and take your speaking career to the next level!
     `,
   },
   "organizing-successful-conferences": {
     title: "5 Tips for Organizing Successful Tech Conferences",
-    date: "2024-01-05",
+    date: "2025-12-14",
     author: "SpeakWise Team",
-    image: "/placeholder.svg",
+    image: "/5-steps.png",
     content: `
 # 5 Tips for Organizing Successful Tech Conferences
 
-Planning a tech conference? Here are our top tips for success.
+Planning a tech conference is a complex but rewarding endeavor. Here are our top five tips for creating an event that attendees will love and remember.
 
 ## 1. Start Early
 
 Begin planning at least 6-12 months in advance. This gives you time to:
-- Secure the venue
-- Recruit speakers
-- Market the event
-- Handle logistics
+- Secure the venue and negotiate better rates
+- Recruit high-quality speakers
+- Market the event effectively
+- Handle logistics and unexpected challenges
 
 ## 2. Curate Quality Speakers
 
 Your speakers make or break the event. Look for:
-- Diverse perspectives
-- Engaging presenters
-- Relevant topics
-- Mix of experience levels
+- Diverse perspectives and backgrounds
+- Engaging presenters with strong communication skills
+- Relevant topics aligned with your audience
+- Mix of experience levels and speaker types
 
 ## 3. Focus on Attendee Experience
 
-Consider:
-- Comfortable venue
-- Good food and breaks
-- Networking opportunities
-- Clear communication
+Consider the full experience:
+- Comfortable and well-equipped venue
+- Quality food and beverage options
+- Regular breaks and networking opportunities
+- Clear signage and communication throughout the event
 
 ## 4. Embrace Technology
 
-Use platforms like SpeakWise to:
-- Manage speaker applications
-- Coordinate schedules
-- Collect feedback
-- Engage attendees
+Use modern platforms like SpeakWise to:
+- Manage speaker applications and schedules
+- Coordinate logistics and communications
+- Collect real-time feedback from attendees
+- Engage attendees before, during, and after the event
 
 ## 5. Gather and Act on Feedback
 
-Post-event feedback is crucial for:
-- Understanding what worked
-- Identifying improvements
-- Planning future events
-- Measuring success
+Post-event feedback is crucial for growth:
+- Understand what worked well and what didn't
+- Identify specific improvements for future events
+- Measure success against your goals
+- Show attendees you value their input
 
-Ready to organize your next conference? [Get started with SpeakWise](/signup)!
+## Conclusion
+
+Successful conferences require thoughtful planning, quality content, and a genuine focus on attendee experience. By following these tips and leveraging modern tools, you'll create an event that resonates with your audience.
+
+Ready to organize your next conference? Contact us at [your-email@speakwise.com] to learn how SpeakWise can help!
     `,
   },
 }
@@ -144,9 +165,10 @@ type BlogPost = {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }): Promise<Metadata> {
-  const post = blogPosts[params.slug as keyof typeof blogPosts]
+  const { slug } = await params
+  const post = blogPosts[slug as keyof typeof blogPosts]
 
   if (!post) {
     return {
@@ -160,12 +182,13 @@ export async function generateMetadata({
   }
 }
 
-export default function BlogPostPage({
+export default async function BlogPostPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const post = blogPosts[params.slug as keyof typeof blogPosts] as BlogPost | undefined
+  const { slug } = await params
+  const post = blogPosts[slug as keyof typeof blogPosts] as BlogPost | undefined
 
   if (!post) {
     notFound()

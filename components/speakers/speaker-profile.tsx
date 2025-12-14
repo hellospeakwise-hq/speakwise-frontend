@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Star, MapPin, Calendar, MessageSquare, Globe, Twitter, Linkedin, Github, Loader2, Mail, ExternalLink, Building2, Award } from "lucide-react"
 import { speakerApi, type Speaker } from '@/lib/api/speakerApi';
 import { organizationApi } from '@/lib/api/organizationApi';
+import { experiencesApi } from '@/lib/api/experiencesApi';
 import { useAuth } from '@/contexts/auth-context';
 import { ExperiencesList } from './experiences-list';
 
@@ -25,6 +26,13 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [hasApprovedOrg, setHasApprovedOrg] = useState(false);
+  const [experiences, setExperiences] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    averageRating: 0,
+    totalReviews: 0,
+    totalEvents: 0,
+    countries: 0,
+  });
 
   useEffect(() => {
     const checkOrganizations = async () => {
@@ -53,9 +61,49 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
         setError(null);
         const data = await speakerApi.getSpeakerById(id);
         setSpeaker(data);
+
+        // Fetch experiences for stats
+        try {
+          const expsData = await experiencesApi.getSpeakerExperiences(parseInt(id));
+          setExperiences(expsData || []);
+
+          // Calculate stats from actual data
+          const totalEvents = expsData?.length || 0;
+          const feedbackCount = data?.feedback_count || 0;
+
+          // Extract unique countries from experiences
+          const countriesSet = new Set<string>();
+          expsData?.forEach((exp: any) => {
+            if (exp.country) countriesSet.add(exp.country);
+            if (exp.location) countriesSet.add(exp.location);
+          });
+          const uniqueCountries = countriesSet.size > 0 ? countriesSet.size : (totalEvents > 0 ? 1 : 0);
+
+          setStats({
+            averageRating: 0,
+            totalReviews: feedbackCount,
+            totalEvents: totalEvents,
+            countries: uniqueCountries,
+          });
+        } catch (expError: any) {
+          // Experiences endpoint might require auth - use fallback
+          console.log('Experiences endpoint requires auth, using speaker data only');
+          setStats({
+            averageRating: 0,
+            totalReviews: data?.feedback_count || 0,
+            totalEvents: 0,
+            countries: 0,
+          });
+        }
       } catch (err) {
-        console.error('Error fetching speaker:', err);
+        console.error('Error loading speaker data:', err);
         setError('Failed to load speaker profile');
+        setStats({
+          averageRating: 0,
+          totalReviews: 0,
+          totalEvents: 0,
+          countries: 0,
+        });
       } finally {
         setLoading(false);
       }
@@ -107,13 +155,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
       !link.name.toLowerCase().includes('linkedin') &&
       !link.name.toLowerCase().includes('github')
     )?.link,
-  })  // For now, use placeholder data for features not yet implemented in backend
-  const placeholderStats = {
-    averageRating: 4.8,
-    totalReviews: 12,
-    totalEvents: 5,
-    countries: 3,
-  };
+  });
 
   const socials = speaker ? getSocialLinks(speaker) : { twitter: null, linkedin: null, github: null, website: null };
 
@@ -141,15 +183,6 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                 <div className="flex items-center mt-2 text-sm text-muted-foreground">
                   <MapPin className="h-4 w-4 mr-1" />
                   {speaker.country || 'Location not specified'}
-                </div>
-
-                <div className="flex items-center gap-2 mt-4">
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                    <span className="ml-1 font-medium">{placeholderStats.averageRating}</span>
-                  </div>
-                  <span className="text-muted-foreground">•</span>
-                  <span className="text-sm text-muted-foreground">{placeholderStats.totalReviews} reviews</span>
                 </div>
 
                 <div className="flex justify-center gap-4 mt-6">
@@ -271,36 +304,37 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
             <CardContent>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Average Rating</p>
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 mr-1" />
-                    <span className="font-bold">{placeholderStats.averageRating}</span>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Total Reviews</p>
+                  <p className="text-sm text-muted-foreground">Total Feedback</p>
                   <div className="flex items-center">
                     <MessageSquare className="h-4 w-4 text-primary mr-1" />
-                    <span className="font-bold">{placeholderStats.totalReviews}</span>
+                    <span className="font-bold">{stats.totalReviews}</span>
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Events</p>
+                  <p className="text-sm text-muted-foreground">Confirmed Events</p>
                   <div className="flex items-center">
                     <Calendar className="h-4 w-4 text-primary mr-1" />
-                    <span className="font-bold">{placeholderStats.totalEvents}</span>
+                    <span className="font-bold">{stats.totalEvents}</span>
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Countries</p>
+                  <p className="text-sm text-muted-foreground">Countries Spoken</p>
                   <div className="flex items-center">
                     <Globe className="h-4 w-4 text-primary mr-1" />
-                    <span className="font-bold">{placeholderStats.countries}</span>
+                    <span className="font-bold">{stats.countries}</span>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Engagement</p>
+                  <div className="flex items-center">
+                    <Award className="h-4 w-4 text-primary mr-1" />
+                    <span className="font-bold">{stats.totalReviews > 0 ? 'Active' : 'New'}</span>
                   </div>
                 </div>
               </div>
             </CardContent>
           </Card>
+
         </div>
 
         <div className="space-y-6">
@@ -316,10 +350,10 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
           </Card>
 
           <Tabs defaultValue="bio">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="bio">Biography</TabsTrigger>
-              <TabsTrigger value="experiences">Speaking Experience</TabsTrigger>
-              <TabsTrigger value="contact">Contact</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 gap-1">
+              <TabsTrigger value="bio" className="text-xs sm:text-sm">Bio</TabsTrigger>
+              <TabsTrigger value="experiences" className="text-xs sm:text-sm">Speaking Experiences</TabsTrigger>
+              <TabsTrigger value="contact" className="text-xs sm:text-sm">Contact</TabsTrigger>
             </TabsList>
             <TabsContent value="bio" className="mt-4">
               <Card>

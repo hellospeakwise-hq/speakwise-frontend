@@ -37,10 +37,17 @@ export const experiencesApi = {
         }
     },
 
-    // Get experiences for a specific speaker (public)
+    // Get experiences for a specific speaker
     async getSpeakerExperiences(speakerId: number): Promise<SpeakerExperience[]> {
-        const response = await apiClient.get(`/speakers/experiences/?speaker=${speakerId}`);
-        return response.data;
+        try {
+            console.log(`🔍 Fetching experiences for speaker ${speakerId}`);
+            const response = await apiClient.get(`/speakers/experiences/?speaker=${speakerId}`);
+            console.log('📥 Experiences loaded:', response.data);
+            return response.data || [];
+        } catch (error: any) {
+            console.error('❌ Error fetching experiences:', error);
+            return []; // Return empty array instead of throwing
+        }
     },
 
     // Get a specific experience by ID
