@@ -103,13 +103,24 @@ export function MainNav() {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center gap-6 md:gap-10">
           <Link href="/" className="flex items-center">
-            <Image
-              src={currentTheme === 'dark' ? '/logo-white.png' : '/logo-black.png'}
-              alt="SpeakWise"
-              width={80}
-              height={80}
-              className="h-16 w-auto"
-            />
+            {mounted && (
+              <Image
+                src={currentTheme === 'dark' ? '/logo-white.png' : '/logo-black.png'}
+                alt="SpeakWise"
+                width={80}
+                height={80}
+                className="h-16 w-auto"
+              />
+            )}
+            {!mounted && (
+              <Image
+                src="/logo-black.png"
+                alt="SpeakWise"
+                width={80}
+                height={80}
+                className="h-16 w-auto"
+              />
+            )}
           </Link>
           <nav className="hidden md:flex gap-6">
             {routes.map((route) => (
@@ -127,9 +138,9 @@ export function MainNav() {
           </nav>
         </div>
         <div className="hidden md:flex items-center gap-4">
-          {isAuthenticated && <OrganizationBadge />}
+          {mounted && isAuthenticated && <OrganizationBadge />}
           <ModeToggle />
-          {isAuthenticated ? (
+          {mounted && isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
@@ -153,7 +164,7 @@ export function MainNav() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
+          ) : mounted ? (
             <>
               <Link href="/signin">
                 <Button variant="outline" size="sm">
@@ -164,7 +175,7 @@ export function MainNav() {
                 <Button size="sm">Sign Up</Button>
               </Link>
             </>
-          )}
+          ) : null}
         </div>
         <div className="md:hidden flex items-center gap-4">
           {isAuthenticated && <OrganizationBadge />}
