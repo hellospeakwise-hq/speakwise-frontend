@@ -96,7 +96,7 @@ export function ManageExperiences() {
                 <div>
                     <h2 className="text-2xl sm:text-3xl font-bold">Manage Speaking Experiences</h2>
                     <p className="text-muted-foreground mt-2">
-                        Track your conference talks, presentations, and speaking engagements
+                        Let's others learn from your expertise by showcasing your past talks and presentations, helping you build credibility as a speaker.
                     </p>
                 </div>
                 <AddExperienceDialog onSuccess={fetchExperiences} />

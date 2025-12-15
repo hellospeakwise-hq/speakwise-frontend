@@ -149,7 +149,7 @@ Post-event feedback is crucial for growth:
 
 Successful conferences require thoughtful planning, quality content, and a genuine focus on attendee experience. By following these tips and leveraging modern tools, you'll create an event that resonates with your audience.
 
-Ready to organize your next conference? Contact us at [your-email@speakwise.com] to learn how SpeakWise can help!
+Ready to organize your next conference? Contact us at [hello.speakwise@gmail.com] to learn how SpeakWise can help!
     `,
   },
 }
