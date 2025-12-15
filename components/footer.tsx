@@ -20,14 +20,14 @@ export function Footer({ className }: React.HTMLAttributes<HTMLElement>) {
             >
               Learn more
             </Link>
-            . The source code is available on{" "}
+            . Follow us{" "}
             <Link
-              href="https://github.com/hellospeakwise-hq/speakwise-frontend"
+              href="https://www.linkedin.com/company/speakwise-conferences/"
               target="_blank"
               rel="noreferrer"
               className="font-medium underline underline-offset-4"
             >
-              GitHub
+              Linkedin
             </Link>
             .
           </p>

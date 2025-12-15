@@ -34,11 +34,11 @@ export function SpeakerDashboardView() {
       </div>
 
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming Events</TabsTrigger>
-          <TabsTrigger value="requests">Speaking Requests</TabsTrigger>
-          <TabsTrigger value="feedback">Feedback & Performance</TabsTrigger>
+        <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b rounded-none p-0 h-auto gap-0 flex-nowrap">
+          <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4">Overview</TabsTrigger>
+          <TabsTrigger value="upcoming" className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4">Upcoming Events</TabsTrigger>
+          <TabsTrigger value="requests" className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4">Speaking Requests</TabsTrigger>
+          <TabsTrigger value="feedback" className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4">Feedback & Performance</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
