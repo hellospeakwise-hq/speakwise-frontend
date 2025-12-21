@@ -1,12 +1,12 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Icons } from "@/components/icons"
 import { toast } from "sonner"
 
-export default function OAuthCallbackPage() {
+function OAuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { setUser } = useAuth()
@@ -116,5 +116,26 @@ export default function OAuthCallbackPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container flex h-screen w-screen flex-col items-center justify-center">
+          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+            <div className="flex flex-col space-y-4 text-center">
+              <Icons.spinner className="mx-auto h-12 w-12 animate-spin" />
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Loading...
+              </h1>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <OAuthCallbackContent />
+    </Suspense>
   )
 }
