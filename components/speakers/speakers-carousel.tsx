@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Speaker } from "@/lib/api/speakerApi"
 import { Eye } from "lucide-react"
+import { getAvatarUrl } from "@/lib/utils"
 
 interface SpeakersCarouselProps {
     speakers: Speaker[]
@@ -35,7 +36,7 @@ export function SpeakersCarousel({ speakers, onSpeakerSelect, filteredCount }: S
                     >
                         <div className="w-28 h-28 rounded-full overflow-hidden bg-orange-100 border-2 border-orange-200 hover:border-orange-400 transition-colors relative">
                             <img
-                                src={speaker.avatar || '/placeholder.svg'}
+                                src={getAvatarUrl(speaker.avatar)}
                                 alt={speaker.speaker_name || `Speaker ${speaker.id}`}
                                 className="w-full h-full object-cover"
                                 onError={(e) => {

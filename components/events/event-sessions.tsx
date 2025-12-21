@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Clock, Loader2, User, MessageSquare, Search, X } from "lucide-react";
 import { apiClient } from '@/lib/api/base';
 import { speakerApi, type Speaker } from '@/lib/api/speakerApi';
+import { getAvatarUrl } from '@/lib/utils';
 import {
     Command,
     CommandEmpty,
@@ -179,7 +180,7 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                                     <div className="flex items-center gap-2 truncate">
                                         <Avatar className="h-6 w-6">
                                             {selectedSpeaker.avatar ? (
-                                                <AvatarImage src={selectedSpeaker.avatar} alt={selectedSpeaker.name} />
+                                                <AvatarImage src={getAvatarUrl(selectedSpeaker.avatar)} alt={selectedSpeaker.name} />
                                             ) : (
                                                 <AvatarFallback className="text-xs">
                                                     {selectedSpeaker.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -214,7 +215,7 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                                             >
                                                 <Avatar className="h-10 w-10">
                                                     {speaker.avatar ? (
-                                                        <AvatarImage src={speaker.avatar} alt={speaker.name} />
+                                                        <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.name} />
                                                     ) : (
                                                         <AvatarFallback>
                                                             {speaker.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -300,7 +301,7 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                                     {talk.speaker_details?.avatar ? (
                                         <Avatar className="h-8 w-8">
                                             <AvatarImage
-                                                src={talk.speaker_details.avatar}
+                                                src={getAvatarUrl(talk.speaker_details.avatar)}
                                                 alt={talk.speaker_name}
                                             />
                                             <AvatarFallback className="text-sm">

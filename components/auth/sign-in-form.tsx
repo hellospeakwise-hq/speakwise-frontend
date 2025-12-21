@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Icons } from "@/components/icons"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
+import { initiateOAuthLogin } from "@/lib/utils/oauth"
 
 export function SignInForm() {
   const router = useRouter()
@@ -81,6 +82,10 @@ export function SignInForm() {
     }
   }
 
+  const handleOAuthLogin = (provider: 'github' | 'google') => {
+    initiateOAuthLogin(provider)
+  }
+
   return (
     <div className="grid gap-6">
       <form onSubmit={handleSubmit}>
@@ -135,6 +140,44 @@ export function SignInForm() {
           </button>
         </div>
       </form>
+      
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Or login with
+          </span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <button
+          type="button"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "w-full"
+          )}
+          onClick={() => handleOAuthLogin('github')}
+          disabled={isLoading}
+        >
+          <Icons.gitHub className="mr-2 h-4 w-4" />
+          GitHub
+        </button>
+        <button
+          type="button"
+          className={cn(
+            buttonVariants({ variant: "outline" }),
+            "w-full"
+          )}
+          onClick={() => handleOAuthLogin('google')}
+          disabled={isLoading}
+        >
+          <Icons.google className="mr-2 h-4 w-4" />
+          Google
+        </button>
+      </div>
     </div>
   )
 }

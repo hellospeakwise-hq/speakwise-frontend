@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { X, MapPin } from "lucide-react"
 import Link from "next/link"
+import { getAvatarUrl } from "@/lib/utils"
 
 interface SpeakerPreviewModalProps {
     speaker: Speaker | null
@@ -22,10 +23,6 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: SpeakerPreview
     }, [])
 
     if (!mounted || !isOpen || !speaker) return null
-
-    const getAvatarUrl = (avatarPath: string | null) => {
-        return avatarPath || "/placeholder.svg"
-    }
 
     return (
         <>
@@ -54,7 +51,7 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: SpeakerPreview
                         <div className="flex justify-center">
                             <div className="w-24 h-24 rounded-full overflow-hidden bg-orange-100 border-2 border-orange-200">
                                 <img
-                                    src={getAvatarUrl(speaker.avatar || null)}
+                                    src={getAvatarUrl(speaker.avatar)}
                                     alt={speaker.speaker_name || `Speaker ${speaker.id}`}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {

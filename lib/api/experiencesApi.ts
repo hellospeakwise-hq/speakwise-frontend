@@ -37,11 +37,11 @@ export const experiencesApi = {
         }
     },
 
-    // Get experiences for a specific speaker
+    // Get experiences for a specific speaker (public endpoint - no auth required)
     async getSpeakerExperiences(speakerId: number): Promise<SpeakerExperience[]> {
         try {
-            console.log(`🔍 Fetching experiences for speaker ${speakerId}`);
-            const response = await apiClient.get(`/speakers/experiences/?speaker=${speakerId}`);
+            console.log(`🔍 Fetching experiences for speaker ${speakerId} (public endpoint)`);
+            const response = await apiClient.get(`/speakers/${speakerId}/experiences/`);
             console.log('📥 Experiences loaded:', response.data);
             return response.data || [];
         } catch (error: any) {
