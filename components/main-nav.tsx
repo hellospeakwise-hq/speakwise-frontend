@@ -64,6 +64,11 @@ export function MainNav() {
         active: pathname === "/about",
       },
       {
+        href: "/pricing",
+        label: "Pricing",
+        active: pathname === "/pricing",
+      },
+      {
         href: "/contact",
         label: "Contact",
         active: pathname === "/contact",
