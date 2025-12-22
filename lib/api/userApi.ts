@@ -29,6 +29,7 @@ export interface SpeakerProfile {
     country: string;
     avatar: string;
     user_account: string;
+    experiences?: any[];
 }
 
 export interface UserProfileResponse {
@@ -87,12 +88,12 @@ export const userApi = {
         }
     },
 
-    // Upload avatar (PUT /api/users/me/)
+    // Upload avatar (PATCH /api/users/me/)
     async uploadAvatar(file: File): Promise<UserProfileResponse> {
         const formData = new FormData();
         formData.append('avatar', file);
         
-        const response = await apiClient.put('/users/me/', formData, {
+        const response = await apiClient.patch('/users/me/', formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
             },

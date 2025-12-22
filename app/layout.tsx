@@ -120,7 +120,7 @@ export default function RootLayout({
         )}
         suppressHydrationWarning
       >
-        <DisableConsole />
+        {/* <DisableConsole /> */}
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <div className="flex min-h-screen flex-col">

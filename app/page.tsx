@@ -6,9 +6,15 @@ import { buttonVariants } from "@/components/ui/button"
 import { Icons } from "@/components/icons"
 import { ArrowRight, TrendingUp, Users, Shield, Zap, BarChart3, Target } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { useEffect, useState } from "react"
 
 export default function Home() {
   const { isAuthenticated } = useAuth()
+  const [hasMounted, setHasMounted] = useState(false)
+
+  useEffect(() => {
+    setHasMounted(true)
+  }, [])
   return (
     <>
       {/* Hero Section */}
@@ -16,7 +22,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-background -z-10" />
         <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center relative">
           <Link
-            href="`https://github.com/hellospeakwise-hq"
+            href="`"
             className="inline-flex items-center gap-2 rounded-2xl bg-muted px-4 py-1.5 text-sm font-medium hover:bg-muted/80 transition-colors"
             target="_blank"
           >
@@ -32,7 +38,7 @@ export default function Home() {
             Build your speaking reputation with real performance data, not just social proof.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            {isAuthenticated ? (
+            {hasMounted && isAuthenticated ? (
               <Link href="/dashboard" className={cn(buttonVariants({ size: "lg", className: "gap-2" }))}>
                 Go to Dashboard <ArrowRight className="h-4 w-4" />
               </Link>
@@ -53,11 +59,12 @@ export default function Home() {
           <div className="flex items-center gap-8 mt-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-8 w-8 rounded-full bg-gradient-to-br from-gray-400 to-gray-600 dark:from-gray-600 dark:to-gray-400 border-2 border-background" />
-                ))}
+                <img src="/Julius.png" alt="Speaker" className="h-8 w-8 rounded-full object-cover border-2 border-background" />
+                <img src="/ezi.jpeg" alt="Speaker" className="h-8 w-8 rounded-full object-cover border-2 border-background" />
+                <img src="/joe.jpeg" alt="Speaker" className="h-8 w-8 rounded-full object-cover border-2 border-background" />
+                <img src="/juliana.jpeg" alt="Speaker" className="h-8 w-8 rounded-full object-cover border-2 border-background" />
               </div>
-              <span>100+ speakers</span>
+              <span>50+ speakers</span>
             </div>
             <div className="h-4 w-px bg-border" />
             <div className="flex items-center gap-2">

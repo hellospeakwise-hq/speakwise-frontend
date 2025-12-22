@@ -75,8 +75,8 @@ export function MainNav() {
       },
     ];
 
-    // Add dashboard link based on user role
-    if (isAuthenticated && user?.role?.role) {
+    // Add dashboard link based on user role (only when mounted)
+    if (mounted && isAuthenticated && user?.role?.role) {
       let dashboardRoute = "/dashboard";
 
       switch (user.role.role) {
@@ -101,7 +101,7 @@ export function MainNav() {
     }
 
     return baseRoutes;
-  }, [pathname, user, isAuthenticated]);
+  }, [pathname, user, isAuthenticated, mounted]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -183,7 +183,7 @@ export function MainNav() {
           ) : null}
         </div>
         <div className="md:hidden flex items-center gap-4">
-          {isAuthenticated && <OrganizationBadge />}
+          {mounted && isAuthenticated && <OrganizationBadge />}
           <ModeToggle />
           <Button variant="ghost" size="icon" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
             {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -207,7 +207,7 @@ export function MainNav() {
               </Link>
             ))}
             <div className="flex flex-col gap-2 mt-4 pt-4 border-t">
-              {isAuthenticated ? (
+              {mounted && isAuthenticated ? (
                 <>
                   <div className="px-2 py-1.5 text-sm font-medium">
                     Signed in as <span className="font-bold">{user ? `${user.first_name || ''} ${user.last_name || ''}` : 'User'}</span>
@@ -230,7 +230,7 @@ export function MainNav() {
                     Sign Out
                   </Button>
                 </>
-              ) : (
+              ) : mounted ? (
                 <>
                   <Link href="/signin">
                     <Button variant="outline" className="w-full" onClick={() => setIsMenuOpen(false)}>
@@ -243,7 +243,7 @@ export function MainNav() {
                     </Button>
                   </Link>
                 </>
-              )}
+              ) : null}
             </div>
           </nav>
         </div>
