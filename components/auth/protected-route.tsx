@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter, usePathname } from "next/navigation"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
 export interface ProtectedRouteProps {
@@ -14,8 +14,16 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
     const { isAuthenticated, user, loading } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
+    const [mounted, setMounted] = useState(false)
+
+    // Prevent hydration mismatch by waiting for client mount
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     useEffect(() => {
+        if (!mounted) return
+        
         if (!loading && !isAuthenticated) {
             toast.error("Please sign in to access this page")
 
@@ -35,10 +43,10 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
                 router.push('/dashboard')
             }
         }
-    }, [isAuthenticated, loading, router, pathname, roles, user])
+    }, [isAuthenticated, loading, router, pathname, roles, user, mounted])
 
-    // Show loading state or nothing while checking auth
-    if (loading || !isAuthenticated) {
+    // Show loading state while mounting or checking auth
+    if (!mounted || loading || !isAuthenticated) {
         return (
             <div className="flex min-h-[50vh] items-center justify-center">
                 <div className="h-16 w-16 animate-spin rounded-full border-4 border-gray-300 border-t-primary"></div>

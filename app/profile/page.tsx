@@ -21,9 +21,11 @@ import { profileOnboardingSteps } from "@/components/onboarding/onboarding-steps
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { AddExperienceDialog } from "@/components/speakers/add-experience-dialog"
 import { ExperiencesList } from "@/components/speakers/experiences-list"
+import { ProfileCompletionTracker } from "@/components/profile/profile-completion-tracker"
 
 export default function ProfilePage() {
     const { user } = useAuth()
+    const [mounted, setMounted] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [profileData, setProfileData] = useState<UserProfileResponse | null>(null)
     const [isCreateOrgDialogOpen, setIsCreateOrgDialogOpen] = useState(false)
@@ -47,17 +49,25 @@ export default function ProfilePage() {
     const [availableSkills, setAvailableSkills] = useState<SkillTag[]>([])
     const [newSkillName, setNewSkillName] = useState("")
 
+    // Mark component as mounted to prevent hydration mismatches
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
     // Load profile data on mount
     useEffect(() => {
-        loadProfile()
-        loadAvailableSkills()
-        loadOrganizations()
-    }, [])
+        if (mounted) {
+            loadProfile()
+            loadAvailableSkills()
+            loadOrganizations()
+        }
+    }, [mounted])
 
     // Update form state when profile data loads
     useEffect(() => {
-        if (profileData) {
-            const { user: userData, speaker } = profileData
+        if (profileData?.user) {
+            const userData = profileData.user
+            const speaker = profileData.speaker
 
             // User data
             setFirstName(userData.first_name || '')
@@ -80,7 +90,28 @@ export default function ProfilePage() {
         try {
             setIsLoadingProfile(true)
             const data = await userApi.getUserProfile()
-            setProfileData(data)
+            console.log('📥 Profile API response:', JSON.stringify(data, null, 2))
+            
+            // Handle the actual API structure:
+            // - User fields are at root level (first_name, last_name, email, etc.)
+            // - Speaker is an array, we need the first element
+            if (data) {
+                const speakerData = Array.isArray(data.speaker) ? data.speaker[0] : data.speaker
+                
+                const wrappedData: UserProfileResponse = {
+                    user: {
+                        id: data.id,
+                        first_name: data.first_name,
+                        last_name: data.last_name,
+                        email: data.email,
+                        nationality: data.nationality,
+                        username: data.username,
+                    },
+                    speaker: speakerData || null
+                }
+                console.log('📥 Wrapped data:', wrappedData)
+                setProfileData(wrappedData as UserProfileResponse)
+            }
         } catch (error) {
             console.error('Failed to load profile:', error)
             toast.error("Failed to load profile")
@@ -236,7 +267,8 @@ export default function ProfilePage() {
         loadOrganizations()
     }
 
-    if (isLoadingProfile) {
+    // Prevent hydration mismatch by not rendering until mounted
+    if (!mounted || isLoadingProfile || !profileData) {
         return (
             <ProtectedRoute>
                 <div className="container py-10">
@@ -251,11 +283,13 @@ export default function ProfilePage() {
     return (
         <ProtectedRoute>
             <div className="container py-10">
-                <div className="flex flex-col space-y-6 max-w-4xl mx-auto">
-                    <div className="space-y-2">
-                        <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-                        <p className="text-muted-foreground">Manage your personal information</p>
-                    </div>
+                <div className="flex gap-6 max-w-5xl mx-auto">
+                    {/* Main Content */}
+                    <div className="flex-1 flex flex-col space-y-6 max-w-4xl">
+                        <div className="space-y-2">
+                            <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+                            <p className="text-muted-foreground">Manage your personal information</p>
+                        </div>
 
                     {/* Profile Picture - First */}
                     <Card data-tour="profile-picture">
@@ -346,7 +380,7 @@ export default function ProfilePage() {
                                     <Input
                                         id="email"
                                         type="email"
-                                        value={profileData?.user.email || ''}
+                                        value={profileData?.user?.email || user?.email || ''}
                                         disabled
                                     />
                                 </div>
@@ -609,6 +643,17 @@ export default function ProfilePage() {
                             </div>
                         </CardContent>
                     </Card>
+                    </div>
+
+                    {/* Sidebar - Profile Completion Tracker */}
+                    <div className="hidden lg:block w-64 flex-shrink-0">
+                        <div className="sticky top-24">
+                            <ProfileCompletionTracker 
+                                profileData={profileData} 
+                                onEditClick={() => setIsEditing(true)}
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
