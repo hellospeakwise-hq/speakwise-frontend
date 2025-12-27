@@ -48,6 +48,7 @@ export default function ProfilePage() {
     const [skillTags, setSkillTags] = useState<SkillTag[]>([])
     const [availableSkills, setAvailableSkills] = useState<SkillTag[]>([])
     const [newSkillName, setNewSkillName] = useState("")
+    const [avatarKey, setAvatarKey] = useState(Date.now()) // Cache buster for avatar image
 
     // Mark component as mounted to prevent hydration mismatches
     useEffect(() => {
@@ -65,23 +66,30 @@ export default function ProfilePage() {
 
     // Update form state when profile data loads
     useEffect(() => {
-        if (profileData?.user) {
-            const userData = profileData.user
-            const speaker = profileData.speaker
+        if (profileData) {
+            const data = profileData as any
+            
+            // Handle user data - could be nested under 'user' or at root level
+            const userData = data.user || data
+            if (userData) {
+                setFirstName(userData.first_name || '')
+                setLastName(userData.last_name || '')
+                setUsername(userData.username || '')
+                setNationality(userData.nationality || '')
+            }
 
-            // User data
-            setFirstName(userData.first_name || '')
-            setLastName(userData.last_name || '')
-            setUsername(userData.username || '')
-            setNationality(userData.nationality || '')
-
-            // Speaker data
-            if (speaker) {
-                setOrganization(speaker.organization || "")
-                setShortBio(speaker.short_bio || "")
-                setLongBio(speaker.long_bio || "")
-                setCountry(speaker.country || "")
-                setSkillTags(speaker.skill_tag || [])
+            // Handle speaker data - could be nested object, array, or at root
+            let speakerData = data.speaker
+            if (Array.isArray(speakerData) && speakerData.length > 0) {
+                speakerData = speakerData[0] // Take first speaker if array
+            }
+            
+            if (speakerData) {
+                setOrganization(speakerData.organization || "")
+                setShortBio(speakerData.short_bio || "")
+                setLongBio(speakerData.long_bio || "")
+                setCountry(speakerData.country || "")
+                setSkillTags(speakerData.skill_tag || [])
             }
         }
     }, [profileData])
@@ -90,28 +98,7 @@ export default function ProfilePage() {
         try {
             setIsLoadingProfile(true)
             const data = await userApi.getUserProfile()
-            console.log('📥 Profile API response:', JSON.stringify(data, null, 2))
-            
-            // Handle the actual API structure:
-            // - User fields are at root level (first_name, last_name, email, etc.)
-            // - Speaker is an array, we need the first element
-            if (data) {
-                const speakerData = Array.isArray(data.speaker) ? data.speaker[0] : data.speaker
-                
-                const wrappedData: UserProfileResponse = {
-                    user: {
-                        id: data.id,
-                        first_name: data.first_name,
-                        last_name: data.last_name,
-                        email: data.email,
-                        nationality: data.nationality,
-                        username: data.username,
-                    },
-                    speaker: speakerData || null
-                }
-                console.log('📥 Wrapped data:', wrappedData)
-                setProfileData(wrappedData as UserProfileResponse)
-            }
+            setProfileData(data)
         } catch (error) {
             console.error('Failed to load profile:', error)
             toast.error("Failed to load profile")
@@ -126,9 +113,6 @@ export default function ProfilePage() {
             setAvailableSkills(tags as any)
         } catch (error: any) {
             // Silently handle 404 - endpoint not implemented yet
-            if (error?.response?.status !== 404) {
-                console.error('Failed to load skill tags:', error)
-            }
             setAvailableSkills([]) // Set empty array as fallback
         }
     }
@@ -151,7 +135,10 @@ export default function ProfilePage() {
 
     const handleSaveProfile = async () => {
         try {
-            // Build flat structure (all fields at root level)
+            const data = profileData as any
+            const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
+            
+            // Build update data with nested speaker including ID for update (not create)
             const updateData: any = {
                 first_name: firstName,
                 last_name: lastName,
@@ -159,51 +146,33 @@ export default function ProfilePage() {
                 nationality: nationality,
             }
 
-            // Add speaker data if user has speaker profile
-            if (profileData?.speaker) {
-                updateData.organization = organization
-                updateData.short_bio = shortBio
-                updateData.long_bio = longBio
-                updateData.country = country
-                updateData.skill_tag = skillTags.map(tag => tag.id)
+            // Add speaker data as nested array with ID to trigger UPDATE not CREATE
+            if (speakerData?.id) {
+                updateData.speaker = [{
+                    id: speakerData.id,  // CRITICAL: Include ID to update existing, not create new
+                    user_account: speakerData.user_account,
+                    organization: organization,
+                    short_bio: shortBio,
+                    long_bio: longBio,
+                    country: country,
+                    // skill_tag excluded - backend expects objects not integers
+                }]
             }
 
-            console.log('📤 Sending update with data:', updateData)
+            console.log('📤 Sending update with data:', JSON.stringify(updateData, null, 2))
             const updatedProfile = await userApi.updateUserProfile(updateData)
             console.log('📥 Received updated profile:', updatedProfile)
 
             // Update state with new data
             setProfileData(updatedProfile)
-
-            // Verify the changes by comparing
-            console.log('🔍 Verification:')
-            console.log('Sent short_bio:', updateData.short_bio)
-            console.log('Received short_bio:', updatedProfile.speaker?.short_bio)
-            console.log('Match?', updateData.short_bio === updatedProfile.speaker?.short_bio)
-
             toast.success("Profile updated successfully")
             setIsEditing(false)
 
-            // Force reload to verify backend actually saved the data
-            console.log('🔄 Reloading profile from backend to verify persistence...')
+            // Reload to verify
             setTimeout(async () => {
                 const freshData = await userApi.getUserProfile()
-                console.log('📥 Fresh data from backend:', freshData)
-                console.log('🔍 Persistence check:')
-                console.log('Expected short_bio:', updateData.short_bio)
-                console.log('Actual short_bio:', freshData.speaker?.short_bio)
-                console.log('Was it saved?', updateData.short_bio === freshData.speaker?.short_bio)
-
-                if (updateData.short_bio !== freshData.speaker?.short_bio) {
-                    console.error('❌ BACKEND DID NOT SAVE THE CHANGES!')
-                    console.error('The backend serializer is likely read-only for these fields')
-                    toast.error("Warning: Changes may not have been saved by the backend")
-                } else {
-                    console.log('✅ Changes were persisted successfully!')
-                }
-
                 setProfileData(freshData)
-            }, 1000)
+            }, 500)
         } catch (error: any) {
             console.error('Failed to update profile:', error)
             console.error('Error response:', error.response?.data)
@@ -220,13 +189,51 @@ export default function ProfilePage() {
         if (!file) return
 
         try {
-            const updatedProfile = await userApi.uploadAvatar(file)
-            setProfileData(updatedProfile)
+            const data = profileData as any
+            const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
+            
+            if (!speakerData?.id) {
+                toast.error("Speaker profile not found")
+                return
+            }
+            
+            // Upload avatar via /api/users/me/ with multipart form data
+            const formData = new FormData()
+            formData.append('speaker[0]id', speakerData.id.toString())
+            formData.append('speaker[0]user_account', speakerData.user_account)
+            formData.append('speaker[0]avatar', file)
+            
+            console.log('📤 Uploading avatar for speaker ID:', speakerData.id)
+            
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/me/`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+                },
+                body: formData
+            })
+            
+            if (!response.ok) {
+                const errorData = await response.json()
+                console.error('❌ Avatar upload failed:', errorData)
+                throw new Error(errorData.detail || 'Failed to upload avatar')
+            }
+            
             toast.success("Avatar uploaded successfully")
-        } catch (error) {
+            
+            // Force refresh the image by updating the cache key
+            setAvatarKey(Date.now())
+            
+            // Reload to get fresh data from server
+            const freshData = await userApi.getUserProfile()
+            setProfileData(freshData)
+        } catch (error: any) {
             console.error('Failed to upload avatar:', error)
-            toast.error("Failed to upload avatar")
+            toast.error(error.message || "Failed to upload avatar")
         }
+        
+        // Reset the input so the same file can be selected again
+        event.target.value = ''
     }
 
     const addSkillTag = async () => {
@@ -283,7 +290,7 @@ export default function ProfilePage() {
     return (
         <ProtectedRoute>
             <div className="container py-10">
-                <div className="flex gap-6 max-w-5xl mx-auto">
+                <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto">
                     {/* Main Content */}
                     <div className="flex-1 flex flex-col space-y-6 max-w-4xl">
                         <div className="space-y-2">
@@ -298,51 +305,63 @@ export default function ProfilePage() {
                             <CardDescription>Upload your profile picture</CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="flex items-center space-x-4">
-                                {profileData?.speaker?.avatar && (
-                                    <div className="relative">
-                                        <img
-                                            src={profileData.speaker.avatar.startsWith('http')
-                                                ? profileData.speaker.avatar
-                                                : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${profileData.speaker.avatar}`
-                                            }
-                                            alt="Profile"
-                                            className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                                            onError={(e) => {
-                                                e.currentTarget.style.display = 'none';
-                                            }}
-                                        />
+                            {(() => {
+                                const data = profileData as any
+                                const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
+                                const avatarUrl = speakerData?.avatar
+                                
+                                // Add cache-busting parameter to force browser to reload image
+                                const getAvatarSrc = () => {
+                                    if (!avatarUrl) return ''
+                                    const baseUrl = avatarUrl.startsWith('http')
+                                        ? avatarUrl
+                                        : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${avatarUrl}`
+                                    return `${baseUrl}?t=${avatarKey}`
+                                }
+                                
+                                return (
+                                    <div className="flex items-center space-x-4">
+                                        {avatarUrl && (
+                                            <div className="relative">
+                                                <img
+                                                    src={getAvatarSrc()}
+                                                    alt="Profile"
+                                                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                                                    onError={(e) => {
+                                                        e.currentTarget.style.display = 'none';
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                        <div className="flex flex-col space-y-2">
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleAvatarUpload}
+                                                className="hidden"
+                                                id="avatar-upload"
+                                            />
+                                            <label htmlFor="avatar-upload">
+                                                <Button
+                                                    variant="outline"
+                                                    className="cursor-pointer"
+                                                    asChild
+                                                >
+                                                    <span>
+                                                        <Upload className="w-4 h-4 mr-2" />
+                                                        {avatarUrl ? 'Change Picture' : 'Upload Picture'}
+                                                    </span>
+                                                </Button>
+                                            </label>
+                                            {avatarUrl && (
+                                                <p className="text-xs text-muted-foreground">
+                                                    Current image: {avatarUrl.split('/').pop()}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
-                                <div className="flex flex-col space-y-2">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleAvatarUpload}
-                                        className="hidden"
-                                        id="avatar-upload"
-                                        disabled={isEditing}
-                                    />
-                                    <label htmlFor="avatar-upload">
-                                        <Button
-                                            variant="outline"
-                                            className="cursor-pointer"
-                                            asChild
-                                            disabled={isEditing}
-                                        >
-                                            <span>
-                                                <Upload className="w-4 h-4 mr-2" />
-                                                {profileData?.speaker?.avatar ? 'Change Picture' : 'Upload Picture'}
-                                            </span>
-                                        </Button>
-                                    </label>
-                                    {profileData?.speaker?.avatar && (
-                                        <p className="text-xs text-muted-foreground">
-                                            Current image: {profileData.speaker.avatar.split('/').pop()}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                                )
+                            })()}
                         </CardContent>
                     </Card>                    {/* Personal Information */}
                     <Card data-tour="personal-info">
@@ -380,7 +399,7 @@ export default function ProfilePage() {
                                     <Input
                                         id="email"
                                         type="email"
-                                        value={profileData?.user?.email || user?.email || ''}
+                                        value={(profileData as any)?.user?.email || (profileData as any)?.email || ''}
                                         disabled
                                     />
                                 </div>
@@ -645,13 +664,23 @@ export default function ProfilePage() {
                     </Card>
                     </div>
 
-                    {/* Sidebar - Profile Completion Tracker */}
-                    <div className="hidden lg:block w-64 flex-shrink-0">
+                    {/* Sticky Sidebar - Profile Completion Tracker */}
+                    <div className="hidden lg:block w-72 flex-shrink-0">
                         <div className="sticky top-24">
-                            <ProfileCompletionTracker 
-                                profileData={profileData} 
-                                onEditClick={() => setIsEditing(true)}
-                            />
+                            {(() => {
+                                const data = profileData as any
+                                const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
+                                const trackerData = {
+                                    user: data?.user || data,
+                                    speaker: speakerData
+                                }
+                                return (
+                                    <ProfileCompletionTracker 
+                                        profileData={trackerData} 
+                                        onEditClick={() => setIsEditing(true)} 
+                                    />
+                                )
+                            })()}
                         </div>
                     </div>
                 </div>
