@@ -78,14 +78,30 @@ export const speakerApi = {
         return response.data;
     },
 
-    // Upload speaker avatar
+    // Upload speaker avatar - try multiple endpoints
     async uploadAvatar(file: File): Promise<SpeakerProfile> {
         const formData = new FormData();
         formData.append('avatar', file);
-        const response = await apiClient.post<SpeakerProfile>('/speakers/profile/avatar/', formData, {
-            headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        return response.data;
+        
+        console.log('📤 Uploading avatar...');
+        
+        // Try the dedicated avatar endpoint first
+        try {
+            const response = await apiClient.post<SpeakerProfile>('/speakers/profile/avatar/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            console.log('✅ Avatar uploaded via /speakers/profile/avatar/');
+            return response.data;
+        } catch (error: any) {
+            console.log('❌ /speakers/profile/avatar/ failed, trying /speakers/profile/...');
+            
+            // Fallback to PATCH on profile endpoint
+            const response = await apiClient.patch<SpeakerProfile>('/speakers/profile/', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            console.log('✅ Avatar uploaded via PATCH /speakers/profile/');
+            return response.data;
+        }
     },
 
     // Get all skill tags

@@ -65,7 +65,7 @@ export const userApi = {
         return response.data;
     },
 
-    // Update user profile (PUT /api/users/me/)
+    // Update user profile (PATCH /api/users/me/)
     // Expects flat structure: all fields at root level
     async updateUserProfile(data: any): Promise<UserProfileResponse> {
         console.log('==========================================');
@@ -74,7 +74,7 @@ export const userApi = {
         console.log('Data being sent:', JSON.stringify(data, null, 2));
         
         try {
-            const response = await apiClient.put('/users/me/', data);
+            const response = await apiClient.patch('/users/me/', data);
             console.log('✅ UPDATE SUCCESS');
             console.log('Response:', response.data);
             return response.data;
@@ -89,9 +89,16 @@ export const userApi = {
     },
 
     // Upload avatar (PATCH /api/users/me/)
-    async uploadAvatar(file: File): Promise<UserProfileResponse> {
+    async uploadAvatar(file: File, speakerId?: number): Promise<UserProfileResponse> {
         const formData = new FormData();
         formData.append('avatar', file);
+        
+        // If we have a speaker ID, include it so backend knows which speaker to update
+        if (speakerId) {
+            formData.append('speaker_id', speakerId.toString());
+        }
+        
+        console.log('📤 Uploading avatar for speaker ID:', speakerId);
         
         const response = await apiClient.patch('/users/me/', formData, {
             headers: {
