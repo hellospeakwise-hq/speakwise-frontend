@@ -8,11 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { toast } from "sonner"
 import { userApi, UserProfileResponse, SkillTag } from "@/lib/api/userApi"
 import { speakerApi } from "@/lib/api/speakerApi"
-import { Upload, X, Building2, ArrowRight, CheckCircle2, Clock, Award } from "lucide-react"
+import { Upload, X, Building2, ArrowRight, CheckCircle2, Clock, Award, Sparkles, Loader2 } from "lucide-react"
 import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
 import { organizationApi, Organization } from "@/lib/api/organizationApi"
 import Link from "next/link"
@@ -22,9 +22,12 @@ import { useOnboarding } from "@/hooks/use-onboarding"
 import { AddExperienceDialog } from "@/components/speakers/add-experience-dialog"
 import { ExperiencesList } from "@/components/speakers/experiences-list"
 import { ProfileCompletionTracker } from "@/components/profile/profile-completion-tracker"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useSearchParams } from "next/navigation"
 
-export default function ProfilePage() {
+function ProfilePageContent() {
     const { user } = useAuth()
+    const searchParams = useSearchParams()
     const [mounted, setMounted] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
     const [profileData, setProfileData] = useState<UserProfileResponse | null>(null)
@@ -32,6 +35,18 @@ export default function ProfilePage() {
     const [isLoadingProfile, setIsLoadingProfile] = useState(true)
     const [organizations, setOrganizations] = useState<Organization[]>([])
     const [isLoadingOrgs, setIsLoadingOrgs] = useState(false)
+    const [showWelcomeBanner, setShowWelcomeBanner] = useState(false)
+
+    // Check if this is a new OAuth user
+    useEffect(() => {
+        const isNewOAuthUser = searchParams.get('welcome') === 'true' || 
+                              sessionStorage.getItem('newOAuthUser') === 'true'
+        if (isNewOAuthUser) {
+            setShowWelcomeBanner(true)
+            // Clear the flag so it doesn't show again
+            sessionStorage.removeItem('newOAuthUser')
+        }
+    }, [searchParams])
 
     // Onboarding
     const { shouldShowOnboarding, completeOnboarding } = useOnboarding('PROFILE')
@@ -293,6 +308,34 @@ export default function ProfilePage() {
                 <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto">
                     {/* Main Content */}
                     <div className="flex-1 flex flex-col space-y-6 max-w-4xl">
+                        {/* Welcome Banner for new OAuth users */}
+                        {showWelcomeBanner && (
+                            <Alert className="bg-orange-50 border-orange-200 dark:bg-orange-900/10 dark:border-orange-900/30">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex">
+                                        <Sparkles className="h-5 w-5 text-orange-500 mt-0.5 mr-3" />
+                                        <div>
+                                            <AlertTitle className="text-orange-800 dark:text-orange-300 text-lg">
+                                                Welcome to SpeakWise! 🎉
+                                            </AlertTitle>
+                                            <AlertDescription className="text-orange-700 dark:text-orange-400 mt-2">
+                                                <p>Your account has been created. Complete your profile below to help organizers find you and invite you to speak at their events.</p>
+                                                <p className="mt-2 text-sm">Speakers with complete profiles are <span className="font-semibold">3x more likely</span> to receive speaking invitations.</p>
+                                            </AlertDescription>
+                                        </div>
+                                    </div>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/20"
+                                        onClick={() => setShowWelcomeBanner(false)}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </Alert>
+                        )}
+
                         <div className="space-y-2">
                             <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
                             <p className="text-muted-foreground">Manage your personal information</p>
@@ -700,5 +743,21 @@ export default function ProfilePage() {
                 onComplete={completeOnboarding}
             />
         </ProtectedRoute>
+    )
+}
+
+export default function ProfilePage() {
+    return (
+        <Suspense fallback={
+            <ProtectedRoute>
+                <div className="container py-10">
+                    <div className="flex justify-center items-center min-h-[400px]">
+                        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
+                    </div>
+                </div>
+            </ProtectedRoute>
+        }>
+            <ProfilePageContent />
+        </Suspense>
     )
 }
