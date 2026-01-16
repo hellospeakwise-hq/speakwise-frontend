@@ -20,7 +20,7 @@ export default function Home() {
       {/* Hero Section */}
       <section className="space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-background -z-10" />
-        <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center relative">
+        <div className="container flex max-w-[64rem] flex-col items-center gap-4 px-4 text-center relative">
           <Link
             href="`"
             className="inline-flex items-center gap-2 rounded-2xl bg-muted px-4 py-1.5 text-sm font-medium hover:bg-muted/80 transition-colors"
@@ -30,11 +30,10 @@ export default function Home() {
             <span>The GitHub for Speakers</span>
           </Link>
           <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight">
-            Turn Speaking Into <br />
-            Measurable Growth
+            Turn Speaking Into Measurable Growth
           </h1>
-          <p className="max-w-[42rem] leading-normal text-muted-foreground sm:text-xl sm:leading-8">
-            Analytics-driven feedback for speakers. Data-backed discovery for organizers. 
+          <p className="max-w-[42rem] px-4 leading-normal text-muted-foreground sm:text-xl sm:leading-8">
+            Analytics-driven feedback for speakers. Data-backed discovery for organizers.
             Build your speaking reputation with real performance data, not just social proof.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
@@ -54,40 +53,40 @@ export default function Home() {
               See How It Works
             </Link>
           </div>
-          
+
           {/* Social Proof */}
-          <div className="flex items-center gap-8 mt-8 text-sm text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 mt-8 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="flex -space-x-2">
                 <img src="/Julius.png" alt="Speaker" className="h-8 w-8 rounded-full object-cover border-2 border-background" />
                 <img src="/ezi.jpeg" alt="Speaker" className="h-8 w-8 rounded-full object-cover border-2 border-background" />
                 <img src="/joe.jpeg" alt="Speaker" className="h-8 w-8 rounded-full object-cover border-2 border-background" />
-                <img src="/juliana.jpeg" alt="Speaker" className="h-8 w-8 rounded-full object-cover border-2 border-background" />
+                <img src="/seth.jpeg" alt="Speaker" className="h-8 w-8 rounded-full object-cover border-2 border-background" />
               </div>
-              <span>50+ speakers</span>
+              <span className="whitespace-nowrap">50+ speakers</span>
             </div>
-            <div className="h-4 w-px bg-border" />
+            <div className="hidden sm:block h-4 w-px bg-border" />
             <div className="flex items-center gap-2">
               <TrendingUp className="h-4 w-4" />
-              <span>10K+ feedback points</span>
+              <span className="whitespace-nowrap">10K+ feedback points</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* Problem Statement */}
-      <section className="container py-8 md:py-12 lg:py-24 border-t">
+      <section className="container px-4 py-8 md:py-12 lg:py-24 border-t">
         <div className="mx-auto max-w-[58rem] space-y-8">
           <div className="text-center space-y-4">
             <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl">
               The Problem
             </h2>
             <p className="text-xl text-muted-foreground max-w-[46rem] mx-auto">
-              Public speaking careers are built on word-of-mouth and social media presence, 
+              Public speaking careers are built on word-of-mouth and social media presence,
               <span className="font-semibold text-foreground"> not real performance data</span>.
             </p>
           </div>
-          
+
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="rounded-lg border bg-muted/50 p-6">
               <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
@@ -109,7 +108,7 @@ export default function Home() {
                 </li>
               </ul>
             </div>
-            
+
             <div className="rounded-lg border bg-muted/50 p-6">
               <h3 className="font-bold text-lg mb-2 flex items-center gap-2">
                 <Icons.users className="h-5 w-5" />
@@ -135,7 +134,7 @@ export default function Home() {
       </section>
 
       {/* Solution - How It Works */}
-      <section id="how-it-works" className="container space-y-6 bg-slate-50 py-8 dark:bg-transparent md:py-12 lg:py-24">
+      <section id="how-it-works" className="container px-4 space-y-6 bg-slate-50 py-8 dark:bg-transparent md:py-12 lg:py-24">
         <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
           <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
             How SpeakWise Works
@@ -144,7 +143,7 @@ export default function Home() {
             A standardized feedback and analytics layer that creates transparency for the entire speaking ecosystem.
           </p>
         </div>
-        
+
         <div className="mx-auto grid justify-center gap-8 md:max-w-[64rem]">
           {/* Step 1 */}
           <div className="relative overflow-hidden rounded-lg border bg-background p-8">
@@ -157,7 +156,7 @@ export default function Home() {
               <div className="flex-1 space-y-2">
                 <h3 className="font-bold text-xl">Anonymous, Verified Feedback</h3>
                 <p className="text-muted-foreground">
-                  After each talk, attendees submit structured, anonymous feedback. Simple, fast, and frictionless  
+                  After each talk, attendees submit structured, anonymous feedback. Simple, fast, and frictionless
                   ensuring honest insights speakers can actually use.
                 </p>
                 <div className="flex flex-wrap gap-2 pt-2">
@@ -182,20 +181,20 @@ export default function Home() {
               <div className="flex-1 space-y-2">
                 <h3 className="font-bold text-xl">Speaker Analytics & Growth Tracking</h3>
                 <p className="text-muted-foreground">
-                  Speakers get aggregated analytics showing performance trends, strengths, and areas for improvement. 
+                  Speakers get aggregated analytics showing performance trends, strengths, and areas for improvement.
                   Track your growth over time  like GitHub contributions, but for speaking.
                 </p>
-                <div className="grid grid-cols-3 gap-4 pt-4">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 pt-4">
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold">4.8/5</div>
+                    <div className="text-xl sm:text-2xl font-bold">4.8/5</div>
                     <div className="text-xs text-muted-foreground">Avg Rating</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold">24</div>
+                    <div className="text-xl sm:text-2xl font-bold">24</div>
                     <div className="text-xs text-muted-foreground">Total Talks</div>
                   </div>
                   <div className="space-y-1">
-                    <div className="text-2xl font-bold">↑ 23%</div>
+                    <div className="text-xl sm:text-2xl font-bold">↑ 23%</div>
                     <div className="text-xs text-muted-foreground">Growth</div>
                   </div>
                 </div>
@@ -215,7 +214,7 @@ export default function Home() {
               <div className="flex-1 space-y-2">
                 <h3 className="font-bold text-xl">Data-Driven Speaker Discovery</h3>
                 <p className="text-muted-foreground">
-                  Organizers search and discover speakers based on real performance data, topic expertise, 
+                  Organizers search and discover speakers based on real performance data, topic expertise,
                   and audience feedback  not just follower counts. Make confident, data-backed booking decisions.
                 </p>
                 <div className="flex items-center gap-2 pt-2 text-sm text-muted-foreground">
@@ -232,7 +231,7 @@ export default function Home() {
       {/* Features Grid */}
       <section
         id="features"
-        className="container space-y-6 py-8 md:py-12 lg:py-24"
+        className="container px-4 space-y-6 py-8 md:py-12 lg:py-24"
       >
         <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
           <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
@@ -313,7 +312,7 @@ export default function Home() {
       </section>
 
       {/* User Types */}
-      <section id="user-types" className="container py-8 md:py-12 lg:py-24 bg-slate-50 dark:bg-transparent">
+      <section id="user-types" className="container px-4 py-8 md:py-12 lg:py-24 bg-slate-50 dark:bg-transparent">
         <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
           <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
             For Everyone in the Ecosystem
@@ -363,13 +362,13 @@ export default function Home() {
       </section>
 
       {/* Vision/CTA */}
-      <section className="container py-8 md:py-12 lg:py-24">
+      <section className="container px-4 py-8 md:py-12 lg:py-24">
         <div className="mx-auto flex max-w-[58rem] flex-col items-center justify-center gap-4 text-center">
           <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl">
             The Future of Public Speaking
           </h2>
           <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-            Our vision: Become the global standard for evaluating, growing, and discovering public speakers 
+            Our vision: Become the global standard for evaluating, growing, and discovering public speakers
             creating a transparent, merit-based speaking ecosystem worldwide.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 mt-4">
