@@ -8,6 +8,7 @@ import { RecentFeedback } from "@/components/dashboard/speaker/recent-feedback"
 import { SpeakingRequests } from "@/components/dashboard/speaker/speaking-requests"
 import { FeedbackTrends } from "@/components/dashboard/speaker/feedback-trends"
 import { Notifications } from "@/components/dashboard/speaker/notifications"
+import { ProfileCompletionBanner } from "@/components/dashboard/speaker/profile-completion-banner"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Award } from "lucide-react"
@@ -17,6 +18,7 @@ export function SpeakerDashboardView() {
 
   return (
     <div className="space-y-6">
+      <ProfileCompletionBanner />
       <Notifications />
 
       {/* Quick Actions */}
