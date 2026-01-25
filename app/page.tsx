@@ -7,6 +7,7 @@ import { Icons } from "@/components/icons"
 import { ArrowRight, TrendingUp, Users, Shield, Zap, BarChart3, Target } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useEffect, useState } from "react"
+import { AnimatedText } from "@/components/ui/animated-text"
 
 export default function Home() {
   const { isAuthenticated } = useAuth()
@@ -29,9 +30,17 @@ export default function Home() {
             <Icons.gitHub className="h-4 w-4" />
             <span>The GitHub for Speakers</span>
           </Link>
-          <h1 className="font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight">
-            Turn Speaking Into Measurable Growth
-          </h1>
+          <AnimatedText
+            staticText="Turn Speaking Into"
+            animatedWords={[
+              "Measurable Growth",
+              "Real Impact",
+              "Proven Success",
+              "Career Momentum",
+              "Your Superpower",
+            ]}
+            interval={2500}
+          />
           <p className="max-w-[42rem] px-4 leading-normal text-muted-foreground sm:text-xl sm:leading-8">
             Analytics-driven feedback for speakers. Data-backed discovery for organizers.
             Build your speaking reputation with real performance data, not just social proof.

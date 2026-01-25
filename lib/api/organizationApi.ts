@@ -41,11 +41,29 @@ export interface AddMemberData {
 }
 
 export const organizationApi = {
-    // Get user's organizations (backend returns organizations for authenticated user)
+    // Get user's organizations (with client-side filtering as safeguard)
     async getUserOrganizations(): Promise<Organization[]> {
         const response = await apiClient.get('/organizations/');
-        // Rely on backend filtering; avoid client-side filtering dependent on localStorage
-        return response.data as Organization[];
+        const allOrgs = response.data as Organization[];
+        
+        // Client-side filtering to ensure users only see their own organizations
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+        if (!userStr) {
+            return [];
+        }
+        
+        try {
+            const user = JSON.parse(userStr);
+            const currentUserId = user.id;
+            
+            // Filter: user is creator OR user is a member
+            return allOrgs.filter(org => 
+                org.created_by === currentUserId || 
+                (org.members && org.members.includes(currentUserId))
+            );
+        } catch {
+            return [];
+        }
     },
 
     // Get single organization
