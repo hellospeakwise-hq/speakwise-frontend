@@ -9,7 +9,7 @@ import { speakerApi, type Speaker } from "@/lib/api/speakerApi"
 import { useAuth } from "@/contexts/auth-context"
 
 interface ProfileField {
-  key: keyof Speaker | string
+  key: keyof Speaker
   label: string
   weight: number
 }
@@ -26,13 +26,14 @@ const PROFILE_FIELDS: ProfileField[] = [
 
 export function ProfileCompletionBanner() {
   const { user } = useAuth()
-  const [speaker, setSpeaker] = useState<Speaker | null>(null)
   const [loading, setLoading] = useState(true)
   const [dismissed, setDismissed] = useState(false)
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const [missingFields, setMissingFields] = useState<string[]>([])
 
   useEffect(() => {
+    let mounted = true
+
     // Check if banner was dismissed in this session
     const isDismissed = sessionStorage.getItem("profile-banner-dismissed")
     if (isDismissed) {
@@ -61,14 +62,15 @@ export function ProfileCompletionBanner() {
           )
         }
         
-        if (currentSpeaker) {
-          setSpeaker(currentSpeaker)
+        if (currentSpeaker && mounted) {
           calculateCompletion(currentSpeaker)
         }
       } catch (error) {
         console.error("Error fetching speaker profile:", error)
       } finally {
-        setLoading(false)
+        if (mounted) {
+          setLoading(false)
+        }
       }
     }
 
@@ -76,6 +78,10 @@ export function ProfileCompletionBanner() {
       fetchSpeakerProfile()
     } else {
       setLoading(false)
+    }
+
+    return () => {
+      mounted = false
     }
   }, [user])
 
@@ -86,12 +92,12 @@ export function ProfileCompletionBanner() {
 
     PROFILE_FIELDS.forEach((field) => {
       totalWeight += field.weight
-      const value = speaker[field.key as keyof Speaker]
+      const value = speaker[field.key]
 
       let isComplete = false
 
       if (field.key === "avatar") {
-        isComplete = !!value && value !== "" && !value.toString().includes("default")
+        isComplete = !!value && typeof value === 'string' && value !== "" && !value.includes("default")
       } else if (field.key === "skill_tag" || field.key === "social_links") {
         isComplete = Array.isArray(value) && value.length > 0
       } else {

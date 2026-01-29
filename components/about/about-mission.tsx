@@ -1,22 +1,21 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Target, Lightbulb, Rocket, Database, Network, TrendingUp } from "lucide-react"
+import { Database, Network, TrendingUp, Rocket } from "lucide-react"
 
 export function AboutMission() {
   const values = [
     {
-      icon: <Database className="h-12 w-12 text-orange-500" />,
+      icon: <Database className="h-12 w-12" />,
       title: "Data Over Hype",
       description:
         "We believe speaking careers should be built on real performance data, not just social media followers. Every talk generates insights that help speakers improve and organizers make better decisions.",
     },
     {
-      icon: <Network className="h-12 w-12 text-orange-500" />,
+      icon: <Network className="h-12 w-12" />,
       title: "Network Effects",
       description:
         "The more talks tracked on SpeakWise, the better our insights become. More speakers mean more value for organizers. More feedback means better growth tools. Everyone wins as the network grows.",
     },
     {
-      icon: <TrendingUp className="h-12 w-12 text-orange-500" />,
+      icon: <TrendingUp className="h-12 w-12" />,
       title: "Continuous Growth",
       description:
         "Public speaking is a skill that improves with structured feedback. We're dedicated to helping speakers track progress, identify strengths, and grow through data-driven insights — like GitHub contributions for speaking.",
@@ -24,15 +23,12 @@ export function AboutMission() {
   ]
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32 bg-slate-50 dark:bg-transparent">
-      <div className="container px-4 md:px-6">
+    <section className="container px-4 py-8 md:py-12 lg:py-24 border-t">
+      <div className="mx-auto max-w-[58rem] space-y-8">
         {/* The Problem & Why Now */}
         <div className="max-w-[800px] mx-auto mb-16">
           <div className="space-y-8">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-red-100 dark:bg-red-900/20 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 mb-4">
-                The Problem
-              </div>
               <h2 className="text-3xl font-bold mb-4">Speaking Careers Are Built on Guesswork</h2>
               <p className="text-muted-foreground text-lg">
                 Speakers rarely receive structured feedback, making improvement difficult. Organizers rely on reputation 
@@ -42,9 +38,6 @@ export function AboutMission() {
             </div>
 
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-green-100 dark:bg-green-900/20 px-4 py-2 text-sm font-medium text-green-600 dark:text-green-400 mb-4">
-                Why Now
-              </div>
               <h2 className="text-3xl font-bold mb-4">The Perfect Time for Transparency</h2>
               <p className="text-muted-foreground text-lg">
                 Conferences and community events are growing globally, but speaker evaluation hasn't evolved. 
@@ -56,35 +49,31 @@ export function AboutMission() {
         </div>
 
         {/* Core Values */}
-        <div className="flex flex-col items-center text-center space-y-4 mb-12">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">What We Believe</h2>
-            <p className="max-w-[700px] text-muted-foreground md:text-xl">
-              Three core principles guide everything we build at SpeakWise.
-            </p>
-          </div>
+        <div className="text-center space-y-4 mb-12">
+          <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl">
+            What We Believe
+          </h2>
+          <p className="max-w-[85%] mx-auto leading-normal text-muted-foreground sm:text-lg sm:leading-7">
+            Three core principles guide everything we build at SpeakWise.
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-          {values.map((value, index) => (
-            <Card key={index} className="bg-white dark:bg-background border-orange-100 dark:border-orange-900/20 hover:border-orange-300 transition-colors">
-              <CardContent className="pt-6 flex flex-col items-center text-center space-y-4">
-                <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-900/20">{value.icon}</div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {values.map((value) => (
+            <div key={value.title} className="rounded-lg border bg-background p-6">
+              <div className="space-y-4">
+                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">{value.icon}</div>
                 <h3 className="text-xl font-bold">{value.title}</h3>
                 <p className="text-muted-foreground">{value.description}</p>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ))}
         </div>
 
         {/* Origin Story */}
-        <div className="mt-16 max-w-[800px] mx-auto">
+        <div className="mt-16 max-w-[800px] mx-auto border-t pt-16">
           <div className="space-y-6">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 dark:bg-orange-900/20 px-4 py-2 text-sm font-medium text-orange-600 dark:text-orange-400 mb-4">
-                <Lightbulb className="h-4 w-4" />
-                Our Story
-              </div>
               <h2 className="text-3xl font-bold mb-4">From Speaker Frustration to Platform Vision</h2>
             </div>
             
