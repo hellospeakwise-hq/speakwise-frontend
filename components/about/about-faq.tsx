@@ -35,21 +35,19 @@ export function AboutFAQ() {
   ]
 
   return (
-    <section className="w-full py-12 md:py-24 lg:py-32">
-      <div className="container px-4 md:px-6">
-        <div className="flex flex-col items-center text-center space-y-4 mb-12">
-          <div className="space-y-2">
-            <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Frequently Asked Questions</h2>
-            <p className="max-w-[700px] text-muted-foreground md:text-xl">
-              Find answers to common questions about how SpeakWise works
-            </p>
-          </div>
+    <section className="container px-4 py-8 md:py-12 lg:py-24 border-t">
+      <div className="mx-auto max-w-[58rem] space-y-8">
+        <div className="text-center space-y-4">
+          <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-5xl">Frequently Asked Questions</h2>
+          <p className="max-w-[85%] mx-auto leading-normal text-muted-foreground sm:text-lg sm:leading-7">
+            Find answers to common questions about how SpeakWise works
+          </p>
         </div>
 
         <div className="max-w-[800px] mx-auto">
           <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, index) => (
-              <AccordionItem key={index} value={`item-${index}`}>
+            {faqs.map((faq) => (
+              <AccordionItem key={faq.question} value={faq.question}>
                 <AccordionTrigger className="text-left font-medium">{faq.question}</AccordionTrigger>
                 <AccordionContent className="text-muted-foreground">{faq.answer}</AccordionContent>
               </AccordionItem>
