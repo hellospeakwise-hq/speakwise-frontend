@@ -33,11 +33,11 @@ export default function Home() {
           <AnimatedText
             staticText="Turn Speaking Into"
             animatedWords={[
-              "Measurable Growth",
-              "Real Impact",
-              "Proven Success",
-              "Career Momentum",
-              "Your Superpower",
+              "Growth",
+              "Impact",
+              "Success",
+              "Momentum",
+              "Power",
             ]}
             interval={2500}
           />

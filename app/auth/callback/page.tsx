@@ -18,17 +18,17 @@ function OAuthCallbackContent() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-
+        
         // Get tokens and user data from URL params
         const accessToken = searchParams.get('access_token')
         const refreshToken = searchParams.get('refresh_token')
         const error = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
-
+        
         // Check if this is a new user (first OAuth login)
         const newUser = searchParams.get('is_new_user') === 'true'
         setIsNewUser(newUser)
-
+        
         // Get user data from URL params (backend may pass these)
         const userId = searchParams.get('user_id')
         const email = searchParams.get('email')
@@ -39,8 +39,12 @@ function OAuthCallbackContent() {
         const roleId = searchParams.get('role_id')
         const roleName = searchParams.get('role')
 
-
-
+        console.log('=== OAuth Callback ===')
+        console.log('Access Token:', accessToken ? 'received' : 'missing')
+        console.log('Is New User:', isNewUser)
+        console.log('User Data:', { userId, email, firstName, lastName, username })
+        console.log('=======================')
+        
         if (error) {
           setStatus('error')
           setErrorMessage(errorDescription || error)
@@ -103,58 +107,26 @@ function OAuthCallbackContent() {
 
         // Determine redirect path
         let redirectPath = '/dashboard'
-
-        // Check if profile is incomplete (missing first_name or last_name)
-        const isProfileIncomplete = !userData?.first_name || !userData?.last_name
-
-        if (isProfileIncomplete) {
-          // Redirect to profile page to complete setup
-          sessionStorage.setItem('profileIncomplete', 'true')
-          redirectPath = '/profile?setup=true'
-          toast.info('Please complete your profile to get started.', {
-            duration: 5000
-          })
-        } else if (newUser) {
-          // Check if this is a new OAuth user - redirect to profile to complete setup
+        
+        // Check if this is a new OAuth user - redirect to profile to complete setup
+        if (newUser) {
+          // Set flag for profile page to show welcome banner
           sessionStorage.setItem('newOAuthUser', 'true')
           redirectPath = '/profile?welcome=true'
           toast.info('Welcome! Please complete your profile to get started.', {
             duration: 5000
           })
         } else {
-          // Get stored redirect path or default to dashboard based on role
-          const savedRedirect = sessionStorage.getItem('oauthRedirect')
-          if (savedRedirect && savedRedirect !== '/signin' && savedRedirect !== '/signup') {
-            redirectPath = savedRedirect
-          } else if (userData?.role?.role) {
-            // Redirect based on user role
-            switch (userData.role.role) {
-              case 'speaker':
-                redirectPath = '/dashboard/speaker'
-                break
-              case 'organizer':
-                redirectPath = '/dashboard/organizer'
-                break
-              case 'attendee':
-                redirectPath = '/dashboard/attendee'
-                break
-              default:
-                redirectPath = '/dashboard'
-            }
-          }
+          // Get stored redirect path or default to dashboard
+          redirectPath = sessionStorage.getItem('oauthRedirect') || '/dashboard'
         }
-
+        
         sessionStorage.removeItem('oauthRedirect')
-
-        console.log('=== OAuth Success ===')
-        console.log('User:', userData)
-        console.log('Profile incomplete:', isProfileIncomplete)
+        
         console.log('Redirecting to:', redirectPath)
-        console.log('====================')
 
-        // Use window.location for hard navigation to ensure auth state is fresh
-        // This prevents race condition with auth context state updates
-        window.location.href = redirectPath
+        // Redirect after a brief delay
+        setTimeout(() => router.push(redirectPath), 1000)
       } catch (error: any) {
         console.error('OAuth callback error:', error)
         setStatus('error')
@@ -182,7 +154,7 @@ function OAuthCallbackContent() {
               </p>
             </>
           )}
-
+          
           {status === 'success' && (
             <>
               <Icons.check className="mx-auto h-12 w-12 text-green-600" />
@@ -190,13 +162,13 @@ function OAuthCallbackContent() {
                 {isNewUser ? 'Welcome to SpeakWise!' : 'Success!'}
               </h1>
               <p className="text-sm text-muted-foreground">
-                {isNewUser
-                  ? 'Taking you to complete your profile...'
+                {isNewUser 
+                  ? 'Taking you to complete your profile...' 
                   : 'Redirecting you to your dashboard...'}
               </p>
             </>
           )}
-
+          
           {status === 'error' && (
             <>
               <Icons.alertCircle className="mx-auto h-12 w-12 text-red-600" />

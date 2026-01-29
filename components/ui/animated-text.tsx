@@ -42,14 +42,14 @@ function AnimatedText({
       className={`font-heading text-3xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight ${className}`}
     >
       <span className="block sm:inline">{staticText}</span>
-      <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1 min-h-[1.2em]">
+      <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1 min-h-[1.4em]">
         &nbsp;
         <AnimatePresence mode="popLayout">
           {words.map((word, index) =>
             wordIndex === index ? (
               <motion.span
                 key={word}
-                className="absolute font-bold text-foreground"
+                className="absolute font-bold text-foreground whitespace-nowrap"
                 initial={{ opacity: 0, y: 50, scale: 0.8 }}
                 animate={{
                   y: 0,
