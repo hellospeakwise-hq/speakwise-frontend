@@ -19,9 +19,9 @@ function OAuthCallbackContent() {
     const handleCallback = async () => {
       try {
         
-        // Get tokens and user data from URL params
-        const accessToken = searchParams.get('access_token')
-        const refreshToken = searchParams.get('refresh_token')
+        // Get tokens and user data from URL params - support both formats (access_token/access and refresh_token/refresh)
+        const accessToken = searchParams.get('access_token') || searchParams.get('access')
+        const refreshToken = searchParams.get('refresh_token') || searchParams.get('refresh')
         const error = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
         
@@ -105,21 +105,8 @@ function OAuthCallbackContent() {
         setStatus('success')
         toast.success('Successfully signed in!')
 
-        // Determine redirect path
-        let redirectPath = '/dashboard'
-        
-        // Check if this is a new OAuth user - redirect to profile to complete setup
-        if (newUser) {
-          // Set flag for profile page to show welcome banner
-          sessionStorage.setItem('newOAuthUser', 'true')
-          redirectPath = '/profile?welcome=true'
-          toast.info('Welcome! Please complete your profile to get started.', {
-            duration: 5000
-          })
-        } else {
-          // Get stored redirect path or default to dashboard
-          redirectPath = sessionStorage.getItem('oauthRedirect') || '/dashboard'
-        }
+        // Always redirect to profile page after OAuth login
+        const redirectPath = '/profile'
         
         sessionStorage.removeItem('oauthRedirect')
         
@@ -159,12 +146,10 @@ function OAuthCallbackContent() {
             <>
               <Icons.check className="mx-auto h-12 w-12 text-green-600" />
               <h1 className="text-2xl font-semibold tracking-tight">
-                {isNewUser ? 'Welcome to SpeakWise!' : 'Success!'}
+                Success!
               </h1>
               <p className="text-sm text-muted-foreground">
-                {isNewUser 
-                  ? 'Taking you to complete your profile...' 
-                  : 'Redirecting you to your dashboard...'}
+                Taking you to your profile...
               </p>
             </>
           )}
