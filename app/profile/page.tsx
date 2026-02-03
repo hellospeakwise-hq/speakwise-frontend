@@ -24,6 +24,7 @@ import { ExperiencesList } from "@/components/speakers/experiences-list"
 import { ProfileCompletionTracker } from "@/components/profile/profile-completion-tracker"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useSearchParams } from "next/navigation"
+import { getDefaultAvatar } from "@/lib/utils"
 
 function ProfilePageContent() {
     const { user } = useAuth()
@@ -242,6 +243,9 @@ function ProfilePageContent() {
             // Reload to get fresh data from server
             const freshData = await userApi.getUserProfile()
             setProfileData(freshData)
+            
+            // Dispatch event to notify navbar to refresh avatar
+            window.dispatchEvent(new CustomEvent('avatarUpdated'))
         } catch (error: any) {
             console.error('Failed to upload avatar:', error)
             toast.error(error.message || "Failed to upload avatar")
@@ -355,7 +359,10 @@ function ProfilePageContent() {
                                 
                                 // Add cache-busting parameter to force browser to reload image
                                 const getAvatarSrc = () => {
-                                    if (!avatarUrl) return ''
+                                    if (!avatarUrl) {
+                                        // Generate a unique default avatar based on user email or name
+                                        return getDefaultAvatar(user?.email || user?.first_name || 'user')
+                                    }
                                     const baseUrl = avatarUrl.startsWith('http')
                                         ? avatarUrl
                                         : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${avatarUrl}`
@@ -364,18 +371,13 @@ function ProfilePageContent() {
                                 
                                 return (
                                     <div className="flex items-center space-x-4">
-                                        {avatarUrl && (
-                                            <div className="relative">
-                                                <img
-                                                    src={getAvatarSrc()}
-                                                    alt="Profile"
-                                                    className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
-                                                    onError={(e) => {
-                                                        e.currentTarget.style.display = 'none';
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
+                                        <div className="relative">
+                                            <img
+                                                src={getAvatarSrc()}
+                                                alt="Profile"
+                                                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                                            />
+                                        </div>
                                         <div className="flex flex-col space-y-2">
                                             <input
                                                 type="file"

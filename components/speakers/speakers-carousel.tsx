@@ -36,12 +36,9 @@ export function SpeakersCarousel({ speakers, onSpeakerSelect, filteredCount }: S
                     >
                         <div className="w-28 h-28 rounded-full overflow-hidden bg-orange-100 border-2 border-orange-200 hover:border-orange-400 transition-colors relative">
                             <img
-                                src={getAvatarUrl(speaker.avatar)}
+                                src={getAvatarUrl(speaker.avatar, speaker.speaker_name || `speaker-${speaker.id}`)}
                                 alt={speaker.speaker_name || `Speaker ${speaker.id}`}
                                 className="w-full h-full object-cover"
-                                onError={(e) => {
-                                    e.currentTarget.src = '/placeholder.svg?height=200&width=200'
-                                }}
                             />
                             {/* Eye Icon Overlay */}
                             {hoveredSpeakerId === speaker.id && (

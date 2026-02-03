@@ -51,12 +51,9 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: SpeakerPreview
                         <div className="flex justify-center">
                             <div className="w-24 h-24 rounded-full overflow-hidden bg-orange-100 border-2 border-orange-200">
                                 <img
-                                    src={getAvatarUrl(speaker.avatar)}
+                                    src={getAvatarUrl(speaker.avatar, speaker.speaker_name || speaker.email || `speaker-${speaker.id}`)}
                                     alt={speaker.speaker_name || `Speaker ${speaker.id}`}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                        e.currentTarget.src = '/placeholder.svg?height=200&width=200'
-                                    }}
                                 />
                             </div>
                         </div>
