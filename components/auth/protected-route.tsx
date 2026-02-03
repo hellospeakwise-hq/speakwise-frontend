@@ -1,9 +1,7 @@
 "use client"
 
-import { useAuth } from "@/contexts/auth-context"
-import { useRouter, usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
-import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { useEffect, useState, useRef } from "react"
 
 export interface ProtectedRouteProps {
     children: React.ReactNode
@@ -11,42 +9,31 @@ export interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
-    const { isAuthenticated, user, loading } = useAuth()
     const router = useRouter()
-    const pathname = usePathname()
-    const [mounted, setMounted] = useState(false)
-
-    // Prevent hydration mismatch by waiting for client mount
-    useEffect(() => {
-        setMounted(true)
-    }, [])
+    const [isReady, setIsReady] = useState(false)
+    const hasChecked = useRef(false)
 
     useEffect(() => {
-        if (!mounted) return
+        // Only check once
+        if (hasChecked.current) return
+        hasChecked.current = true
+
+        // Check localStorage directly
+        const token = localStorage.getItem('accessToken')
+        const user = localStorage.getItem('user')
         
-        if (!loading && !isAuthenticated) {
-            toast.error("Please sign in to access this page")
-
-            // Store the page they were trying to visit
-            if (pathname !== '/signin' && pathname !== '/signup') {
-                sessionStorage.setItem('redirectAfterLogin', pathname)
-            }
-
-            router.push('/signin')
+        console.log('[ProtectedRoute] Auth check:', { hasToken: !!token, hasUser: !!user })
+        
+        if (!token || !user) {
+            console.log('[ProtectedRoute] Not authenticated, redirecting to signin')
+            router.replace('/signin')
             return
         }
+        
+        setIsReady(true)
+    }, [router])
 
-        // Role-based access control
-        if (!loading && isAuthenticated && roles && user?.userType) {
-            if (!roles.includes(user.userType as any)) {
-                toast.error("You don't have permission to access this page")
-                router.push('/dashboard')
-            }
-        }
-    }, [isAuthenticated, loading, router, pathname, roles, user, mounted])
-
-    // Show loading state while mounting or checking auth
-    if (!mounted || loading || !isAuthenticated) {
+    if (!isReady) {
         return (
             <div className="flex min-h-[50vh] items-center justify-center">
                 <div className="h-16 w-16 animate-spin rounded-full border-4 border-gray-300 border-t-primary"></div>
@@ -54,6 +41,5 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
         )
     }
 
-    // If authenticated and has the right role (or no role check required), show the children
     return <>{children}</>
 }

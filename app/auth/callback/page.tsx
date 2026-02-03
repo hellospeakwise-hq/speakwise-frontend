@@ -1,55 +1,43 @@
 "use client"
 
-import { useEffect, useState, Suspense } from "react"
+import { useEffect, useState, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useAuth } from "@/contexts/auth-context"
 import { Icons } from "@/components/icons"
 import { toast } from "sonner"
-import { authApi } from "@/lib/api/auth"
 
 function OAuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { setUser } = useAuth()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState('')
   const [isNewUser, setIsNewUser] = useState(false)
+  const hasRun = useRef(false)
 
   useEffect(() => {
+    // Prevent double execution
+    if (hasRun.current) return
+    hasRun.current = true
+
     const handleCallback = async () => {
       try {
-        
-        // Get tokens and user data from URL params - support both formats (access_token/access and refresh_token/refresh)
+        // Get tokens from URL - support both formats
         const accessToken = searchParams.get('access_token') || searchParams.get('access')
         const refreshToken = searchParams.get('refresh_token') || searchParams.get('refresh')
         const error = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
         
-        // Check if this is a new user (first OAuth login)
-        const newUser = searchParams.get('is_new_user') === 'true'
-        setIsNewUser(newUser)
-        
-        // Get user data from URL params (backend may pass these)
-        const userId = searchParams.get('user_id')
-        const email = searchParams.get('email')
-        const firstName = searchParams.get('first_name')
-        const lastName = searchParams.get('last_name')
-        const username = searchParams.get('username')
-        const speakerId = searchParams.get('speaker_id')
-        const roleId = searchParams.get('role_id')
-        const roleName = searchParams.get('role')
+        // Get user data from URL (backend passes this in the 'user' param)
+        const userParam = searchParams.get('user')
 
         console.log('=== OAuth Callback ===')
         console.log('Access Token:', accessToken ? 'received' : 'missing')
-        console.log('Is New User:', isNewUser)
-        console.log('User Data:', { userId, email, firstName, lastName, username })
-        console.log('=======================')
-        
+        console.log('User param:', userParam ? 'received' : 'missing')
+
         if (error) {
           setStatus('error')
           setErrorMessage(errorDescription || error)
           toast.error(`OAuth error: ${errorDescription || error}`)
-          setTimeout(() => router.push('/signin'), 3000)
+          setTimeout(() => router.replace('/signin'), 2000)
           return
         }
 
@@ -57,74 +45,80 @@ function OAuthCallbackContent() {
           setStatus('error')
           setErrorMessage('No access token received')
           toast.error('Authentication failed: No access token received')
-          setTimeout(() => router.push('/signin'), 3000)
+          setTimeout(() => router.replace('/signin'), 2000)
           return
         }
 
-        // Store tokens
+        // Store tokens in localStorage
         localStorage.setItem('accessToken', accessToken)
         if (refreshToken) {
           localStorage.setItem('refreshToken', refreshToken)
         }
 
-        // Try to get user profile from API
+        // Parse user data from URL param
         let userData = null
-        try {
-          const profile = await authApi.getProfile()
-          userData = {
-            id: profile.id,
-            speaker_id: profile.speaker_id,
-            first_name: profile.first_name,
-            last_name: profile.last_name,
-            email: profile.email,
-            role: profile.role || { id: 2, role: 'speaker' },
-            userType: profile.role?.role || 'speaker'
-          }
-        } catch (profileError) {
-          console.log('Could not fetch profile, using URL params')
-          // Fallback to URL params if profile fetch fails
-          if (userId && email) {
+        if (userParam) {
+          try {
+            // Backend sends Python dict format, need to parse it
+            const cleanedUserParam = userParam
+              .replace(/'/g, '"')
+              .replace(/None/g, 'null')
+              .replace(/True/g, 'true')
+              .replace(/False/g, 'false')
+            const parsedUser = JSON.parse(cleanedUserParam)
+            
             userData = {
-              id: userId,
-              speaker_id: speakerId ? parseInt(speakerId) : undefined,
-              first_name: firstName || '',
-              last_name: lastName || '',
-              email: email,
-              role: { id: roleId ? parseInt(roleId) : 2, role: (roleName as any) || 'speaker' },
-              userType: (roleName as any) || 'speaker'
+              id: parsedUser.id,
+              first_name: parsedUser.first_name || '',
+              last_name: parsedUser.last_name || '',
+              email: parsedUser.email,
+              role: { id: 2, role: 'speaker' },
+              userType: 'speaker'
             }
+          } catch (e) {
+            console.log('Could not parse user param:', e)
           }
         }
 
+        // If we have user data, store it
         if (userData) {
-          // Store user data
           localStorage.setItem('user', JSON.stringify(userData))
-          setUser(userData)
+          console.log('User data stored:', userData)
         }
+
+        // Check if profile is incomplete (new user)
+        const profileIncomplete = !userData?.first_name || userData.first_name === ''
+        setIsNewUser(profileIncomplete)
 
         setStatus('success')
-        toast.success('Successfully signed in!')
 
-        // Always redirect to profile page after OAuth login
-        const redirectPath = '/profile'
-        
-        sessionStorage.removeItem('oauthRedirect')
-        
+        // Determine redirect
+        let redirectPath = '/'
+        if (profileIncomplete) {
+          redirectPath = '/profile'
+          toast.success('Hey new Speaker! 🎤 Complete your profile to get started!', { duration: 5000 })
+        } else {
+          toast.success('Welcome back! 👋')
+        }
+
         console.log('Redirecting to:', redirectPath)
+        
+        // Use replace to avoid back-button issues
+        setTimeout(() => {
+          window.location.href = redirectPath
+        }, 1000)
 
-        // Redirect after a brief delay
-        setTimeout(() => router.push(redirectPath), 1000)
       } catch (error: any) {
         console.error('OAuth callback error:', error)
         setStatus('error')
-        setErrorMessage(error.message || 'An error occurred during authentication')
+        setErrorMessage(error.message || 'An error occurred')
         toast.error('Authentication failed')
-        setTimeout(() => router.push('/signin'), 3000)
+        setTimeout(() => router.replace('/signin'), 2000)
       }
     }
 
     handleCallback()
-  }, [searchParams, router, setUser])
+  }, [searchParams, router])
 
   return (
     <div className="container flex h-screen w-screen flex-col items-center justify-center">
@@ -146,10 +140,12 @@ function OAuthCallbackContent() {
             <>
               <Icons.check className="mx-auto h-12 w-12 text-green-600" />
               <h1 className="text-2xl font-semibold tracking-tight">
-                Success!
+                {isNewUser ? 'Welcome to SpeakWise! 🎉' : 'Welcome back!'}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Taking you to your profile...
+                {isNewUser 
+                  ? 'Taking you to complete your profile...' 
+                  : 'Taking you home...'}
               </p>
             </>
           )}
