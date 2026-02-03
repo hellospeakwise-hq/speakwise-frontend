@@ -150,7 +150,7 @@ export function MainNav() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
                   <User className="h-4 w-4" />
-                  <span>{user ? `${user.first_name || ''} ${user.last_name || ''}` : 'Account'}</span>
+                  <span>{user ? `${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Account' : 'Account'}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">

@@ -168,11 +168,8 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
               <div className="flex flex-col items-center text-center">
                 <Avatar className="w-32 h-32 mb-4">
                   <AvatarImage
-                    src={getAvatarUrl(speaker.avatar) || undefined}
+                    src={getAvatarUrl(speaker.avatar, speaker.speaker_name || `speaker-${speaker.id}`)}
                     alt={speaker.speaker_name || "Speaker"}
-                    onError={(e) => {
-                      console.error('Avatar failed to load:', speaker.avatar);
-                    }}
                   />
                   <AvatarFallback className="text-2xl bg-orange-100 text-orange-600">
                     {(speaker.speaker_name || `Speaker ${speaker.id}`).split(' ').map((n: string) => n[0]).join('').toUpperCase()}

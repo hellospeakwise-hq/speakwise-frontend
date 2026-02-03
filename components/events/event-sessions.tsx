@@ -179,13 +179,10 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                                 {selectedSpeaker ? (
                                     <div className="flex items-center gap-2 truncate">
                                         <Avatar className="h-6 w-6">
-                                            {selectedSpeaker.avatar ? (
-                                                <AvatarImage src={getAvatarUrl(selectedSpeaker.avatar)} alt={selectedSpeaker.name} />
-                                            ) : (
-                                                <AvatarFallback className="text-xs">
-                                                    {selectedSpeaker.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                                </AvatarFallback>
-                                            )}
+                                            <AvatarImage src={getAvatarUrl(selectedSpeaker.avatar, selectedSpeaker.name)} alt={selectedSpeaker.name} />
+                                            <AvatarFallback className="text-xs">
+                                                {selectedSpeaker.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                            </AvatarFallback>
                                         </Avatar>
                                         <span className="truncate">{selectedSpeaker.name}</span>
                                     </div>
@@ -214,13 +211,10 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                                                 className="flex items-center gap-3 py-3"
                                             >
                                                 <Avatar className="h-10 w-10">
-                                                    {speaker.avatar ? (
-                                                        <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.name} />
-                                                    ) : (
-                                                        <AvatarFallback>
-                                                            {speaker.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                                        </AvatarFallback>
-                                                    )}
+                                                    <AvatarImage src={getAvatarUrl(speaker.avatar, speaker.name)} alt={speaker.name} />
+                                                    <AvatarFallback>
+                                                        {speaker.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                                    </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col flex-1 min-w-0">
                                                     <span className="font-medium truncate">{speaker.name}</span>
@@ -298,21 +292,15 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                                     </Badge>
                                 </div>
                                 <div className="flex items-center gap-2 mb-3">
-                                    {talk.speaker_details?.avatar ? (
-                                        <Avatar className="h-8 w-8">
-                                            <AvatarImage
-                                                src={getAvatarUrl(talk.speaker_details.avatar)}
-                                                alt={talk.speaker_name}
-                                            />
-                                            <AvatarFallback className="text-sm">
-                                                {talk.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                            </AvatarFallback>
-                                        </Avatar>
-                                    ) : (
-                                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                                            <User className="h-4 w-4 text-muted-foreground" />
-                                        </div>
-                                    )}
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage
+                                            src={getAvatarUrl(talk.speaker_details?.avatar, talk.speaker_name)}
+                                            alt={talk.speaker_name}
+                                        />
+                                        <AvatarFallback className="text-sm">
+                                            {talk.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                        </AvatarFallback>
+                                    </Avatar>
                                     <div className="flex flex-col">
                                         <span className="text-sm font-medium">{talk.speaker_name}</span>
                                         {talk.speaker_details?.organization && (
