@@ -56,9 +56,9 @@ export function AboutTeam() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
           {teamMembers.map((member) => (
-            <div key={member.id} className="rounded-lg border bg-background p-6 flex flex-col items-center text-center space-y-4">
+            <div key={member.id} className="rounded-lg border bg-background p-8 flex flex-col items-center text-center space-y-4 min-w-[280px]">
               <div className="w-24 h-24 rounded-full overflow-hidden bg-muted">
                 <img
                   src={member.avatar_url || "/placeholder.svg"}
