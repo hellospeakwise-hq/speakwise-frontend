@@ -59,7 +59,8 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
       try {
         setLoading(true);
         setError(null);
-        const data = await speakerApi.getSpeakerById(id);
+        // Support both ID and username lookups
+        const data = await speakerApi.getSpeakerByIdOrUsername(id);
         setSpeaker(data);
 
         // Fetch experiences for stats
@@ -266,7 +267,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                     <Button variant="outline" className="w-full" disabled>
                       Gift Speaker
                     </Button>
-                    <div className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full">
+                    <div className="absolute -bottom-2 right-2 bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full border">
                       Coming Soon
                     </div>
                   </div>

@@ -60,19 +60,50 @@ export function SignInForm() {
       router.push(redirectPath)
     } catch (error: any) {
       console.error("Login error:", error)
+      console.error("Login error message:", error?.message)
+      console.error("Login error response:", error?.response?.data)
       
       // Provide user-friendly error messages
-      let errorMessage = "Invalid credentials. Please check your email and password."
+      let errorMessage = "Unable to sign in. Please try again."
       
       if (error?.message) {
         // Use the message from our improved auth API
-        errorMessage = error.message;
-      } else if (error?.response?.status === 400 || error?.response?.status === 401) {
-        errorMessage = "Incorrect email or password";
-      } else if (!error?.response) {
-        errorMessage = "Network error. Please check your connection and try again.";
-      } else if (error?.response?.status >= 500) {
-        errorMessage = "Server error. Please try again later.";
+        const msg = error.message.toLowerCase();
+        
+        // Don't show raw "Network error" to user - be more helpful
+        if (msg.includes('network') || msg.includes('fetch') || msg.includes('connection')) {
+          errorMessage = "Unable to connect. Please check your internet connection and try again.";
+        } else if (msg.includes('incorrect') || msg.includes('invalid') || msg.includes('credentials')) {
+          errorMessage = "Incorrect email or password. Please try again.";
+        } else {
+          // Use the actual error message from backend
+          errorMessage = error.message;
+        }
+      } else if (error?.response?.data) {
+        // Parse the response data for user-friendly messages
+        const data = error.response.data;
+        if (data.detail) {
+          errorMessage = data.detail;
+        } else if (data.non_field_errors && Array.isArray(data.non_field_errors)) {
+          errorMessage = data.non_field_errors.join('. ');
+        } else if (data.email && Array.isArray(data.email)) {
+          errorMessage = data.email.join('. ');
+        } else if (data.password && Array.isArray(data.password)) {
+          errorMessage = data.password.join('. ');
+        } else if (typeof data === 'object') {
+          // Try to extract any error messages from the response
+          const messages: string[] = [];
+          for (const [field, errors] of Object.entries(data)) {
+            if (Array.isArray(errors)) {
+              errors.forEach((err: string) => messages.push(err));
+            } else if (typeof errors === 'string') {
+              messages.push(errors);
+            }
+          }
+          if (messages.length > 0) {
+            errorMessage = messages.join('. ');
+          }
+        }
       }
       
       setError(errorMessage)
