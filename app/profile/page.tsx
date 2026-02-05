@@ -34,6 +34,7 @@ function ProfilePageContent() {
     const [profileData, setProfileData] = useState<UserProfileResponse | null>(null)
     const [isCreateOrgDialogOpen, setIsCreateOrgDialogOpen] = useState(false)
     const [isLoadingProfile, setIsLoadingProfile] = useState(true)
+    const [isSaving, setIsSaving] = useState(false)
     const [organizations, setOrganizations] = useState<Organization[]>([])
     const [isLoadingOrgs, setIsLoadingOrgs] = useState(false)
     const [showWelcomeBanner, setShowWelcomeBanner] = useState(false)
@@ -150,6 +151,7 @@ function ProfilePageContent() {
     }
 
     const handleSaveProfile = async () => {
+        setIsSaving(true)
         try {
             const data = profileData as any
             const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
@@ -197,6 +199,8 @@ function ProfilePageContent() {
                 || error.message
                 || "Failed to update profile"
             toast.error(errorMessage)
+        } finally {
+            setIsSaving(false)
         }
     }
 
@@ -698,8 +702,11 @@ function ProfilePageContent() {
                             <div className="flex justify-end space-x-2">
                                 {isEditing ? (
                                     <>
-                                        <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                                        <Button onClick={handleSaveProfile}>Save Changes</Button>
+                                        <Button variant="outline" onClick={() => setIsEditing(false)} disabled={isSaving}>Cancel</Button>
+                                        <Button onClick={handleSaveProfile} disabled={isSaving}>
+                                            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            {isSaving ? "Saving..." : "Save Changes"}
+                                        </Button>
                                     </>
                                 ) : (
                                     <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>

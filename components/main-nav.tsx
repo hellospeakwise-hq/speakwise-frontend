@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { OrganizationBadge } from "@/components/organization-badge"
-import { Menu, X, LogOut, User } from "lucide-react"
+import { Menu, X, LogOut, User, UserCircle } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
+import { userApi } from "@/lib/api/userApi"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,8 @@ export function MainNav() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [speakerId, setSpeakerId] = useState<number | null>(null)
+  const [username, setUsername] = useState<string | null>(null)
   const { user, logout, isAuthenticated } = useAuth()
   const { theme, systemTheme } = useTheme()
 
@@ -31,6 +34,33 @@ export function MainNav() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Fetch speaker_id and username if not available in user object
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      if (isAuthenticated) {
+        try {
+          const profile = await userApi.getUserProfile()
+          const data = profile as any
+          const userData = data?.user || data
+          const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
+          
+          if (speakerData?.id) {
+            setSpeakerId(speakerData.id)
+          }
+          if (userData?.username) {
+            setUsername(userData.username)
+          }
+        } catch (error) {
+          console.error('Failed to fetch profile data:', error)
+        }
+      }
+    }
+    
+    if (mounted && isAuthenticated) {
+      fetchProfileData()
+    }
+  }, [mounted, isAuthenticated])
 
   // Determine current theme (default to light if not mounted)
   const currentTheme = mounted ? (theme === 'system' ? systemTheme : theme) : 'light'
@@ -156,8 +186,18 @@ export function MainNav() {
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                {speakerId && (
+                  <DropdownMenuItem>
+                    <Link href={`/speakers/${speakerId}`} className="w-full flex items-center">
+                      {/* <UserCircle className="h-4 w-4 mr-2" /> */}
+                      View Profile
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem>
+
                   <Link href="/dashboard" className="w-full">Dashboard</Link>
+                  
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link href="/profile" className="w-full">Settings</Link>

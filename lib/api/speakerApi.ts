@@ -38,6 +38,7 @@ export interface Speaker {
     country: string;
     avatar: string;
     user_account: string;
+    username?: string;  // Username for friendly URLs
 }
 
 export interface UpdateSpeakerProfileData {
@@ -64,6 +65,31 @@ export const speakerApi = {
             throw new Error('Speaker not found');
         }
         return speaker;
+    },
+
+    // Get speaker by ID or username
+    async getSpeakerByIdOrUsername(idOrUsername: string): Promise<Speaker> {
+        const response = await apiClient.get<Speaker[]>('/speakers/');
+        const speakers = response.data;
+        
+        // First try to find by ID if it's a number
+        if (/^\d+$/.test(idOrUsername)) {
+            const speaker = speakers.find(s => s.id.toString() === idOrUsername);
+            if (speaker) return speaker;
+        }
+        
+        // Try to find by username (from user_account or speaker_name)
+        const speakerByUsername = speakers.find(s => {
+            // user_account might contain the username
+            const userAccount = s.user_account?.toLowerCase();
+            const searchTerm = idOrUsername.toLowerCase();
+            return userAccount === searchTerm || 
+                   s.speaker_name?.toLowerCase().replace(/\s+/g, '').includes(searchTerm);
+        });
+        
+        if (speakerByUsername) return speakerByUsername;
+        
+        throw new Error('Speaker not found');
     },
 
     // Get speaker profile
