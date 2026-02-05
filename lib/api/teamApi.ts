@@ -1,3 +1,5 @@
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
 export interface SocialLink {
   name: string
   link: string
@@ -15,12 +17,12 @@ export interface TeamMember {
 }
 
 /**
- * Fetch all team members from the API (via Next.js API proxy route to avoid CORS)
+ * Fetch all team members from the API
  */
 export async function fetchTeamMembers(): Promise<TeamMember[]> {
   try {
-    console.log('Fetching team members from Next.js API proxy route: /api/proxy/teams');
-    const response = await fetch(`/api/proxy/teams`, {
+    console.log('Fetching team members from:', `${API_BASE_URL}/api/teams/`);
+    const response = await fetch(`${API_BASE_URL}/api/teams/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -41,12 +43,12 @@ export async function fetchTeamMembers(): Promise<TeamMember[]> {
 }
 
 /**
- * Fetch a single team member by ID (via Next.js API proxy route to avoid CORS)
+ * Fetch a single team member by ID
  */
 export async function fetchTeamMemberById(id: number): Promise<TeamMember> {
   try {
     console.log('Fetching team member by ID:', id);
-    const response = await fetch(`/api/proxy/teams/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/teams/${id}/`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

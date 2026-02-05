@@ -19,6 +19,9 @@ export function SignUpForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState("")
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
@@ -74,6 +77,12 @@ export function SignUpForm() {
       return false
     }
 
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      toast.error("Passwords do not match")
+      return false
+    }
+
     return true
   }
 
@@ -97,12 +106,12 @@ export function SignUpForm() {
         password
       )
       
-      toast.success("🎉 Account created successfully! Redirecting to sign in...", { 
+      toast.success("🎉 Account created successfully! Please sign in to continue.", { 
         id: "registration",
         duration: 3000 
       })
       
-      // Wait a bit before redirecting to show the success message
+      // Redirect to signin - user needs to login to get tokens
       setTimeout(() => {
         router.push("/signin")
       }, 1500)
@@ -205,19 +214,63 @@ export function SignUpForm() {
 
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              autoComplete="new-password"
-              disabled={isLoading}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                disabled={isLoading}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <Icons.eyeOff className="h-4 w-4" />
+                ) : (
+                  <Icons.eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
             <p className="px-1 text-xs text-muted-foreground">
               Must be at least 8 characters long
             </p>
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="confirmPassword">Confirm Password</Label>
+            <div className="relative">
+              <Input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                disabled={isLoading}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                tabIndex={-1}
+              >
+                {showConfirmPassword ? (
+                  <Icons.eyeOff className="h-4 w-4" />
+                ) : (
+                  <Icons.eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
 
           {error && (
@@ -253,10 +306,10 @@ export function SignUpForm() {
           type="button"
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "w-full"
+            "w-full opacity-50 cursor-not-allowed"
           )}
-          onClick={() => handleOAuthSignup('github')}
-          disabled={isLoading}
+          disabled={true}
+          title="Coming Soon"
         >
           <Icons.gitHub className="mr-2 h-4 w-4" />
           GitHub
@@ -265,10 +318,10 @@ export function SignUpForm() {
           type="button"
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "w-full"
+            "w-full opacity-50 cursor-not-allowed"
           )}
-          onClick={() => handleOAuthSignup('google')}
-          disabled={isLoading}
+          disabled={true}
+          title="Coming Soon"
         >
           <Icons.google className="mr-2 h-4 w-4" />
           Google
