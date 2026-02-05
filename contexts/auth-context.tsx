@@ -207,27 +207,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             console.log("Registration response:", response);
 
-            // Use the response data directly as it matches our User type
-            // All new users default to speaker role
-            const userData: User = {
-                id: response.id,
-                speaker_id: response.speaker_id,
-                first_name: response.first_name,
-                last_name: response.last_name,
-                email: response.email,
-                role: response.role || { id: 2, role: 'speaker' }, // Default to speaker if role not provided
-                userType: response.role?.role || 'speaker' // Default to speaker
-            };
-
-            setUser(userData);
-            setIsAuthenticated(true);
-            localStorage.setItem('user', JSON.stringify(userData));
-
-            // Start automatic token refresh
-            scheduleTokenRefresh();
-
-            // Return dashboard path - all new users default to speaker
-            return "/dashboard/speaker";
+            // Registration successful - account created
+            // Don't set user or isAuthenticated here - user needs to login to get tokens
+            // Just return success, the sign-up form will redirect to signin
+            return true;
         } catch (error) {
             console.error("Registration error in context:", error);
             throw error;

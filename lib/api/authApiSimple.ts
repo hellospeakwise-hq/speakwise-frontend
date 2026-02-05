@@ -58,7 +58,26 @@ export const authApiSimple = {
                 try {
                     const errorData = JSON.parse(responseText);
                     console.error('Registration error details:', errorData);
-                    errorMessage = JSON.stringify(errorData);
+                    
+                    // Parse the error object into user-friendly messages
+                    const messages: string[] = [];
+                    for (const [field, errors] of Object.entries(errorData)) {
+                        if (Array.isArray(errors)) {
+                            errors.forEach((err: string) => {
+                                // Make field names more readable
+                                const fieldName = field.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+                                // Check if error already contains field context
+                                if (err.toLowerCase().includes(field.toLowerCase()) || err.toLowerCase().includes('this')) {
+                                    messages.push(err);
+                                } else {
+                                    messages.push(`${fieldName}: ${err}`);
+                                }
+                            });
+                        } else if (typeof errors === 'string') {
+                            messages.push(errors);
+                        }
+                    }
+                    errorMessage = messages.length > 0 ? messages.join('. ') : 'Registration failed';
                 } catch (parseError) {
                     // If it's not valid JSON, use the text as is
                     errorMessage = responseText || errorMessage;

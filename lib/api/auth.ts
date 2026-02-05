@@ -56,8 +56,38 @@ export const authApi = {
 
     console.log('Registration request:', { ...payload, password: '[HIDDEN]' });
 
-    const response = await apiClient.post<AuthResponse>('users/auth/register/', payload);
-    return response.data;
+    try {
+      const response = await apiClient.post<AuthResponse>('users/auth/register/', payload);
+      return response.data;
+    } catch (error: any) {
+      console.error('Registration error:', error.response?.data);
+      
+      // Parse error response to get user-friendly message
+      const errorData = error.response?.data;
+      if (errorData && typeof errorData === 'object') {
+        const messages: string[] = [];
+        for (const [field, errors] of Object.entries(errorData)) {
+          if (Array.isArray(errors)) {
+            errors.forEach((err: string) => {
+              // Check if error already contains field context
+              if (err.toLowerCase().includes(field.toLowerCase()) || err.toLowerCase().includes('this')) {
+                messages.push(err);
+              } else {
+                const fieldName = field.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
+                messages.push(`${fieldName}: ${err}`);
+              }
+            });
+          } else if (typeof errors === 'string') {
+            messages.push(errors);
+          }
+        }
+        if (messages.length > 0) {
+          throw new Error(messages.join('. '));
+        }
+      }
+      
+      throw new Error(error.message || 'Registration failed. Please try again.');
+    }
   },
 
   /**

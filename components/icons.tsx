@@ -6,6 +6,8 @@ import {
   ChevronRight,
   Command,
   CreditCard,
+  Eye,
+  EyeOff,
   File,
   FileText,
   HelpCircle,
@@ -65,6 +67,8 @@ export const Icons = {
   menu: Menu,
   chevronDown: ChevronDown,
   alertCircle: AlertCircle,
+  eye: Eye,
+  eyeOff: EyeOff,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"

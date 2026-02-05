@@ -14,7 +14,7 @@ export async function GET(
     const url = new URL(request.url)
     const searchParams = url.searchParams.toString()
     
-    const apiUrl = `${API_BASE_URL}/api/${apiPath}${searchParams ? `?${searchParams}` : ''}`
+    const apiUrl = `${API_BASE_URL}/api/${apiPath}/${searchParams ? `?${searchParams}` : ''}`
     
     console.log(`Proxying GET request to: ${apiUrl}`)
     
@@ -22,11 +22,21 @@ export async function GET(
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        ...(request.headers.get('authorization')
+          ? { Authorization: request.headers.get('authorization') as string }
+          : {}),
+        ...(request.headers.get('cookie')
+          ? { Cookie: request.headers.get('cookie') as string }
+          : {}),
       },
     })
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      const errorText = await response.text()
+      return NextResponse.json(
+        { error: errorText || `Failed to fetch ${apiPath}` },
+        { status: response.status }
+      )
     }
 
     const data = await response.json()
