@@ -175,7 +175,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
                   <AvatarFallback className="text-2xl bg-orange-100 text-orange-600">
                     {(speaker.speaker_name || `Speaker ${speaker.id}`).split(' ').map((n: string) => n[0]).join('').toUpperCase()}
                   </AvatarFallback>
-                </Avatar>
+                </Avatar> 
                 <h2 className="text-2xl font-bold">{speaker.speaker_name || `Speaker ${speaker.id}`}</h2>
                 <p className="text-muted-foreground">{speaker.organization || 'Independent Speaker'}</p>
                 <div className="flex items-center mt-2 text-sm text-muted-foreground">
