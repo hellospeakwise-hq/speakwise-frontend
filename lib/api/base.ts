@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 // API configuration
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000',
-  TIMEOUT: 10000,
+  TIMEOUT: Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS) || 30000,
 } as const;
 
 // Create Axios instance
