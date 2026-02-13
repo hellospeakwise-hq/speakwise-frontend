@@ -10,8 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
 import { useState, useEffect, Suspense } from "react"
 import { toast } from "sonner"
-import { userApi, UserProfileResponse, SkillTag } from "@/lib/api/userApi"
-import { speakerApi } from "@/lib/api/speakerApi"
+import { userApi, UserProfileResponse } from "@/lib/api/userApi"
+import { speakerApi, SkillTag } from "@/lib/api/speakerApi"
 import { Upload, X, Building2, ArrowRight, CheckCircle2, Clock, Award, Sparkles, Loader2 } from "lucide-react"
 import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
 import { organizationApi, Organization } from "@/lib/api/organizationApi"
@@ -20,8 +20,8 @@ import { OnboardingTour } from "@/components/onboarding/onboarding-tour"
 import { profileOnboardingSteps } from "@/components/onboarding/onboarding-steps"
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { AddExperienceDialog } from "@/components/speakers/add-experience-dialog"
-import { ExperiencesList } from "@/components/speakers/experiences-list"
 import { ProfileCompletionTracker } from "@/components/profile/profile-completion-tracker"
+import { SkillsCombobox } from "@/components/profile/skills-combobox"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useSearchParams } from "next/navigation"
 import { getDefaultAvatar } from "@/lib/utils"
@@ -63,8 +63,6 @@ function ProfilePageContent() {
     const [longBio, setLongBio] = useState("")
     const [country, setCountry] = useState("")
     const [skillTags, setSkillTags] = useState<SkillTag[]>([])
-    const [availableSkills, setAvailableSkills] = useState<SkillTag[]>([])
-    const [newSkillName, setNewSkillName] = useState("")
     const [avatarKey, setAvatarKey] = useState(Date.now()) // Cache buster for avatar image
 
     // Mark component as mounted to prevent hydration mismatches
@@ -76,7 +74,6 @@ function ProfilePageContent() {
     useEffect(() => {
         if (mounted) {
             loadProfile()
-            loadAvailableSkills()
             loadOrganizations()
         }
     }, [mounted])
@@ -106,8 +103,11 @@ function ProfilePageContent() {
                 setShortBio(speakerData.short_bio || "")
                 setLongBio(speakerData.long_bio || "")
                 setCountry(speakerData.country || "")
-                setSkillTags(speakerData.skill_tag || [])
+                // Don't set skillTags here - we load them from /speakers/skills/ endpoint
             }
+            
+            // Load skills after profile data is set
+            loadSkills()
         }
     }, [profileData])
 
@@ -124,13 +124,14 @@ function ProfilePageContent() {
         }
     }
 
-    const loadAvailableSkills = async () => {
+    const loadSkills = async () => {
         try {
-            const tags = await speakerApi.getSkillTags()
-            setAvailableSkills(tags as any)
-        } catch (error: any) {
-            // Silently handle 404 - endpoint not implemented yet
-            setAvailableSkills([]) // Set empty array as fallback
+            // Load speaker's skills from the new endpoint
+            const skills = await speakerApi.getSkills()
+            setSkillTags(skills as any)
+        } catch (error) {
+            // Silently fail - skills will be empty
+            console.error('Failed to load skills:', error)
         }
     }
 
@@ -259,14 +260,20 @@ function ProfilePageContent() {
         event.target.value = ''
     }
 
-    const addSkillTag = async () => {
-        if (!newSkillName.trim()) return
-
+    // Add an EXISTING skill to user's profile by creating it via POST
+    const addSkillTag = async (skill: SkillTag) => {
+        // Check if already added
+        if (skillTags.some(s => s.id === skill.id)) {
+            toast.error("Skill already added")
+            return
+        }
+        
         try {
-            const newTag = await speakerApi.createSkillTag(newSkillName.trim())
-            setAvailableSkills(prev => [...prev, newTag as any])
-            setSkillTags(prev => [...prev, newTag as any])
-            setNewSkillName("")
+            // POST to /speakers/skills/ to add the skill to user's profile
+            await speakerApi.createSkill({ name: skill.name })
+            
+            // Update local state
+            setSkillTags(prev => [...prev, skill])
             toast.success("Skill added successfully")
         } catch (error) {
             console.error('Failed to add skill:', error)
@@ -274,19 +281,34 @@ function ProfilePageContent() {
         }
     }
 
-    const toggleSkillTag = (skill: SkillTag) => {
-        setSkillTags(prev => {
-            const exists = prev.find(tag => tag.id === skill.id)
-            if (exists) {
-                return prev.filter(tag => tag.id !== skill.id)
-            } else {
-                return [...prev, skill]
-            }
-        })
+    // CREATE a brand new skill (that doesn't exist in the system yet)
+    const createNewSkill = async (name: string): Promise<SkillTag | null> => {
+        try {
+            // This creates a new skill tag in the system AND adds it to the user
+            const newTag = await speakerApi.createSkill({ name })
+            setSkillTags(prev => [...prev, newTag])
+            toast.success("Skill created and added")
+            return newTag
+        } catch (error) {
+            console.error('Failed to create skill:', error)
+            toast.error("Failed to create skill")
+            return null
+        }
     }
 
-    const removeSkillTag = (skillId: number) => {
-        setSkillTags(prev => prev.filter(tag => tag.id !== skillId))
+    // Remove a skill from user's profile
+    const removeSkillTag = async (skillId: number) => {
+        try {
+            // DELETE /speakers/skills/{id}/ to remove from user's profile
+            await speakerApi.deleteSkill(skillId)
+            
+            // Update local state
+            setSkillTags(prev => prev.filter(tag => tag.id !== skillId))
+            toast.success("Skill removed")
+        } catch (error) {
+            console.error('Failed to remove skill:', error)
+            toast.error("Failed to remove skill")
+        }
     }
 
     const handleCreateOrganization = () => {
@@ -542,67 +564,49 @@ function ProfilePageContent() {
                     <Card data-tour="skills">
                         <CardHeader>
                             <CardTitle>Skills & Expertise</CardTitle>
-                            <CardDescription>Add your skills and areas of expertise</CardDescription>
+                            <CardDescription>Add your skills and areas of expertise to help organizers find you</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
+                                {/* Skill Combobox - Search existing or create new */}
+                                <SkillsCombobox
+                                    selectedSkills={skillTags}
+                                    onSkillAdd={addSkillTag}
+                                    onCreateSkill={createNewSkill}
+                                />
+
                                 {/* Current Skills */}
                                 <div className="space-y-2">
-                                    <Label>Your Skills</Label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {skillTags.map((skill) => (
-                                            <Badge key={skill.id} variant="secondary" className="text-sm">
-                                                {skill.name}
-                                                {isEditing && (
+                                    <Label className="text-sm text-muted-foreground">Your Skills ({skillTags.length})</Label>
+                                    {skillTags.length > 0 ? (
+                                        <div className="flex flex-wrap gap-2">
+                                            {skillTags.map((skill) => (
+                                                <Badge 
+                                                    key={skill.id} 
+                                                    variant="secondary" 
+                                                    className="text-sm py-1.5 px-3 flex items-center gap-1.5"
+                                                >
+                                                    {skill.name}
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
-                                                        className="ml-2 h-auto p-0"
+                                                        className="h-4 w-4 p-0 hover:bg-destructive/20 rounded-full"
                                                         onClick={() => removeSkillTag(skill.id)}
                                                     >
                                                         <X className="w-3 h-3" />
                                                     </Button>
-                                                )}
-                                            </Badge>
-                                        ))}
-                                        {skillTags.length === 0 && (
-                                            <p className="text-muted-foreground">No skills added yet</p>
-                                        )}
-                                    </div>
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                            <p className="text-muted-foreground text-sm">No skills added yet</p>
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                                Search for existing skills or create your own
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
-
-                                {/* Add Skills */}
-                                {isEditing && (
-                                    <div className="space-y-3">
-                                        <Label>Available Skills</Label>
-                                        <div className="flex flex-wrap gap-2">
-                                            {availableSkills
-                                                .filter(skill => !skillTags.find(tag => tag.id === skill.id))
-                                                .map((skill) => (
-                                                    <Badge
-                                                        key={skill.id}
-                                                        variant="outline"
-                                                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-                                                        onClick={() => toggleSkillTag(skill)}
-                                                    >
-                                                        {skill.name}
-                                                    </Badge>
-                                                ))}
-                                        </div>
-
-                                        <div className="flex space-x-2">
-                                            <Input
-                                                value={newSkillName}
-                                                onChange={(e) => setNewSkillName(e.target.value)}
-                                                placeholder="Add a new skill"
-                                                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addSkillTag())}
-                                            />
-                                            <Button onClick={addSkillTag} disabled={!newSkillName.trim()}>
-                                                Add Skill
-                                            </Button>
-                                        </div>
-                                    </div>
-                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -636,7 +640,7 @@ function ProfilePageContent() {
                         </Card>
                     )}
 
-                    {/* Organization Summary */}
+                    {/* Organization Summary - HIDDEN: Focusing on speaker features for now
                     <Card data-tour="organizations">
                         <CardHeader>
                             <CardTitle>Organizations</CardTitle>
@@ -695,6 +699,7 @@ function ProfilePageContent() {
                             )}
                         </CardContent>
                     </Card>
+                    */}
 
                     {/* Edit Profile Button - At the bottom */}
                     <Card>

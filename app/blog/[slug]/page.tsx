@@ -44,7 +44,7 @@ Unlike traditional speaker management tools, SpeakWise brings together all three
 
 ## Getting Started
 
-Ready to elevate your speaking career or organize your next event? Contact us at [your-email@speakwise.com] and join the SpeakWise community today!
+Ready to elevate your speaking career or organize your next event? Contact us at hello.speakwise@gmail.com and join the SpeakWise community today!
 
 Thank you for being part of our journey!
     `,

@@ -17,13 +17,14 @@ import { ExperiencesList } from './experiences-list';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 interface SpeakerProfileProps {
-  id: string
+  id: string;
+  initialData?: Speaker | null;  // Optional: pass speaker data directly (e.g., from /users/me/)
 }
 
-export function SpeakerProfile({ id }: SpeakerProfileProps) {
+export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   const { isAuthenticated } = useAuth();
-  const [speaker, setSpeaker] = useState<Speaker | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [speaker, setSpeaker] = useState<Speaker | null>(initialData || null);
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [hasApprovedOrg, setHasApprovedOrg] = useState(false);
   const [experiences, setExperiences] = useState<any[]>([]);
@@ -56,6 +57,23 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
 
   useEffect(() => {
     const loadSpeaker = async () => {
+      // Skip fetching if we already have initialData
+      if (initialData) {
+        console.log('Using initialData for speaker profile');
+        // Still try to load skills if authenticated (for own profile)
+        if (isAuthenticated) {
+          try {
+            const skills = await speakerApi.getSkills();
+            if (skills && skills.length > 0) {
+              setSpeaker(prev => prev ? { ...prev, skill_tags: skills } : prev);
+            }
+          } catch (err) {
+            console.log('Could not load skills from /speakers/skills/', err);
+          }
+        }
+        return;
+      }
+      
       try {
         setLoading(true);
         setError(null);
@@ -113,7 +131,7 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
     if (id) {
       loadSpeaker();
     }
-  }, [id]);
+  }, [id, initialData, isAuthenticated]);
 
   // Helper function to construct full image URL
   const getAvatarUrl = (avatarPath: string | undefined) => {
@@ -282,8 +300,8 @@ export function SpeakerProfile({ id }: SpeakerProfileProps) {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {speaker.skill_tag && speaker.skill_tag.length > 0 ? (
-                  speaker.skill_tag.map((skill) => (
+                {speaker.skill_tags && speaker.skill_tags.length > 0 ? (
+                  speaker.skill_tags.map((skill) => (
                     <Badge key={skill.id} variant="secondary">
                       {skill.name}
                     </Badge>

@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
-import { speakerApi, type Speaker } from "@/lib/api/speakerApi";
+import { speakerApi, type Speaker, getSpeakerSlug } from "@/lib/api/speakerApi";
 
 interface EventSpeakersProps {
     eventId: string;
@@ -99,12 +99,12 @@ export function EventSpeakers({ eventId, isManagement = false }: EventSpeakersPr
                                 )}
                             </div>
                             <div className="flex space-x-2">
-                                <Link href={`/speakers/${speaker.id}`} passHref>
+                                <Link href={`/speakers/${getSpeakerSlug(speaker)}`} passHref>
                                     <Button variant="outline" size="sm">
                                         Profile
                                     </Button>
                                 </Link>
-                                <Link href={`/events/${eventId}/speakers/${speaker.id}/feedback`} passHref>
+                                <Link href={`/events/${eventId}/speakers/${getSpeakerSlug(speaker)}/feedback`} passHref>
                                     <Button size="sm" variant="secondary">
                                         Give Feedback
                                     </Button>

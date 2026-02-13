@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { UserCircle, X, ChevronRight } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { X, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { speakerApi, type Speaker } from "@/lib/api/speakerApi"
 import { useAuth } from "@/contexts/auth-context"
+import { cn } from "@/lib/utils"
 
 interface ProfileField {
   key: keyof Speaker
@@ -20,9 +20,42 @@ const PROFILE_FIELDS: ProfileField[] = [
   { key: "long_bio", label: "Detailed bio", weight: 15 },
   { key: "organization", label: "Organization", weight: 15 },
   { key: "country", label: "Location", weight: 10 },
-  { key: "skill_tag", label: "Skills/Expertise", weight: 10 },
+  { key: "skill_tags", label: "Skills/Expertise", weight: 10 },
   { key: "social_links", label: "Social links", weight: 10 },
 ]
+
+// Fun messages based on completion percentage
+const getMotivationalMessage = (percentage: number, missingFields: string[]) => {
+  if (percentage < 30) {
+    return {
+      emoji: "🚀",
+      title: "Let's launch your speaker journey!",
+      subtitle: "Your profile is just getting started. Add some details to help organizers discover you!",
+      mascotMood: "excited"
+    }
+  } else if (percentage < 50) {
+    return {
+      emoji: "🌱",
+      title: "Growing nicely!",
+      subtitle: "You're making progress! A few more details and you'll be on fire!",
+      mascotMood: "happy"
+    }
+  } else if (percentage < 70) {
+    return {
+      emoji: "⚡",
+      title: "Almost there, superstar!",
+      subtitle: `Just add your ${missingFields.slice(0, 2).join(" and ").toLowerCase()} to level up!`,
+      mascotMood: "encouraging"
+    }
+  } else {
+    return {
+      emoji: "🎯",
+      title: "So close to 100%!",
+      subtitle: "You're nearly there! Complete your profile to maximize your visibility!",
+      mascotMood: "cheering"
+    }
+  }
+}
 
 export function ProfileCompletionBanner() {
   const { user } = useAuth()
@@ -30,6 +63,7 @@ export function ProfileCompletionBanner() {
   const [dismissed, setDismissed] = useState(false)
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const [missingFields, setMissingFields] = useState<string[]>([])
+  const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -85,6 +119,17 @@ export function ProfileCompletionBanner() {
     }
   }, [user])
 
+  // Trigger animation periodically
+  useEffect(() => {
+    if (!loading && !dismissed && completionPercentage < 80) {
+      const interval = setInterval(() => {
+        setIsAnimating(true)
+        setTimeout(() => setIsAnimating(false), 1000)
+      }, 5000)
+      return () => clearInterval(interval)
+    }
+  }, [loading, dismissed, completionPercentage])
+
   const calculateCompletion = (speaker: Speaker) => {
     let totalWeight = 0
     let completedWeight = 0
@@ -98,7 +143,7 @@ export function ProfileCompletionBanner() {
 
       if (field.key === "avatar") {
         isComplete = !!value && typeof value === 'string' && value !== "" && !value.includes("default")
-      } else if (field.key === "skill_tag" || field.key === "social_links") {
+      } else if (field.key === "skill_tags" || field.key === "social_links") {
         isComplete = Array.isArray(value) && value.length > 0
       } else {
         isComplete = !!value && value !== ""
@@ -126,56 +171,99 @@ export function ProfileCompletionBanner() {
     return null
   }
 
-  return (
-    <Alert className="bg-orange-50 border-orange-200 dark:bg-orange-900/10 dark:border-orange-900/30">
-      <div className="flex items-start justify-between">
-        <div className="flex">
-          <UserCircle className="h-4 w-4 text-orange-500 mt-0.5 mr-2" />
-          <div>
-            <AlertTitle className="text-orange-800 dark:text-orange-300">
-              Complete your profile to get noticed
-            </AlertTitle>
-            <AlertDescription className="text-orange-700 dark:text-orange-400">
-              <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-1.5 bg-orange-200 dark:bg-orange-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-orange-500 rounded-full transition-all"
-                      style={{ width: `${completionPercentage}%` }}
-                    />
-                  </div>
-                  <span className="text-xs font-medium text-orange-600 dark:text-orange-400">
-                    {completionPercentage}%
-                  </span>
-                </div>
-                
-                {missingFields.length > 0 && (
-                  <p className="text-sm">
-                    Add your {missingFields.slice(0, 2).join(" and ").toLowerCase()}
-                    {missingFields.length > 2 && ` (+${missingFields.length - 2} more)`} to help organizers find you.
-                  </p>
-                )}
+  const message = getMotivationalMessage(completionPercentage, missingFields)
 
-                <Link href="/profile">
-                  <Button variant="link" className="p-0 h-auto text-orange-600 dark:text-orange-400 gap-1">
-                    Update Profile
-                    <ChevronRight className="h-3 w-3" />
-                  </Button>
-                </Link>
-              </div>
-            </AlertDescription>
-          </div>
-        </div>
+  return (
+    <div className="relative overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="p-4 sm:p-6">
+        {/* Dismiss button - absolute positioned */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-6 w-6 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/20"
+          className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
           onClick={handleDismiss}
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Dismiss</span>
         </Button>
+
+        {/* Header with emoji and title */}
+        <div className="flex items-center gap-3 pr-8">
+          <div className={cn(
+            "flex-shrink-0 text-3xl transition-transform duration-500",
+            isAnimating ? "scale-110 -rotate-6" : "scale-100 rotate-0"
+          )}>
+            <span className="animate-bounce inline-block" style={{ animationDuration: "2s" }}>
+              {message.emoji}
+            </span>
+          </div>
+          <div>
+            <h3 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-1.5 flex-wrap">
+              {message.title}
+              <span className={cn(
+                "inline-block transition-transform text-sm",
+                isAnimating && "animate-ping"
+              )}>
+                ✨
+              </span>
+            </h3>
+          </div>
+        </div>
+
+        {/* Subtitle */}
+        <p className="text-sm text-muted-foreground mt-2">
+          {message.subtitle}
+        </p>
+
+        {/* Progress bar */}
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-xs font-medium text-muted-foreground">
+              Profile Completion
+            </span>
+            <span className="text-sm font-bold text-foreground">
+              {completionPercentage}%
+            </span>
+          </div>
+          
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-1000 ease-out relative bg-primary"
+              style={{ width: `${completionPercentage}%` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+            </div>
+          </div>
+
+          {/* Missing fields - horizontal scroll on mobile */}
+          {missingFields.length > 0 && (
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {missingFields.slice(0, 3).map((field) => (
+                <span
+                  key={field}
+                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground whitespace-nowrap"
+                >
+                  <span className="mr-1">📝</span>
+                  {field}
+                </span>
+              ))}
+              {missingFields.length > 3 && (
+                <span className="inline-flex items-center px-2 py-1 text-xs text-muted-foreground whitespace-nowrap">
+                  +{missingFields.length - 3} more
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* CTA Button - full width on mobile */}
+        <Link href="/profile" className="block mt-4">
+          <Button className="w-full sm:w-auto group">
+            <span>Complete My Profile</span>
+            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </Link>
       </div>
-    </Alert>
+    </div>
   )
 }

@@ -57,18 +57,22 @@ export default function BlogPage() {
       </div>
       <hr className="my-8" />
       <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3">
-        {blogPosts.map((post) => (
+        {blogPosts.map((post, index) => (
           <article
             key={post.id}
             className="group relative flex flex-col space-y-2"
           >
-            <Image
-              src={post.image}
-              alt={post.title}
-              width={800}
-              height={450}
-              className="rounded-md border bg-muted transition-colors"
-            />
+            <div className="relative aspect-video overflow-hidden rounded-md border bg-muted">
+              <Image
+                src={post.image}
+                alt={post.title}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                className="object-cover transition-colors"
+                loading={index === 0 ? "eager" : "lazy"}
+                priority={index === 0}
+              />
+            </div>
             <h2 className="text-2xl font-extrabold">{post.title}</h2>
             <p className="text-muted-foreground">{post.excerpt}</p>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">

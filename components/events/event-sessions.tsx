@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Clock, Loader2, User, MessageSquare, Search, X } from "lucide-react";
 import { apiClient } from '@/lib/api/base';
-import { speakerApi, type Speaker } from '@/lib/api/speakerApi';
+import { speakerApi, type Speaker, getSpeakerSlug } from '@/lib/api/speakerApi';
 import { getAvatarUrl } from '@/lib/utils';
 import {
     Command,
@@ -339,14 +339,14 @@ export function EventSessions({ eventId }: EventSessionsProps) {
 
                                 {/* Action Buttons */}
                                 <div className="flex flex-col gap-2 pt-2">
-                                    <Link href={`/speakers/${talk.speaker}`}>
+                                    <Link href={`/speakers/${talk.speaker_details ? getSpeakerSlug(talk.speaker_details) : talk.speaker}`}>
                                         <Button variant="outline" size="sm" className="w-full">
                                             <User className="h-4 w-4 mr-2" />
                                             View Speaker Profile
                                         </Button>
                                     </Link>
 
-                                    <Link href={`/events/${eventId}/speakers/${talk.speaker}/feedback`}>
+                                    <Link href={`/events/${eventId}/speakers/${talk.speaker_details ? getSpeakerSlug(talk.speaker_details) : talk.speaker}/feedback`}>
                                         <Button variant="outline" size="sm" className="w-full">
                                             <MessageSquare className="h-4 w-4 mr-2" />
                                             Give Feedback

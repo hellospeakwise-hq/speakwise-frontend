@@ -1,4 +1,5 @@
 import apiClient from './base';
+import { cachedFetch, CACHE_TTL, removeFromCache } from '../utils/cache';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
@@ -21,7 +22,7 @@ export interface User {
 export interface SpeakerProfile {
     id: number;
     social_links: any[];
-    skill_tag: SkillTag[];
+    skill_tags: SkillTag[];
     speaker_name: string;
     organization: string;
     short_bio: string;
@@ -49,7 +50,7 @@ export interface UpdateSpeakerData {
     short_bio?: string;
     long_bio?: string;
     country?: string;
-    skill_tag?: number[];
+    skill_tags?: number[];
     social_links?: any[];
 }
 
@@ -59,8 +60,21 @@ export interface UpdateProfileData {
 }
 
 export const userApi = {
-    // Get user profile (GET /api/users/me/)
+    // Get user profile (GET /api/users/me/) - cached for faster loading
     async getUserProfile(): Promise<UserProfileResponse> {
+        return cachedFetch(
+            'user_profile',
+            async () => {
+                const response = await apiClient.get('/users/me/');
+                return response.data;
+            },
+            { ttl: CACHE_TTL.SHORT } // 1 minute cache for user profile
+        );
+    },
+
+    // Force refresh user profile (skip cache)
+    async refreshUserProfile(): Promise<UserProfileResponse> {
+        removeFromCache('user_profile');
         const response = await apiClient.get('/users/me/');
         return response.data;
     },
@@ -77,6 +91,9 @@ export const userApi = {
             const response = await apiClient.patch('/users/me/', data);
             console.log('✅ UPDATE SUCCESS');
             console.log('Response:', response.data);
+            // Invalidate cache after successful update
+            removeFromCache('user_profile');
+            removeFromCache('speakers_list');
             return response.data;
         } catch (error: any) {
             console.error('❌ UPDATE FAILED');
