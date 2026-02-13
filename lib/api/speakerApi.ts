@@ -1,4 +1,5 @@
 import { apiClient } from './base';
+import { cachedFetch, CACHE_TTL } from '../utils/cache';
 
 export interface SpeakerProfile {
     id: number;
@@ -21,6 +22,12 @@ export interface SkillTag {
     duration?: number;
 }
 
+export interface CreateSkillData {
+    name: string;
+    description?: string;
+    duration?: number;
+}
+
 export interface SocialLink {
     id: number;
     name: string;
@@ -30,7 +37,7 @@ export interface SocialLink {
 export interface Speaker {
     id: number;
     social_links: SocialLink[];
-    skill_tag: SkillTag[];
+    skill_tags: SkillTag[];
     speaker_name: string;
     organization: string;
     short_bio: string;
@@ -39,6 +46,12 @@ export interface Speaker {
     avatar: string;
     user_account: string;
     username?: string;  // Username for friendly URLs
+    slug?: string;      // Slug for URL routing (usually same as user_account)
+}
+
+// Helper to get the slug for a speaker (fallback to id if no username)
+export function getSpeakerSlug(speaker: Speaker): string {
+    return speaker.slug || speaker.user_account || speaker.username || speaker.id.toString();
 }
 
 export interface UpdateSpeakerProfileData {
@@ -50,46 +63,38 @@ export interface UpdateSpeakerProfileData {
 }
 
 export const speakerApi = {
-    // Get all speakers
+    // Get all speakers (cached for 5 minutes)
     async getSpeakers(): Promise<Speaker[]> {
-        const response = await apiClient.get<Speaker[]>('/speakers/');
-        return response.data;
+        return cachedFetch(
+            'speakers_list',
+            async () => {
+                const response = await apiClient.get<Speaker[]>('/speakers/');
+                return response.data;
+            },
+            { ttl: CACHE_TTL.MEDIUM }
+        );
     },
 
-    // Get speaker by ID
+    // Get speaker by slug (ID or username) - cached per speaker
+    async getSpeakerBySlug(slug: string): Promise<Speaker> {
+        return cachedFetch(
+            `speaker_${slug}`,
+            async () => {
+                const response = await apiClient.get<Speaker>(`/speakers/${slug}/`);
+                return response.data;
+            },
+            { ttl: CACHE_TTL.MEDIUM }
+        );
+    },
+
+    // Get speaker by ID (uses slug endpoint)
     async getSpeakerById(id: string): Promise<Speaker> {
-        const response = await apiClient.get<Speaker[]>('/speakers/');
-        const speakers = response.data;
-        const speaker = speakers.find(s => s.id.toString() === id);
-        if (!speaker) {
-            throw new Error('Speaker not found');
-        }
-        return speaker;
+        return this.getSpeakerBySlug(id);
     },
 
-    // Get speaker by ID or username
+    // Get speaker by ID or username (uses slug endpoint)
     async getSpeakerByIdOrUsername(idOrUsername: string): Promise<Speaker> {
-        const response = await apiClient.get<Speaker[]>('/speakers/');
-        const speakers = response.data;
-        
-        // First try to find by ID if it's a number
-        if (/^\d+$/.test(idOrUsername)) {
-            const speaker = speakers.find(s => s.id.toString() === idOrUsername);
-            if (speaker) return speaker;
-        }
-        
-        // Try to find by username (from user_account or speaker_name)
-        const speakerByUsername = speakers.find(s => {
-            // user_account might contain the username
-            const userAccount = s.user_account?.toLowerCase();
-            const searchTerm = idOrUsername.toLowerCase();
-            return userAccount === searchTerm || 
-                   s.speaker_name?.toLowerCase().replace(/\s+/g, '').includes(searchTerm);
-        });
-        
-        if (speakerByUsername) return speakerByUsername;
-        
-        throw new Error('Speaker not found');
+        return this.getSpeakerBySlug(idOrUsername);
     },
 
     // Get speaker profile
@@ -130,16 +135,45 @@ export const speakerApi = {
         }
     },
 
-    // Get all skill tags
+    // Get all skill tags (legacy endpoint)
     async getSkillTags(): Promise<SkillTag[]> {
         const response = await apiClient.get<SkillTag[]>('/speakers/skill-tags/');
         return response.data;
     },
 
-    // Create a new skill tag
+    // Create a new skill tag (legacy endpoint)
     async createSkillTag(name: string): Promise<SkillTag> {
         const response = await apiClient.post<SkillTag>('/speakers/skill-tags/', { name });
         return response.data;
+    },
+
+    // Get speaker's skills (new endpoint)
+    async getSkills(): Promise<SkillTag[]> {
+        const response = await apiClient.get<SkillTag[]>('/speakers/skills/');
+        return response.data;
+    },
+
+    // Get skill by ID
+    async getSkillById(id: number): Promise<SkillTag> {
+        const response = await apiClient.get<SkillTag>(`/speakers/skills/${id}/`);
+        return response.data;
+    },
+
+    // Create a new skill
+    async createSkill(data: CreateSkillData): Promise<SkillTag> {
+        const response = await apiClient.post<SkillTag>('/speakers/skills/', data);
+        return response.data;
+    },
+
+    // Update a skill
+    async updateSkill(id: number, data: Partial<CreateSkillData>): Promise<SkillTag> {
+        const response = await apiClient.patch<SkillTag>(`/speakers/skills/${id}/`, data);
+        return response.data;
+    },
+
+    // Delete a skill
+    async deleteSkill(id: number): Promise<void> {
+        await apiClient.delete(`/speakers/skills/${id}/`);
     }
 };
 

@@ -8,6 +8,7 @@ import { Footer } from "@/components/footer"
 import { Toaster } from "sonner"
 import { AuthProvider } from "@/contexts/auth-context"
 import { DisableConsole } from "@/components/disable-console"
+import { CookieConsent } from "@/components/cookie-consent"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -129,6 +130,7 @@ export default function RootLayout({
               <main className="flex-1">{children}</main>
               <Footer />
             </div>
+            <CookieConsent />
           </AuthProvider>
         </ThemeProvider>
       </body>

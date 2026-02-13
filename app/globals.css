@@ -112,6 +112,20 @@
     animation-delay: 4s;
   }
 
+  /* Shimmer animation for profile completion banner */
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite;
+  }
+
   /* Hide scrollbar for carousel */
   .scrollbar-hide {
     -ms-overflow-style: none;

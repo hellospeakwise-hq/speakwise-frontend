@@ -27,7 +27,7 @@ interface ProfileCompletionTrackerProps {
             long_bio?: string
             country?: string
             avatar?: string
-            skill_tag?: any[]
+            skill_tags?: any[]
             experiences?: any[]
         } | null
     }
@@ -138,7 +138,7 @@ export function ProfileCompletionTracker({ profileData, onEditClick }: ProfileCo
         {
             id: 'skill_tags',
             label: 'Skills',
-            isComplete: (speaker?.skill_tag?.length || 0) > 0,
+            isComplete: (speaker?.skill_tags?.length || 0) > 0,
             priority: 'recommended',
             icon: <Tags className="h-3 w-3" />
         },

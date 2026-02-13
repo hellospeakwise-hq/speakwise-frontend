@@ -26,6 +26,7 @@ export function MainNav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [speakerId, setSpeakerId] = useState<number | null>(null)
+  const [speakerSlug, setSpeakerSlug] = useState<string | null>(null)
   const [username, setUsername] = useState<string | null>(null)
   const { user, logout, isAuthenticated } = useAuth()
   const { theme, systemTheme } = useTheme()
@@ -48,8 +49,12 @@ export function MainNav() {
           if (speakerData?.id) {
             setSpeakerId(speakerData.id)
           }
+          // Use username as slug, fallback to speaker id
           if (userData?.username) {
             setUsername(userData.username)
+            setSpeakerSlug(userData.username)
+          } else if (speakerData?.id) {
+            setSpeakerSlug(speakerData.id.toString())
           }
         } catch (error) {
           console.error('Failed to fetch profile data:', error)
@@ -188,7 +193,7 @@ export function MainNav() {
                 <DropdownMenuSeparator />
                 {speakerId && (
                   <DropdownMenuItem>
-                    <Link href={`/speakers/${speakerId}`} className="w-full flex items-center">
+                    <Link href="/speakers/me" className="w-full flex items-center">
                       {/* <UserCircle className="h-4 w-4 mr-2" /> */}
                       View Profile
                     </Link>
