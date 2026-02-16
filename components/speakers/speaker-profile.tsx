@@ -416,7 +416,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ExperiencesList speakerId={parseInt(id)} />
+                  <ExperiencesList speakerSlug={id} />
                 </CardContent>
               </Card>
             </TabsContent>
