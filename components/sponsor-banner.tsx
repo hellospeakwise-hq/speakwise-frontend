@@ -45,7 +45,7 @@ export function SponsorBanner() {
               asChild
             >
               <a
-                href="https://github.com/sponsors/your-username"
+                href="https://github.com/sponsors/hellospeakwise-hq"
                 target="_blank"
                 rel="noopener noreferrer"
               >
