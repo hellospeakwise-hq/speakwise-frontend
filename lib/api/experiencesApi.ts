@@ -25,29 +25,28 @@ export const experiencesApi = {
     // Get all experiences for the authenticated speaker
     async getMyExperiences(): Promise<SpeakerExperience[]> {
         try {
-            console.log('🔍 API: Fetching my experiences from /speakers/experiences/');
             const response = await apiClient.get('/speakers/experiences/');
-            console.log('📥 API Response:', response.data);
             return response.data;
         } catch (error: any) {
-            console.error('❌ API Error:', error);
-            console.error('Response:', error.response?.data);
-            console.error('Status:', error.response?.status);
+            console.error('Error fetching experiences:', error);
             throw error;
         }
     },
 
-    // Get experiences for a specific speaker (public endpoint - no auth required)
-    async getSpeakerExperiences(speakerId: number): Promise<SpeakerExperience[]> {
+    // Get experiences for a specific speaker by slug (public endpoint - no auth required)
+    async getSpeakerExperiencesBySlug(slug: string): Promise<SpeakerExperience[]> {
         try {
-            console.log(`🔍 Fetching experiences for speaker ${speakerId} (public endpoint)`);
-            const response = await apiClient.get(`/speakers/${speakerId}/experiences/`);
-            console.log('📥 Experiences loaded:', response.data);
+            const response = await apiClient.get(`/speakers/${slug}/experiences/`);
             return response.data || [];
         } catch (error: any) {
-            console.error('❌ Error fetching experiences:', error);
+            console.error('Error fetching speaker experiences:', error);
             return []; // Return empty array instead of throwing
         }
+    },
+
+    // Get experiences for a specific speaker by ID (legacy - uses slug endpoint)
+    async getSpeakerExperiences(speakerId: number): Promise<SpeakerExperience[]> {
+        return this.getSpeakerExperiencesBySlug(speakerId.toString());
     },
 
     // Get a specific experience by ID
@@ -59,14 +58,10 @@ export const experiencesApi = {
     // Create a new experience
     async createExperience(data: CreateExperienceData): Promise<SpeakerExperience> {
         try {
-            console.log('📤 Creating experience with data:', data);
             const response = await apiClient.post('/speakers/experiences/', data);
-            console.log('✅ Experience created:', response.data);
             return response.data;
         } catch (error: any) {
-            console.error('❌ Failed to create experience:', error);
-            console.error('Response:', error.response?.data);
-            console.error('Status:', error.response?.status);
+            console.error('Failed to create experience:', error);
             throw error;
         }
     },

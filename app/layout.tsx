@@ -9,6 +9,7 @@ import { Toaster } from "sonner"
 import { AuthProvider } from "@/contexts/auth-context"
 import { DisableConsole } from "@/components/disable-console"
 import { CookieConsent } from "@/components/cookie-consent"
+import { SponsorBanner } from "@/components/sponsor-banner"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -126,6 +127,7 @@ export default function RootLayout({
           <AuthProvider>
             <div className="flex min-h-screen flex-col">
               <Toaster position="top-center" />
+              <SponsorBanner />
               <MainNav />
               <main className="flex-1">{children}</main>
               <Footer />

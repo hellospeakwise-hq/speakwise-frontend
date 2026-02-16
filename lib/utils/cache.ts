@@ -155,8 +155,8 @@ export async function cachedFetch<T>(
  * Cache TTL presets
  */
 export const CACHE_TTL = {
-  SHORT: 1 * 60 * 1000,      // 1 minute - for frequently changing data
-  MEDIUM: 5 * 60 * 1000,     // 5 minutes - default
-  LONG: 15 * 60 * 1000,      // 15 minutes - for semi-static data
-  VERY_LONG: 60 * 60 * 1000, // 1 hour - for rarely changing data
+  SHORT: 30 * 1000,          // 30 seconds - for frequently changing data
+  MEDIUM: 2 * 60 * 1000,     // 2 minutes - default for most data
+  LONG: 5 * 60 * 1000,       // 5 minutes - for semi-static data
+  VERY_LONG: 10 * 60 * 1000, // 10 minutes - for rarely changing data
 } as const;
