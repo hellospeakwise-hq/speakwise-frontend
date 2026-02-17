@@ -188,10 +188,9 @@ export function SignInForm() {
           type="button"
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "w-full opacity-50 cursor-not-allowed"
+            "w-full"
           )}
-          disabled={true}
-          title="Coming Soon"
+          onClick={() => handleOAuthLogin('github')}
         >
           <Icons.gitHub className="mr-2 h-4 w-4" />
           GitHub
@@ -200,10 +199,9 @@ export function SignInForm() {
           type="button"
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "w-full opacity-50 cursor-not-allowed"
+            "w-full"
           )}
-          disabled={true}
-          title="Coming Soon"
+          onClick={() => handleOAuthLogin('google')}
         >
           <Icons.google className="mr-2 h-4 w-4" />
           Google
