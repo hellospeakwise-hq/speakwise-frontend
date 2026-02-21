@@ -25,7 +25,8 @@ function ResetPasswordContent() {
 
     useEffect(() => {
         const resetToken = searchParams.get('token')
-        const resetEmail = sessionStorage.getItem('resetPasswordEmail')
+        // Read email from URL params (backend now includes it in the reset link)
+        const resetEmail = searchParams.get('email') || sessionStorage.getItem('resetPasswordEmail')
 
         if (!resetToken) {
             setIsValid(false)
@@ -42,7 +43,7 @@ function ResetPasswordContent() {
         setToken(resetToken)
         setEmail(resetEmail)
         setIsValid(true)
-    }, [searchParams, toast])
+    }, [searchParams])
 
     const validatePassword = () => {
         if (password.length < 8) {
