@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { DisableConsole } from "@/components/disable-console"
 import { CookieConsent } from "@/components/cookie-consent"
 import { SponsorBanner } from "@/components/sponsor-banner"
+import { PWAInstallPrompt } from "@/components/pwa-install-prompt"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
@@ -25,6 +26,7 @@ const fontHeading = localFont({
 
 export const metadata = {
   title: "SpeakWise - GitHub for Speakers | Showcase Your Talks & Get Feedback",
+  manifest: "/manifest.json",
   description:
     "The GitHub for speakers. Build your speaking portfolio, showcase your conference talks, and receive anonymous feedback from attendees. The ultimate platform for speakers to grow and event organizers to manage.",
   icons: {
@@ -83,6 +85,18 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* PWA Meta Tags */}
+        <meta name="application-name" content="SpeakWise" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+        <meta name="apple-mobile-web-app-title" content="SpeakWise" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#0a0a0f" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96x96.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" />
         {/* Umami Analytics */}
         <Script
           defer
@@ -133,6 +147,7 @@ export default function RootLayout({
               <Footer />
             </div>
             <CookieConsent />
+            <PWAInstallPrompt />
           </AuthProvider>
         </ThemeProvider>
       </body>
