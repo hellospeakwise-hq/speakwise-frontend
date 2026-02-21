@@ -5,7 +5,7 @@ import localFont from "next/font/local"
 import { ThemeProvider } from "@/components/theme-provider"
 import { MainNav } from "@/components/main-nav"
 import { Footer } from "@/components/footer"
-import { Toaster } from "sonner"
+import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/contexts/auth-context"
 import { DisableConsole } from "@/components/disable-console"
 import { CookieConsent } from "@/components/cookie-consent"
@@ -126,7 +126,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <AuthProvider>
             <div className="flex min-h-screen flex-col">
-              <Toaster position="top-center" />
+              <Toaster />
               <SponsorBanner />
               <MainNav />
               <main className="flex-1">{children}</main>
