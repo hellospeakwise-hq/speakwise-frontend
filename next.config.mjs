@@ -1,10 +1,13 @@
 /** @type {import('next').NextConfig} */
 import withPWAInit from "@ducanh2912/next-pwa"
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const withPWA = withPWAInit({
   dest: "public",
+  disable: !isProd,          // ← KEY FIX: disable SW in dev (stops infinite recompile loop)
   cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  aggressiveFrontEndNavCaching: false,  // ← was causing SW reinstall freezes
   reloadOnOnline: true,
   swcMinify: true,
   fallbacks: {
