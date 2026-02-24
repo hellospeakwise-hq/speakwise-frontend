@@ -54,11 +54,13 @@ export interface Speaker {
 export interface FollowStatus {
     is_following: boolean;
     followers_count: number;
+    following_count: number;
 }
 
 export interface FollowActionResponse {
     detail: string;
     followers_count: number;
+    following_count: number;
 }
 
 export interface SpeakerFollower {

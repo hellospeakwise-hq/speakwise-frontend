@@ -45,6 +45,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   // Follow state
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
   const [followLoading, setFollowLoading] = useState(false);
 
   // ── Load speaker data ───────────────────────────────────────────────────────
@@ -84,7 +85,11 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
     setFollowersCount(speaker.followers_count ?? 0);
     if (!isAuthenticated) return;
     speakerApi.getFollowStatus(slug)
-      .then((s) => { setIsFollowing(s.is_following); setFollowersCount(s.followers_count); })
+      .then((s) => {
+        setIsFollowing(s.is_following);
+        setFollowersCount(s.followers_count);
+        setFollowingCount(s.following_count);
+      })
       .catch(() => {});
   }, [speaker, isAuthenticated, id]);
 
@@ -97,10 +102,12 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
         const res = await speakerApi.unfollowSpeaker(slug);
         setIsFollowing(false);
         setFollowersCount(res.followers_count);
+        setFollowingCount(res.following_count);
       } else {
         const res = await speakerApi.followSpeaker(slug);
         setIsFollowing(true);
         setFollowersCount(res.followers_count);
+        setFollowingCount(res.following_count);
       }
     } catch (err) {
       console.error('Follow error:', err);
@@ -291,7 +298,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
               </button>
               <span className="text-[#30363d]">·</span>
               <button className="flex items-center gap-1.5 text-[#e6edf3] hover:text-orange-400 transition-colors">
-                <span className="font-bold">0</span>
+                <span className="font-bold">{followingCount}</span>
                 <span className="text-[#8b949e]">following</span>
               </button>
             </div>
