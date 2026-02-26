@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -69,6 +70,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
         const data = await speakerApi.getSpeakerByIdOrUsername(id);
         setSpeaker(data);
         setFollowersCount(data.followers_count ?? 0);
+        setFollowingCount(data.following_count ?? 0);
       } catch {
         setError('Failed to load speaker profile');
       } finally {
@@ -192,15 +194,23 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
 
             {/* Avatar & name */}
             <div className="flex flex-col items-center md:items-start gap-4">
-              <div className="relative">
-                <Avatar className="w-[296px] h-[296px] md:w-full md:h-auto aspect-square rounded-full border-2 border-[#30363d] shadow-2xl">
+              <div className="relative w-[296px] md:w-full aspect-square">
+                <Avatar className="w-full h-full rounded-full border-2 border-[#30363d] shadow-2xl">
                   <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speakerName} className="object-cover" />
                   <AvatarFallback className="text-5xl font-bold bg-gradient-to-br from-orange-500 to-amber-400 text-white rounded-full">
                     {getInitials(speakerName)}
                   </AvatarFallback>
                 </Avatar>
-                {/* Online indicator */}
-                <span className="absolute bottom-3 right-3 w-5 h-5 rounded-full bg-green-500 border-2 border-[#0d1117]" title="Active" />
+                {/* Verified badge — pinned to the 45° bottom-right edge of the circle */}
+                <span className="absolute bottom-7 right-7" title="Verified Speaker">
+                  <Image
+                    src="/verified.png"
+                    alt="Verified"
+                    width={36}
+                    height={36}
+                    className="drop-shadow-lg"
+                  />
+                </span>
               </div>
 
               {/* Name block */}

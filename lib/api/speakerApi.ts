@@ -48,6 +48,7 @@ export interface Speaker {
     username?: string;  // Username for friendly URLs
     slug?: string;      // Slug for URL routing (usually same as user_account)
     followers_count?: number;
+    following_count?: number;  // How many speakers this speaker follows
     is_following?: boolean;
 }
 
