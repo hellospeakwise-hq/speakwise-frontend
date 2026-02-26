@@ -35,6 +35,8 @@ function ProfilePageContent() {
     const [isCreateOrgDialogOpen, setIsCreateOrgDialogOpen] = useState(false)
     const [isLoadingProfile, setIsLoadingProfile] = useState(true)
     const [isSaving, setIsSaving] = useState(false)
+    const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+    const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null)
     const [organizations, setOrganizations] = useState<Organization[]>([])
     const [isLoadingOrgs, setIsLoadingOrgs] = useState(false)
     const [showWelcomeBanner, setShowWelcomeBanner] = useState(false)
@@ -209,12 +211,19 @@ function ProfilePageContent() {
         const file = event.target.files?.[0]
         if (!file) return
 
+        setIsUploadingAvatar(true)
+
+        // Show an instant local preview while upload is in progress
+        const localPreviewUrl = URL.createObjectURL(file)
+        setCurrentAvatarUrl(localPreviewUrl)
+
         try {
             const data = profileData as any
             const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
             
             if (!speakerData?.id) {
                 toast.error("Speaker profile not found")
+                setCurrentAvatarUrl(null)
                 return
             }
             
@@ -223,8 +232,6 @@ function ProfilePageContent() {
             formData.append('speaker[0]id', speakerData.id.toString())
             formData.append('speaker[0]user_account', speakerData.user_account)
             formData.append('speaker[0]avatar', file)
-            
-            console.log('📤 Uploading avatar for speaker ID:', speakerData.id)
             
             const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/me/`, {
                 method: 'PATCH',
@@ -236,27 +243,39 @@ function ProfilePageContent() {
             
             if (!response.ok) {
                 const errorData = await response.json()
-                console.error('❌ Avatar upload failed:', errorData)
                 throw new Error(errorData.detail || 'Failed to upload avatar')
             }
             
-            toast.success("Avatar uploaded successfully")
-            
-            // Force refresh the image by updating the cache key
-            setAvatarKey(Date.now())
-            
-            // Reload to get fresh data from server
+            // Fetch fresh profile FIRST, then update cache buster so URL + key always match
             const freshData = await userApi.getUserProfile()
+            const freshSpeaker = Array.isArray((freshData as any)?.speaker)
+                ? (freshData as any).speaker[0]
+                : (freshData as any)?.speaker
+            const newAvatarPath = freshSpeaker?.avatar
+
+            if (newAvatarPath) {
+                const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
+                const absoluteUrl = newAvatarPath.startsWith('http') ? newAvatarPath : `${apiBase}${newAvatarPath}`
+                const newKey = Date.now()
+                setAvatarKey(newKey)
+                setCurrentAvatarUrl(`${absoluteUrl}?t=${newKey}`)
+            }
+
             setProfileData(freshData)
-            
-            // Dispatch event to notify navbar to refresh avatar
+            toast.success("Avatar updated successfully")
+
+            // Notify navbar to refresh
             window.dispatchEvent(new CustomEvent('avatarUpdated'))
         } catch (error: any) {
             console.error('Failed to upload avatar:', error)
             toast.error(error.message || "Failed to upload avatar")
+            // Revert optimistic preview on error
+            setCurrentAvatarUrl(null)
+        } finally {
+            setIsUploadingAvatar(false)
         }
         
-        // Reset the input so the same file can be selected again
+        // Reset the input so the same file can be re-selected
         event.target.value = ''
     }
 
@@ -382,28 +401,36 @@ function ProfilePageContent() {
                                 const data = profileData as any
                                 const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
                                 const avatarUrl = speakerData?.avatar
-                                
-                                // Add cache-busting parameter to force browser to reload image
+
+                                // currentAvatarUrl takes priority (optimistic / post-upload)
+                                // fallback to the server URL with cache-buster, then default avatar
                                 const getAvatarSrc = () => {
-                                    if (!avatarUrl) {
-                                        // Generate a unique default avatar based on user email or name
-                                        return getDefaultAvatar(user?.email || user?.first_name || 'user')
-                                    }
-                                    const baseUrl = avatarUrl.startsWith('http')
+                                    if (currentAvatarUrl) return currentAvatarUrl
+                                    if (!avatarUrl) return getDefaultAvatar(user?.email || user?.first_name || 'user')
+                                    const base = avatarUrl.startsWith('http')
                                         ? avatarUrl
                                         : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${avatarUrl}`
-                                    return `${baseUrl}?t=${avatarKey}`
+                                    return `${base}?t=${avatarKey}`
                                 }
-                                
+
                                 return (
                                     <div className="flex items-center space-x-4">
-                                        <div className="relative">
+                                        {/* Avatar preview with upload-progress overlay */}
+                                        <div className="relative w-20 h-20 flex-shrink-0">
                                             <img
                                                 src={getAvatarSrc()}
                                                 alt="Profile"
-                                                className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
+                                                className={`w-20 h-20 rounded-full object-cover border-2 border-gray-200 transition-opacity duration-300 ${
+                                                    isUploadingAvatar ? 'opacity-40' : 'opacity-100'
+                                                }`}
                                             />
+                                            {isUploadingAvatar && (
+                                                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/20">
+                                                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                                                </div>
+                                            )}
                                         </div>
+
                                         <div className="flex flex-col space-y-2">
                                             <input
                                                 type="file"
@@ -411,22 +438,38 @@ function ProfilePageContent() {
                                                 onChange={handleAvatarUpload}
                                                 className="hidden"
                                                 id="avatar-upload"
+                                                disabled={isUploadingAvatar}
                                             />
                                             <label htmlFor="avatar-upload">
                                                 <Button
                                                     variant="outline"
                                                     className="cursor-pointer"
                                                     asChild
+                                                    disabled={isUploadingAvatar}
                                                 >
                                                     <span>
-                                                        <Upload className="w-4 h-4 mr-2" />
-                                                        {avatarUrl ? 'Change Picture' : 'Upload Picture'}
+                                                        {isUploadingAvatar ? (
+                                                            <>
+                                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                                Uploading...
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <Upload className="w-4 h-4 mr-2" />
+                                                                {avatarUrl ? 'Change Picture' : 'Upload Picture'}
+                                                            </>
+                                                        )}
                                                     </span>
                                                 </Button>
                                             </label>
-                                            {avatarUrl && (
+                                            {avatarUrl && !isUploadingAvatar && (
                                                 <p className="text-xs text-muted-foreground">
                                                     Current image: {avatarUrl.split('/').pop()}
+                                                </p>
+                                            )}
+                                            {isUploadingAvatar && (
+                                                <p className="text-xs text-orange-500 font-medium animate-pulse">
+                                                    Uploading your picture…
                                                 </p>
                                             )}
                                         </div>
