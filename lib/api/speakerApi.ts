@@ -47,6 +47,32 @@ export interface Speaker {
     user_account: string;
     username?: string;  // Username for friendly URLs
     slug?: string;      // Slug for URL routing (usually same as user_account)
+    followers_count?: number;
+    is_following?: boolean;
+}
+
+export interface FollowStatus {
+    is_following: boolean;
+    followers_count: number;
+    following_count: number;
+}
+
+export interface FollowActionResponse {
+    detail: string;
+    followers_count: number;
+    following_count: number;
+}
+
+export interface SpeakerFollower {
+    id: number;
+    follower: string;
+    follower_username: string;
+    created_at: string;
+}
+
+export interface SpeakerFollowersResponse {
+    followers_count: number;
+    followers: SpeakerFollower[];
 }
 
 // Helper to get the slug for a speaker (fallback to id if no username)
@@ -174,7 +200,31 @@ export const speakerApi = {
     // Delete a skill
     async deleteSkill(id: number): Promise<void> {
         await apiClient.delete(`/speakers/skills/${id}/`);
-    }
+    },
+
+    // Follow a speaker by slug
+    async followSpeaker(slug: string): Promise<FollowActionResponse> {
+        const response = await apiClient.post<FollowActionResponse>(`/speakers/${slug}/follow/`);
+        return response.data;
+    },
+
+    // Unfollow a speaker by slug
+    async unfollowSpeaker(slug: string): Promise<FollowActionResponse> {
+        const response = await apiClient.delete<FollowActionResponse>(`/speakers/${slug}/follow/`);
+        return response.data;
+    },
+
+    // Check if the authenticated user follows a speaker
+    async getFollowStatus(slug: string): Promise<FollowStatus> {
+        const response = await apiClient.get<FollowStatus>(`/speakers/${slug}/follow/`);
+        return response.data;
+    },
+
+    // Get all followers for a speaker (public)
+    async getSpeakerFollowers(slug: string): Promise<SpeakerFollowersResponse> {
+        const response = await apiClient.get<SpeakerFollowersResponse>(`/speakers/${slug}/followers/`);
+        return response.data;
+    },
 };
 
 export default speakerApi;
