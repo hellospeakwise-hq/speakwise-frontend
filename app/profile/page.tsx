@@ -24,7 +24,8 @@ import { ProfileCompletionTracker } from "@/components/profile/profile-completio
 import { SkillsCombobox } from "@/components/profile/skills-combobox"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useSearchParams } from "next/navigation"
-import { getDefaultAvatar } from "@/lib/utils"
+import { getDefaultAvatar, getAvatarUrl } from "@/lib/utils"
+import { AvatarCropDialog } from "@/components/profile/avatar-crop-dialog"
 
 function ProfilePageContent() {
     const { user } = useAuth()
@@ -37,6 +38,8 @@ function ProfilePageContent() {
     const [isSaving, setIsSaving] = useState(false)
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
     const [currentAvatarUrl, setCurrentAvatarUrl] = useState<string | null>(null)
+    const [rawImageSrc, setRawImageSrc] = useState<string | null>(null)
+    const [cropDialogOpen, setCropDialogOpen] = useState(false)
     const [organizations, setOrganizations] = useState<Organization[]>([])
     const [isLoadingOrgs, setIsLoadingOrgs] = useState(false)
     const [showWelcomeBanner, setShowWelcomeBanner] = useState(false)
@@ -207,46 +210,53 @@ function ProfilePageContent() {
         }
     }
 
-    const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Step 1 — user picks a file → open the crop dialog
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
         if (!file) return
+        const objectUrl = URL.createObjectURL(file)
+        setRawImageSrc(objectUrl)
+        setCropDialogOpen(true)
+        // Reset input so the same file can be re-selected after cancel
+        event.target.value = ''
+    }
 
+    // Step 2 — user confirms crop → upload the cropped blob
+    const handleCropConfirmed = async (croppedBlob: Blob, previewUrl: string) => {
         setIsUploadingAvatar(true)
-
-        // Show an instant local preview while upload is in progress
-        const localPreviewUrl = URL.createObjectURL(file)
-        setCurrentAvatarUrl(localPreviewUrl)
+        setCurrentAvatarUrl(previewUrl) // optimistic preview
 
         try {
             const data = profileData as any
             const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
-            
+
             if (!speakerData?.id) {
                 toast.error("Speaker profile not found")
                 setCurrentAvatarUrl(null)
                 return
             }
-            
-            // Upload avatar via /api/users/me/ with multipart form data
+
             const formData = new FormData()
             formData.append('speaker[0]id', speakerData.id.toString())
             formData.append('speaker[0]user_account', speakerData.user_account)
-            formData.append('speaker[0]avatar', file)
-            
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/me/`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
+            // Convert blob to File so the backend sees a proper filename
+            const croppedFile = new File([croppedBlob], 'avatar.jpg', { type: 'image/jpeg' })
+            formData.append('speaker[0]avatar', croppedFile)
+
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/me/`,
+                {
+                    method: 'PATCH',
+                    headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
+                    body: formData,
                 },
-                body: formData
-            })
-            
+            )
+
             if (!response.ok) {
-                const errorData = await response.json()
-                throw new Error(errorData.detail || 'Failed to upload avatar')
+                const err = await response.json()
+                throw new Error(err.detail || 'Failed to upload avatar')
             }
-            
-            // Fetch fresh profile FIRST, then update cache buster so URL + key always match
+
             const freshData = await userApi.getUserProfile()
             const freshSpeaker = Array.isArray((freshData as any)?.speaker)
                 ? (freshData as any).speaker[0]
@@ -255,28 +265,24 @@ function ProfilePageContent() {
 
             if (newAvatarPath) {
                 const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
-                const absoluteUrl = newAvatarPath.startsWith('http') ? newAvatarPath : `${apiBase}${newAvatarPath}`
+                const absoluteUrl = newAvatarPath.startsWith('http')
+                    ? newAvatarPath
+                    : `${apiBase}${newAvatarPath}`
                 const newKey = Date.now()
                 setAvatarKey(newKey)
                 setCurrentAvatarUrl(`${absoluteUrl}?t=${newKey}`)
             }
 
             setProfileData(freshData)
-            toast.success("Avatar updated successfully")
-
-            // Notify navbar to refresh
+            toast.success('Profile picture updated!')
             window.dispatchEvent(new CustomEvent('avatarUpdated'))
         } catch (error: any) {
             console.error('Failed to upload avatar:', error)
-            toast.error(error.message || "Failed to upload avatar")
-            // Revert optimistic preview on error
+            toast.error(error.message || 'Failed to upload avatar')
             setCurrentAvatarUrl(null)
         } finally {
             setIsUploadingAvatar(false)
         }
-        
-        // Reset the input so the same file can be re-selected
-        event.target.value = ''
     }
 
     // Add an EXISTING skill to user's profile by creating it via POST
@@ -435,7 +441,7 @@ function ProfilePageContent() {
                                             <input
                                                 type="file"
                                                 accept="image/*"
-                                                onChange={handleAvatarUpload}
+                                                onChange={handleFileSelect}
                                                 className="hidden"
                                                 id="avatar-upload"
                                                 disabled={isUploadingAvatar}
@@ -798,6 +804,14 @@ function ProfilePageContent() {
                 steps={profileOnboardingSteps}
                 run={shouldShowOnboarding && !isLoadingProfile}
                 onComplete={completeOnboarding}
+            />
+
+            {/* Avatar crop dialog — opens when user picks a file */}
+            <AvatarCropDialog
+                imageSrc={rawImageSrc}
+                open={cropDialogOpen}
+                onClose={() => setCropDialogOpen(false)}
+                onCropComplete={handleCropConfirmed}
             />
         </ProtectedRoute>
     )

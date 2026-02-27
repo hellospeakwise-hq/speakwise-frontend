@@ -22,16 +22,13 @@ export function getDefaultAvatar(seed: string, style: 'lorelei' | 'notionists' |
 
 export function getAvatarUrl(avatarPath: string | null | undefined, fallbackSeed?: string): string {
   if (!avatarPath) {
-    // If no avatar, generate a unique default based on seed
-    if (fallbackSeed) {
-      return getDefaultAvatar(fallbackSeed)
-    }
+    if (fallbackSeed) return getDefaultAvatar(fallbackSeed)
     return getDefaultAvatar('default-user')
   }
   // If it's already a full URL, return as is
   if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://')) {
-    return avatarPath;
+    return avatarPath
   }
   // Otherwise, construct the full URL with the backend base URL
-  return `${API_BASE_URL}${avatarPath.startsWith('/') ? '' : '/'}${avatarPath}`;
+  return `${API_BASE_URL}${avatarPath.startsWith('/') ? '' : '/'}${avatarPath}`
 }
