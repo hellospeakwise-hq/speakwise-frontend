@@ -1,11 +1,12 @@
-"use client"
+'use client'
 
-import { useEffect, useState } from "react"
-import { Speaker, getSpeakerSlug } from "@/lib/api/speakerApi"
-import { Button } from "@/components/ui/button"
-import { X, Users, Calendar, BadgeCheck, Plus } from "lucide-react"
-import Link from "next/link"
-import { getAvatarUrl } from "@/lib/utils"
+import { useEffect, useState } from 'react'
+import { Speaker, getSpeakerSlug } from '@/lib/api/speakerApi'
+import { Button } from '@/components/ui/button'
+import { X, Calendar, Plus } from 'lucide-react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { getAvatarUrl } from '@/lib/utils'
 
 interface SpeakerPreviewModalProps {
     speaker: Speaker | null
@@ -74,13 +75,20 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: Readonly<Speak
                         <div className="p-4 space-y-3">
                             {/* Name with Verified Badge */}
                             <div className="flex items-center gap-2">
-                                <Link 
+                                <Link
                                     href={`/speakers/${getSpeakerSlug(speaker)}`}
                                     className="text-lg font-bold hover:text-orange-500 transition-colors truncate"
                                 >
                                     {speaker.speaker_name || `Speaker ${speaker.id}`}
                                 </Link>
-                                <BadgeCheck className="h-5 w-5 text-green-500 flex-shrink-0" />
+                                {/* Custom verified badge asset */}
+                                <Image
+                                    src="/verified.png"
+                                    alt="Verified"
+                                    width={20}
+                                    height={20}
+                                    className="flex-shrink-0 drop-shadow-sm"
+                                />
                             </div>
 
                             {/* Bio/Description */}
@@ -88,28 +96,38 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: Readonly<Speak
                                 {speaker.short_bio || speaker.organization || 'Professional speaker ready to inspire and educate.'}
                             </p>
 
-                            {/* Stats and Follow Row */}
+                            {/* Stats and Action Row */}
                             <div className="flex items-center justify-between pt-2">
                                 {/* Stats */}
                                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-1.5">
-                                        <Users className="h-4 w-4" />
-                                        <span className="font-medium text-foreground">
-                                            {speaker.skill_tags?.length || 0}
+                                    {/* Followers count */}
+                                    <div className="flex items-center gap-1">
+                                        <Image
+                                            src="/verified.png"
+                                            alt="followers"
+                                            width={13}
+                                            height={13}
+                                            className="opacity-60"
+                                        />
+                                        <span className="font-semibold text-foreground">
+                                            {speaker.followers_count ?? 0}
                                         </span>
+                                        <span>followers</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5">
-                                        <Calendar className="h-4 w-4" />
-                                        <span className="font-medium text-foreground">
-                                            {speaker.experiences?.length || 0}
+                                    {/* Talks / experiences */}
+                                    <div className="flex items-center gap-1">
+                                        <Calendar className="h-3.5 w-3.5" />
+                                        <span className="font-semibold text-foreground">
+                                            {(speaker as any).experiences?.length || 0}
                                         </span>
+                                        <span>talks</span>
                                     </div>
                                 </div>
 
                                 {/* View Profile Button */}
                                 <Link href={`/speakers/${getSpeakerSlug(speaker)}`}>
-                                    <Button 
-                                        size="sm" 
+                                    <Button
+                                        size="sm"
                                         className="rounded-full px-4 gap-1 bg-foreground text-background hover:bg-foreground/90"
                                     >
                                         View
@@ -120,7 +138,7 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: Readonly<Speak
 
                             {/* Request Speaker Link */}
                             <div className="pt-1 text-center">
-                                <Link 
+                                <Link
                                     href={`/speakers/${getSpeakerSlug(speaker)}/request`}
                                     className="text-sm text-orange-500 hover:text-orange-600 hover:underline transition-colors"
                                 >

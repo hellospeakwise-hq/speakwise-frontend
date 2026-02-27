@@ -105,58 +105,7 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
 
-        {/* Clear stale SW caches for API/media so uploaded images always load fresh */}
-        <Script
-          id="sw-cache-cleaner"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('caches' in window) {
-                // Delete any SW-cached responses for API or media URLs
-                // (fixes stale 403/404 for profile images)
-                caches.keys().then(function(cacheNames) {
-                  cacheNames.forEach(function(cacheName) {
-                    caches.open(cacheName).then(function(cache) {
-                      cache.keys().then(function(requests) {
-                        requests.forEach(function(request) {
-                          if (
-                            request.url.includes('apis.speak-wise.live') ||
-                            request.url.includes('/media/')
-                          ) {
-                            cache.delete(request);
-                          }
-                        });
-                      });
-                    });
-                  });
-                });
-              }
-            `,
-          }}
-        />
-
         {/* Chatwoot - Disabled for now */}
-        {/* <Script
-          id="chatwoot-script"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(d,t) {
-                var BASE_URL="https://app.chatwoot.com";
-                var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-                g.src=BASE_URL+"/packs/js/sdk.js";
-                g.async = true;
-                s.parentNode.insertBefore(g,s);
-                g.onload=function(){
-                  window.chatwootSDK.run({
-                    websiteToken: '${process.env.NEXT_PUBLIC_CHATWOOT_WEBSITE_TOKEN}',
-                    baseUrl: BASE_URL
-                  })
-                }
-              })(document,"script");
-            `,
-          }}
-        /> */}
       </head>
       <body
         className={cn(
