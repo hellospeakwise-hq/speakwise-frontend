@@ -9,9 +9,12 @@ import { SpeakingRequests } from "@/components/dashboard/speaker/speaking-reques
 import { FeedbackTrends } from "@/components/dashboard/speaker/feedback-trends"
 import { Notifications } from "@/components/dashboard/speaker/notifications"
 import { ProfileCompletionBanner } from "@/components/dashboard/speaker/profile-completion-banner"
+import { MyTalksSection } from "@/components/dashboard/speaker/my-talks-section"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Award } from "lucide-react"
+import { Award, Mic } from "lucide-react"
+
+const TAB_CLASS = "rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4"
 
 export function SpeakerDashboardView() {
   const [activeTab, setActiveTab] = useState("overview")
@@ -37,10 +40,14 @@ export function SpeakerDashboardView() {
 
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b rounded-none p-0 h-auto gap-0 flex-nowrap">
-          <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4">Overview</TabsTrigger>
-          <TabsTrigger value="upcoming" className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4">Upcoming Events</TabsTrigger>
-          <TabsTrigger value="requests" className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4">Speaking Requests</TabsTrigger>
-          <TabsTrigger value="feedback" className="rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4">Feedback & Performance</TabsTrigger>
+          <TabsTrigger value="overview"  className={TAB_CLASS}>Overview</TabsTrigger>
+          <TabsTrigger value="upcoming"  className={TAB_CLASS}>Upcoming Events</TabsTrigger>
+          <TabsTrigger value="requests"  className={TAB_CLASS}>Speaking Requests</TabsTrigger>
+          <TabsTrigger value="feedback"  className={TAB_CLASS}>Feedback & Performance</TabsTrigger>
+          <TabsTrigger value="talks"     className={`${TAB_CLASS} gap-1.5 flex items-center`}>
+            <Mic className="h-4 w-4" />
+            My Talks
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-6">
@@ -64,6 +71,10 @@ export function SpeakerDashboardView() {
             <FeedbackTrends />
             <RecentFeedback />
           </div>
+        </TabsContent>
+
+        <TabsContent value="talks">
+          <MyTalksSection />
         </TabsContent>
       </Tabs>
     </div>

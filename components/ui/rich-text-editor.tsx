@@ -2,157 +2,142 @@
 
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
 import Placeholder from '@tiptap/extension-placeholder'
+import Link from '@tiptap/extension-link'
+import { useEffect } from 'react'
 import {
-    Bold,
-    Italic,
-    List,
-    ListOrdered,
-    Link as LinkIcon,
-    Image as ImageIcon,
-    Heading2,
-    Quote
+    Bold, Italic, List, ListOrdered,
+    Heading2, Heading3, Link as LinkIcon,
+    Undo, Redo, Minus,
 } from 'lucide-react'
-import { Button } from './button'
 import { cn } from '@/lib/utils'
 
 interface RichTextEditorProps {
-    content: string
-    onChange: (content: string) => void
+    value: string
+    onChange: (html: string) => void
     placeholder?: string
     className?: string
+    minHeight?: string
 }
 
-export function RichTextEditor({ content, onChange, placeholder, className }: RichTextEditorProps) {
+function ToolbarBtn({
+    onClick, active, disabled, title, children,
+}: {
+    onClick: () => void
+    active?: boolean
+    disabled?: boolean
+    title: string
+    children: React.ReactNode
+}) {
+    return (
+        <button
+            type="button"
+            onMouseDown={(e) => { e.preventDefault(); onClick() }}
+            disabled={disabled}
+            title={title}
+            className={cn(
+                'p-1.5 rounded transition-colors',
+                active
+                    ? 'bg-orange-500 text-white'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                disabled && 'opacity-40 cursor-not-allowed',
+            )}
+        >
+            {children}
+        </button>
+    )
+}
+
+export function RichTextEditor({
+    value,
+    onChange,
+    placeholder = 'Write something…',
+    className,
+    minHeight = '140px',
+}: RichTextEditorProps) {
     const editor = useEditor({
         extensions: [
-            StarterKit,
-            Link.configure({
-                openOnClick: false,
-                HTMLAttributes: {
-                    class: 'text-primary underline',
-                },
+            StarterKit.configure({
+                bulletList: { keepMarks: true },
+                orderedList: { keepMarks: true },
             }),
-            Image.configure({
-                HTMLAttributes: {
-                    class: 'max-w-full h-auto rounded-lg',
-                },
-            }),
-            Placeholder.configure({
-                placeholder: placeholder || 'Start writing...',
-            }),
+            Placeholder.configure({ placeholder }),
+            Link.configure({ openOnClick: false, autolink: true }),
         ],
-        content,
-        onUpdate: ({ editor }) => {
-            onChange(editor.getHTML())
-        },
+        content: value || '',
         editorProps: {
             attributes: {
-                class: 'prose prose-sm max-w-none focus:outline-none min-h-[150px] px-3 py-2',
+                class: 'outline-none prose prose-sm dark:prose-invert max-w-none p-3',
+                style: `min-height: ${minHeight}`,
             },
+        },
+        onUpdate({ editor }) {
+            onChange(editor.isEmpty ? '' : editor.getHTML())
         },
         immediatelyRender: false,
     })
 
+    // Sync external reset
+    useEffect(() => {
+        if (!editor) return
+        if (value === '' && !editor.isEmpty) editor.commands.clearContent()
+    }, [value, editor])
+
     const addLink = () => {
-        const url = window.prompt('Enter URL:')
-        if (url && editor) {
-            editor.chain().focus().setLink({ href: url }).run()
-        }
+        const url = window.prompt('Enter URL')
+        if (!url || !editor) return
+        editor.chain().focus().setLink({ href: url }).run()
     }
 
-    const addImage = () => {
-        const url = window.prompt('Enter image URL:')
-        if (url && editor) {
-            editor.chain().focus().setImage({ src: url }).run()
-        }
-    }
-
-    if (!editor) {
-        return null
-    }
+    if (!editor) return null
 
     return (
-        <div className={cn('border rounded-md', className)}>
+        <div className={cn('rounded-md border border-input overflow-hidden focus-within:ring-1 focus-within:ring-ring', className)}>
             {/* Toolbar */}
-            <div className="border-b p-2 flex flex-wrap gap-1">
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleBold().run()}
-                    className={editor.isActive('bold') ? 'bg-muted' : ''}
-                >
-                    <Bold className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleItalic().run()}
-                    className={editor.isActive('italic') ? 'bg-muted' : ''}
-                >
-                    <Italic className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                    className={editor.isActive('heading', { level: 2 }) ? 'bg-muted' : ''}
-                >
-                    <Heading2 className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleBulletList().run()}
-                    className={editor.isActive('bulletList') ? 'bg-muted' : ''}
-                >
-                    <List className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleOrderedList().run()}
-                    className={editor.isActive('orderedList') ? 'bg-muted' : ''}
-                >
-                    <ListOrdered className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => editor.chain().focus().toggleBlockquote().run()}
-                    className={editor.isActive('blockquote') ? 'bg-muted' : ''}
-                >
-                    <Quote className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={addLink}
-                    className={editor.isActive('link') ? 'bg-muted' : ''}
-                >
-                    <LinkIcon className="h-4 w-4" />
-                </Button>
-                <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={addImage}
-                >
-                    <ImageIcon className="h-4 w-4" />
-                </Button>
+            <div className="flex flex-wrap items-center gap-0.5 border-b border-border bg-muted/40 px-2 py-1.5">
+                <ToolbarBtn title="Bold (⌘B)" onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive('bold')}>
+                    <Bold className="h-3.5 w-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn title="Italic (⌘I)" onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive('italic')}>
+                    <Italic className="h-3.5 w-3.5" />
+                </ToolbarBtn>
+
+                <div className="w-px h-4 bg-border mx-1" />
+
+                <ToolbarBtn title="Heading 2" onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive('heading', { level: 2 })}>
+                    <Heading2 className="h-3.5 w-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn title="Heading 3" onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()} active={editor.isActive('heading', { level: 3 })}>
+                    <Heading3 className="h-3.5 w-3.5" />
+                </ToolbarBtn>
+
+                <div className="w-px h-4 bg-border mx-1" />
+
+                <ToolbarBtn title="Bullet list" onClick={() => editor.chain().focus().toggleBulletList().run()} active={editor.isActive('bulletList')}>
+                    <List className="h-3.5 w-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn title="Numbered list" onClick={() => editor.chain().focus().toggleOrderedList().run()} active={editor.isActive('orderedList')}>
+                    <ListOrdered className="h-3.5 w-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn title="Horizontal rule" onClick={() => editor.chain().focus().setHorizontalRule().run()}>
+                    <Minus className="h-3.5 w-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn title="Add link" onClick={addLink} active={editor.isActive('link')}>
+                    <LinkIcon className="h-3.5 w-3.5" />
+                </ToolbarBtn>
+
+                <div className="w-px h-4 bg-border mx-1" />
+
+                <ToolbarBtn title="Undo (⌘Z)" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
+                    <Undo className="h-3.5 w-3.5" />
+                </ToolbarBtn>
+                <ToolbarBtn title="Redo (⌘⇧Z)" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}>
+                    <Redo className="h-3.5 w-3.5" />
+                </ToolbarBtn>
             </div>
 
-            {/* Editor */}
-            <EditorContent editor={editor} className="prose-sm" />
+            {/* Content area */}
+            <EditorContent editor={editor} className="bg-background text-foreground text-sm" />
         </div>
     )
 }
