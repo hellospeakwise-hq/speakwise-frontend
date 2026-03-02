@@ -624,7 +624,7 @@ export function MyTalksSection() {
                         My Talks
                     </h2>
                     <p className="text-sm text-muted-foreground mt-0.5">
-                        Post talks for peer review — share the link and collect anonymous feedback from anyone.
+                        Post talks for peer review  share the link and collect anonymous feedback from anyone.
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -645,8 +645,8 @@ export function MyTalksSection() {
 
             {/* Legend */}
             <div className="flex flex-wrap gap-4 text-xs text-muted-foreground bg-muted/40 border border-border rounded-lg px-4 py-3">
-                <span className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-green-500" /> Public — visible on your profile</span>
-                <span className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" /> Private — only you</span>
+                <span className="flex items-center gap-1.5"><Globe className="h-3.5 w-3.5 text-green-500" /> Public: visible on your profile</span>
+                <span className="flex items-center gap-1.5"><Lock className="h-3.5 w-3.5" /> Private: only you</span>
                 <span className="flex items-center gap-1.5"><Eye className="h-3.5 w-3.5 text-blue-500" /> Accepting reviews</span>
                 <span className="flex items-center gap-1.5"><EyeOff className="h-3.5 w-3.5" /> Reviews closed</span>
             </div>

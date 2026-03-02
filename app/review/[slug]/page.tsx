@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
     Star, MessageSquare, Send, CheckCircle2, XCircle,
     Loader2, Mic, Clock, Tag, ChevronLeft,
@@ -16,34 +17,41 @@ import { publicTalksApi, type Talk, type TalkReview } from '@/lib/api/talksApi'
 
 function StarPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
     const [hover, setHover] = useState(0)
+    const active = hover || value
+
+    const label =
+        active === 0 ? 'Tap to rate' :
+        active === 1 ? 'Poor' :
+        active === 2 ? 'Fair' :
+        active === 3 ? 'Good' :
+        active === 4 ? 'Great' :
+                        'Excellent!'
+
     return (
-        <div className="flex items-center gap-2">
-            {[1, 2, 3, 4, 5].map((n) => (
-                <button
-                    key={n}
-                    type="button"
-                    onClick={() => onChange(n)}
-                    onMouseEnter={() => setHover(n)}
-                    onMouseLeave={() => setHover(0)}
-                    className="transition-transform hover:scale-110 focus:outline-none"
-                    aria-label={`${n} star${n > 1 ? 's' : ''}`}
-                >
-                    <Star
-                        className={`h-10 w-10 transition-colors ${
-                            n <= (hover || value)
-                                ? 'text-yellow-400 fill-yellow-400'
-                                : 'text-muted-foreground'
-                        }`}
-                    />
-                </button>
-            ))}
-            <span className="ml-2 text-sm text-muted-foreground">
-                {value === 0 ? 'Tap to rate' :
-                 value === 1 ? '⭐ Poor' :
-                 value === 2 ? '⭐⭐ Fair' :
-                 value === 3 ? '⭐⭐⭐ Good' :
-                 value === 4 ? '⭐⭐⭐⭐ Great' :
-                              '⭐⭐⭐⭐⭐ Excellent!'}
+        <div className="flex flex-col items-start gap-1.5">
+            <div className="flex items-center gap-2">
+                {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                        key={n}
+                        type="button"
+                        onClick={() => onChange(n)}
+                        onMouseEnter={() => setHover(n)}
+                        onMouseLeave={() => setHover(0)}
+                        className="transition-transform hover:scale-110 focus:outline-none"
+                        aria-label={`${n} star${n > 1 ? 's' : ''}`}
+                    >
+                        <Star
+                            className={`h-10 w-10 transition-colors ${
+                                n <= active
+                                    ? 'text-yellow-400 fill-yellow-400'
+                                    : 'text-muted-foreground'
+                            }`}
+                        />
+                    </button>
+                ))}
+            </div>
+            <span className={`text-sm font-medium ${active === 0 ? 'text-muted-foreground' : 'text-orange-500'}`}>
+                {label}
             </span>
         </div>
     )
@@ -164,8 +172,14 @@ export default function TalkReviewPage() {
                     </Link>
 
                     <div className="flex items-start gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center flex-shrink-0">
-                            <Mic className="h-6 w-6 text-orange-500" />
+                        <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            <Image
+                                src="/icons/icon-96x96.png"
+                                alt="SpeakWise"
+                                width={40}
+                                height={40}
+                                className="object-contain"
+                            />
                         </div>
                         <div className="flex-1 min-w-0">
                             <h1 className="text-2xl font-bold leading-snug">{talk.title}</h1>
@@ -218,7 +232,7 @@ export default function TalkReviewPage() {
                                     Leave a Review
                                 </h2>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                    No account needed — your feedback is anonymous.
+                                    No account needed your feedback is anonymous.
                                 </p>
                             </div>
 
