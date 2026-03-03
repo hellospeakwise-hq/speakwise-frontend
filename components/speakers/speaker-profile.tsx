@@ -438,7 +438,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
             <div className="grid grid-cols-3 gap-3">
               {[
                 { icon: Users, label: 'Followers', value: followersCount, color: 'text-orange-400', clickable: true },
-                { icon: Mic,   label: 'Talks',     value: totalTalks,     color: 'text-blue-400' },
+                { icon: Mic,   label: 'Talk Presentations', value: totalTalks, color: 'text-blue-400' },
                 { icon: Star,  label: 'Rating',    value: '—',            color: 'text-yellow-400' },
               ].map(({ icon: Icon, label, value, color, clickable }) => (
                 <div
@@ -569,7 +569,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
               <div className="bg-card border border-border rounded-lg p-5">
                 <h3 className="text-sm font-semibold mb-4 flex items-center gap-2">
                   <Mic className="h-4 w-4 text-orange-400" />
-                  Conference Talks &amp; Presentations
+                  Stage History
                 </h3>
                 <ExperiencesList speakerSlug={id} />
               </div>
