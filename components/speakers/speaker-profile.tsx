@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -46,6 +46,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   // Followers / following list
   const [followList, setFollowList] = useState<FollowPerson[]>([]);
   const [followListLoading, setFollowListLoading] = useState(false);
+  const followListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkOrganizations = async () => {
@@ -132,6 +133,10 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
       setFollowList([]);
     } finally {
       setFollowListLoading(false);
+      // Auto-scroll to the list on mobile after content renders
+      setTimeout(() => {
+        followListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
   }, [speaker, id]);
 
@@ -647,7 +652,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
 
             {/* ── FOLLOWERS / FOLLOWING PAGE ─────────────────────────────────── */}
             {(activeTab === 'followers' || activeTab === 'following') && (
-              <div className="space-y-4">
+              <div ref={followListRef} className="space-y-4">
                 {/* Header with back button */}
                 <div className="flex items-center gap-3">
                   <button
