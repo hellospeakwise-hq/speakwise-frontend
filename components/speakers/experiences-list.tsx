@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from "react"
-import { Calendar, ExternalLink, Video, Award, FileText } from "lucide-react"
+import { Calendar, ExternalLink, Video, Award, FileText, ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -13,6 +13,7 @@ import {
 import { experiencesApi, type SpeakerExperience } from "@/lib/api/experiencesApi"
 import { format } from "date-fns"
 import { ExperienceDetailModal } from "./experience-detail-modal"
+import { TalkCoverImage } from "@/components/ui/talk-cover-image"
 
 interface ExperiencesListProps {
     speakerId?: number
@@ -23,6 +24,8 @@ export function ExperiencesList({ speakerId, speakerSlug }: ExperiencesListProps
     const [experiences, setExperiences] = useState<SpeakerExperience[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedExperience, setSelectedExperience] = useState<SpeakerExperience | null>(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const PAGE_SIZE = 10
 
     useEffect(() => {
         const fetchExperiences = async () => {
@@ -41,6 +44,7 @@ export function ExperiencesList({ speakerId, speakerSlug }: ExperiencesListProps
                     return dateB - dateA
                 })
                 setExperiences(sorted)
+                setCurrentPage(1) // Reset to first page on data change
             } catch (error) {
                 console.error('Error fetching experiences:', error)
             } finally {
@@ -85,21 +89,27 @@ export function ExperiencesList({ speakerId, speakerSlug }: ExperiencesListProps
         )
     }
 
+    const totalPages = Math.ceil(experiences.length / PAGE_SIZE)
+    const paginatedExperiences = experiences.slice(
+        (currentPage - 1) * PAGE_SIZE,
+        currentPage * PAGE_SIZE
+    )
+
     return (
         <div className="space-y-4">
-            {experiences.map((experience) => (
+            {paginatedExperiences.map((experience) => (
                 <Card 
                     key={experience.id} 
                     className="group hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer"
                     onClick={() => setSelectedExperience(experience)}
                 >
                     <div className="flex flex-col sm:flex-row gap-0">
-                        {/* Image placeholder */}
-                        <div className="w-full sm:w-64 h-48 sm:h-auto bg-gradient-to-br from-muted via-muted/80 to-muted/60 flex items-center justify-center flex-shrink-0">
-                            <div className="text-muted-foreground/40">
-                                <Award className="w-16 h-16" />
-                            </div>
-                        </div>
+                        {/* Generated cover image */}
+                        <TalkCoverImage
+                            title={experience.topic}
+                            category={experience.event_name}
+                            className="w-full sm:w-64 h-48 sm:h-auto flex-shrink-0"
+                        />
                         
                         {/* Content */}
                         <div className="flex-1 p-6 flex flex-col justify-between">
@@ -152,6 +162,40 @@ export function ExperiencesList({ speakerId, speakerSlug }: ExperiencesListProps
                     </div>
                 </Card>
             ))}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t border-border">
+                    <p className="text-sm text-muted-foreground">
+                        Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, experiences.length)} of {experiences.length} presentations
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="gap-1"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                            Previous
+                        </Button>
+                        <span className="text-sm font-medium px-2">
+                            {currentPage} / {totalPages}
+                        </span>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="gap-1"
+                        >
+                            Next
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
+                    </div>
+                </div>
+            )}
 
             {/* Experience Detail Modal */}
             {selectedExperience && (
