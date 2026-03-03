@@ -64,6 +64,18 @@ export interface FollowActionResponse {
     following_count: number;
 }
 
+export interface FollowPerson {
+    id: number;
+    username: string;
+    full_name: string;
+    avatar: string | null;
+    slug: string | null;
+    short_bio: string;
+    country: string;
+    organization: string;
+    created_at: string;
+}
+
 export interface SpeakerFollower {
     id: number;
     follower: string;
@@ -73,7 +85,12 @@ export interface SpeakerFollower {
 
 export interface SpeakerFollowersResponse {
     followers_count: number;
-    followers: SpeakerFollower[];
+    followers: FollowPerson[];
+}
+
+export interface SpeakerFollowingResponse {
+    following_count: number;
+    following: FollowPerson[];
 }
 
 // Helper to get the slug for a speaker (fallback to id if no username)
@@ -224,6 +241,12 @@ export const speakerApi = {
     // Get all followers for a speaker (public)
     async getSpeakerFollowers(slug: string): Promise<SpeakerFollowersResponse> {
         const response = await apiClient.get<SpeakerFollowersResponse>(`/speakers/${slug}/followers/`);
+        return response.data;
+    },
+
+    // Get all speakers that a speaker follows (public)
+    async getSpeakerFollowing(slug: string): Promise<SpeakerFollowingResponse> {
+        const response = await apiClient.get<SpeakerFollowingResponse>(`/speakers/${slug}/following/`);
         return response.data;
     },
 };
