@@ -11,7 +11,7 @@ import {
   Users, Calendar, MessageSquare, Mic, Zap, Award,
   Star, ChevronRight, Sparkles, Link as LinkIcon,
 } from 'lucide-react';
-import { speakerApi, type Speaker } from '@/lib/api/speakerApi';
+import { speakerApi, type Speaker, type FollowPerson } from '@/lib/api/speakerApi';
 import { organizationApi } from '@/lib/api/organizationApi';
 import { useAuth } from '@/contexts/auth-context';
 import { ExperiencesList } from './experiences-list';
@@ -36,12 +36,16 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [hasApprovedOrg, setHasApprovedOrg] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'talks' | 'contact'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'talks' | 'contact' | 'followers' | 'following'>('overview');
   const [totalTalks, setTotalTalks] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [followLoading, setFollowLoading] = useState(false);
+
+  // Followers / following list
+  const [followList, setFollowList] = useState<FollowPerson[]>([]);
+  const [followListLoading, setFollowListLoading] = useState(false);
 
   useEffect(() => {
     const checkOrganizations = async () => {
@@ -109,6 +113,27 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
       setFollowLoading(false);
     }
   }, [speaker, id, isFollowing]);
+
+  const showFollowList = useCallback(async (type: 'followers' | 'following') => {
+    if (!speaker) return;
+    const slug = speaker.slug || id;
+    setActiveTab(type);
+    setFollowListLoading(true);
+    setFollowList([]);
+    try {
+      if (type === 'followers') {
+        const res = await speakerApi.getSpeakerFollowers(slug);
+        setFollowList(res.followers);
+      } else {
+        const res = await speakerApi.getSpeakerFollowing(slug);
+        setFollowList(res.following);
+      }
+    } catch {
+      setFollowList([]);
+    } finally {
+      setFollowListLoading(false);
+    }
+  }, [speaker, id]);
 
   const getAvatarUrl = (avatarPath?: string) => {
     if (!avatarPath) return undefined;
@@ -287,13 +312,19 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
 
             {/* Followers / Following stats */}
             <div className="flex items-center gap-4 text-sm">
-              <button className="flex items-center gap-1.5 hover:text-orange-400 transition-colors">
+              <button
+                onClick={() => showFollowList('followers')}
+                className="flex items-center gap-1.5 hover:text-orange-400 transition-colors"
+              >
                 <Users className="h-4 w-4 text-muted-foreground" />
                 <span className="font-bold">{followersCount}</span>
                 <span className="text-muted-foreground">followers</span>
               </button>
               <span className="text-border">·</span>
-              <button className="flex items-center gap-1.5 hover:text-orange-400 transition-colors">
+              <button
+                onClick={() => showFollowList('following')}
+                className="flex items-center gap-1.5 hover:text-orange-400 transition-colors"
+              >
                 <span className="font-bold">{followingCount}</span>
                 <span className="text-muted-foreground">following</span>
               </button>
@@ -401,11 +432,15 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
             {/* Stats strip */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { icon: Users, label: 'Followers', value: followersCount, color: 'text-orange-400' },
+                { icon: Users, label: 'Followers', value: followersCount, color: 'text-orange-400', clickable: true },
                 { icon: Mic,   label: 'Talks',     value: totalTalks,     color: 'text-blue-400' },
                 { icon: Star,  label: 'Rating',    value: '—',            color: 'text-yellow-400' },
-              ].map(({ icon: Icon, label, value, color }) => (
-                <div key={label} className="bg-card border border-border rounded-lg p-4 flex flex-col gap-1">
+              ].map(({ icon: Icon, label, value, color, clickable }) => (
+                <div
+                  key={label}
+                  onClick={clickable ? () => showFollowList('followers') : undefined}
+                  className={`bg-card border border-border rounded-lg p-4 flex flex-col gap-1 ${clickable ? 'cursor-pointer hover:border-orange-500/40 transition-colors' : ''}`}
+                >
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Icon className={`h-3.5 w-3.5 ${color}`} />
                     {label}
@@ -606,6 +641,107 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                       <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
                     </div>
                   </Link>
+                )}
+              </div>
+            )}
+
+            {/* ── FOLLOWERS / FOLLOWING PAGE ─────────────────────────────────── */}
+            {(activeTab === 'followers' || activeTab === 'following') && (
+              <div className="space-y-4">
+                {/* Header with back button */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setActiveTab('overview')}
+                    className="text-sm text-muted-foreground hover:text-orange-400 transition-colors flex items-center gap-1"
+                  >
+                    ← Back to profile
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-3 pb-2 border-b border-border">
+                  <Users className="h-5 w-5 text-orange-400" />
+                  <h2 className="text-lg font-semibold capitalize">{activeTab}</h2>
+                  <span className="text-sm text-muted-foreground">
+                    {activeTab === 'followers' ? followersCount : followingCount}
+                  </span>
+                </div>
+
+                {followListLoading ? (
+                  <div className="flex justify-center py-16">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : followList.length === 0 ? (
+                  <div className="text-center py-16 space-y-2">
+                    <Users className="h-10 w-10 text-muted-foreground mx-auto opacity-40" />
+                    <p className="text-sm text-muted-foreground">
+                      {activeTab === 'followers'
+                        ? `${speakerName.split(' ')[0]} doesn\u2019t have any followers yet.`
+                        : `${speakerName.split(' ')[0]} isn\u2019t following anyone yet.`}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {followList.map((person) => (
+                      <div
+                        key={person.id}
+                        className="bg-card border border-border rounded-lg p-4 flex items-start gap-4 hover:border-orange-500/40 transition-colors"
+                      >
+                        {/* Avatar */}
+                        <Link href={person.slug ? `/speakers/${person.slug}` : '#'}>
+                          <Avatar className="h-12 w-12 flex-shrink-0">
+                            <AvatarImage
+                              src={person.avatar ? getAvatarUrl(person.avatar) : undefined}
+                              alt={person.full_name}
+                            />
+                            <AvatarFallback className="bg-orange-500/10 text-orange-600 text-sm font-bold">
+                              {getInitials(person.full_name)}
+                            </AvatarFallback>
+                          </Avatar>
+                        </Link>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            href={person.slug ? `/speakers/${person.slug}` : '#'}
+                            className="text-sm font-semibold hover:text-orange-400 transition-colors"
+                          >
+                            {person.full_name}
+                          </Link>
+                          <p className="text-xs text-muted-foreground">
+                            @{person.username}
+                          </p>
+                          {person.short_bio && (
+                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                              {person.short_bio}
+                            </p>
+                          )}
+                          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                            {person.organization && (
+                              <span className="flex items-center gap-1">
+                                <Building2 className="h-3 w-3" />
+                                {person.organization}
+                              </span>
+                            )}
+                            {person.country && (
+                              <span className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                {person.country}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* View profile button */}
+                        {person.slug && (
+                          <Link href={`/speakers/${person.slug}`}>
+                            <Button variant="outline" size="sm" className="text-xs flex-shrink-0">
+                              View
+                            </Button>
+                          </Link>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}

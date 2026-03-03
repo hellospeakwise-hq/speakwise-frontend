@@ -110,22 +110,24 @@ export function MainNav() {
       },
     ];
 
-    // Add dashboard link based on user role (only when mounted)
-    if (mounted && isAuthenticated && user?.role?.role) {
+    // Add dashboard link for authenticated users (always, regardless of role loading state)
+    if (mounted && isAuthenticated) {
       let dashboardRoute = "/dashboard";
 
-      switch (user.role.role) {
-        case "speaker":
-          dashboardRoute = "/dashboard/speaker";
-          break;
-        case "organizer":
-          dashboardRoute = "/dashboard/organizer";
-          break;
-        case "attendee":
-          dashboardRoute = "/dashboard/attendee";
-          break;
-        default:
-          dashboardRoute = "/dashboard/attendee";
+      if (user?.role?.role) {
+        switch (user.role.role) {
+          case "speaker":
+            dashboardRoute = "/dashboard/speaker";
+            break;
+          case "organizer":
+            dashboardRoute = "/dashboard/organizer";
+            break;
+          case "attendee":
+            dashboardRoute = "/dashboard/attendee";
+            break;
+          default:
+            dashboardRoute = "/dashboard/attendee";
+        }
       }
 
       baseRoutes.splice(3, 0, {
