@@ -8,11 +8,12 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useState, useEffect, Suspense } from "react"
 import { toast } from "sonner"
 import { userApi, UserProfileResponse } from "@/lib/api/userApi"
 import { speakerApi, SkillTag } from "@/lib/api/speakerApi"
-import { Upload, X, Building2, ArrowRight, CheckCircle2, Clock, Award, Sparkles, Loader2 } from "lucide-react"
+import { Upload, X, Building2, ArrowRight, CheckCircle2, Clock, Award, Sparkles, Loader2, Pencil, Check } from "lucide-react"
 import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
 import { organizationApi, Organization } from "@/lib/api/organizationApi"
 import Link from "next/link"
@@ -391,9 +392,44 @@ function ProfilePageContent() {
                             </Alert>
                         )}
 
-                        <div className="space-y-2">
-                            <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-                            <p className="text-muted-foreground">Manage your personal information</p>
+                        <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-1">
+                                <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
+                                <p className="text-muted-foreground">Manage your personal information</p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0 pt-1">
+                                <TooltipProvider delayDuration={300}>
+                                {isEditing ? (
+                                    <>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button variant="outline" size="icon" className="rounded-full h-10 w-10" onClick={() => setIsEditing(false)} disabled={isSaving}>
+                                                    <X className="h-4 w-4" />
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Cancel</TooltipContent>
+                                        </Tooltip>
+                                        <Tooltip>
+                                            <TooltipTrigger asChild>
+                                                <Button size="icon" className="rounded-full h-10 w-10" onClick={handleSaveProfile} disabled={isSaving}>
+                                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                                                </Button>
+                                            </TooltipTrigger>
+                                            <TooltipContent>Save Changes</TooltipContent>
+                                        </Tooltip>
+                                    </>
+                                ) : (
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <Button size="icon" className="rounded-full h-10 w-10" onClick={() => setIsEditing(true)}>
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Edit Profile</TooltipContent>
+                                    </Tooltip>
+                                )}
+                                </TooltipProvider>
+                            </div>
                         </div>
 
                     {/* Profile Picture - First */}
