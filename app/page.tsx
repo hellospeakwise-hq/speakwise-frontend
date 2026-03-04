@@ -23,7 +23,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-background -z-10" />
         <div className="container flex max-w-[64rem] flex-col items-center gap-4 px-4 text-center relative">
           <Link
-            href="`"
+            href=""
             className="inline-flex items-center gap-2 rounded-2xl bg-muted px-4 py-1.5 text-sm font-medium hover:bg-muted/80 transition-colors"
             target="_blank"
           >
