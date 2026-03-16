@@ -1,14 +1,16 @@
 "use client"
 import Link from "next/link"
 import Image from "next/image"
-import { Calendar, MapPin, Users, ImageIcon, Loader2 } from "lucide-react"
-import { useMemo } from "react"
+import { Calendar, MapPin, Users, ImageIcon, Loader2, LayoutGrid, List } from "lucide-react"
+import { useMemo, useState } from "react"
 import type { DateTimeInfo } from "@/lib/types/api"
 import { formatDateFromMaybe } from '@/lib/utils/event-utils'
 import { getEventImageUrl } from '@/lib/utils/event-utils'
 import { useEvents } from "@/hooks/use-events"
 import { useAuth } from "@/contexts/auth-context"
 import type { Event } from "@/lib/types/api"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 
 
 interface EventsListProps {
@@ -16,10 +18,11 @@ interface EventsListProps {
     tagFilter?: number | null
 }
 
+type ViewMode = "grid" | "list"
+
 export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
     const { events, loading, error } = useEvents()
-
-    // Helper to ensure absolute image URL
+    const [viewMode, setViewMode] = useState<ViewMode>("grid")
 
     // Filter events based on country and tags
     const filteredEvents = useMemo(() => {
@@ -47,6 +50,27 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
 
     const getDateString = (val?: string | DateTimeInfo | null) => formatDateFromMaybe(val as any)
 
+    const getLocationString = (event: Event) => {
+        if (!event.location) return 'Location TBD'
+        if (typeof event.location === 'string') return event.location
+        const parts = [
+            event.location.venue,
+            event.location.city,
+            event.location.country?.name,
+        ].filter(Boolean)
+        return parts.length > 0 ? parts.join(', ') : 'Location TBD'
+    }
+
+    const getDateRangeString = (event: Event) => {
+        if (event.date_range) {
+            if (event.date_range.same_day) {
+                return getDateString(event.date_range.start)
+            }
+            return `${getDateString(event.date_range.start)} - ${getDateString(event.date_range.end)}`
+        }
+        return event.date || 'Date TBD'
+    }
+
     if (loading) {
         return (
             <div className="flex items-center justify-center p-8">
@@ -57,7 +81,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
     }
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4">
             {error && (
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <p className="text-yellow-800 text-sm">{error}</p>
@@ -70,6 +94,26 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                     {filteredEvents.length === 0 && !loading && " (No events found)"}
                     {((countryFilter && countryFilter.length > 0) || tagFilter) && ` (filtered)`}
                 </p>
+                <div className="flex items-center gap-1 border rounded-lg p-0.5">
+                    <Button
+                        variant={viewMode === "grid" ? "default" : "ghost"}
+                        size="icon"
+                        className={`h-8 w-8 ${viewMode === "grid" ? "bg-orange-500 hover:bg-orange-600 text-white" : "hover:bg-muted"}`}
+                        onClick={() => setViewMode("grid")}
+                        aria-label="Grid view"
+                    >
+                        <LayoutGrid className="h-4 w-4" />
+                    </Button>
+                    <Button
+                        variant={viewMode === "list" ? "default" : "ghost"}
+                        size="icon"
+                        className={`h-8 w-8 ${viewMode === "list" ? "bg-orange-500 hover:bg-orange-600 text-white" : "hover:bg-muted"}`}
+                        onClick={() => setViewMode("list")}
+                        aria-label="List view"
+                    >
+                        <List className="h-4 w-4" />
+                    </Button>
+                </div>
             </div>
 
             {filteredEvents.length === 0 && !loading ? (
@@ -81,7 +125,8 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                         }
                     </p>
                 </div>
-            ) : (
+            ) : viewMode === "grid" ? (
+                /* ========== GRID VIEW ========== */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredEvents.map((event) => (
                         <div key={event.id} className="rounded-lg border bg-card text-card-foreground shadow-sm flex flex-col h-full hover:shadow-md transition-shadow overflow-hidden">
@@ -110,24 +155,11 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                                 <div className="text-sm text-muted-foreground">
                                     <div className="flex items-center mt-2">
                                         <Calendar className="h-4 w-4 mr-2 text-orange-500" />
-                                        <span className="text-xs">
-                                            {event.date_range ? (
-                                                event.date_range.same_day ?
-                                                    getDateString(event.date_range.start) :
-                                                    `${getDateString(event.date_range.start)} - ${getDateString(event.date_range.end)}`
-                                            ) : (event.date || 'Date TBD')}
-                                        </span>
+                                        <span className="text-xs">{getDateRangeString(event)}</span>
                                     </div>
                                     <div className="flex items-center mt-1">
                                         <MapPin className="h-4 w-4 mr-2 text-orange-500" />
-                                        <span className="text-xs">
-                                            {event.location
-                                                ? typeof event.location === 'string'
-                                                    ? event.location
-                                                    : `${event.location.venue || ''}${event.location.city ? `, ${event.location.city}` : ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'Location TBD'
-                                                : 'Location TBD'
-                                            }
-                                        </span>
+                                        <span className="text-xs">{getLocationString(event)}</span>
                                     </div>
                                 </div>
                             </div>
@@ -146,7 +178,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                                                 key={tag.id}
                                                 className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
                                                 style={{
-                                                    backgroundColor: `${tag.color}33`, // Add transparency
+                                                    backgroundColor: `${tag.color}33`,
                                                     color: tag.color,
                                                     border: `1px solid ${tag.color}`
                                                 }}
@@ -179,6 +211,91 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                                 </Link>
                             </div>
                         </div>
+                    ))}
+                </div>
+            ) : (
+                /* ========== LIST VIEW ========== */
+                <div className="space-y-3">
+                    {filteredEvents.map((event) => (
+                        <Link
+                            key={event.id}
+                            href={`/events/${event.id}`}
+                            className="block group"
+                        >
+                            <div className="flex items-stretch rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-all hover:border-orange-200 dark:hover:border-orange-800 overflow-hidden">
+                                {/* Image thumbnail */}
+                                <div className="relative w-32 sm:w-44 shrink-0 bg-gray-100 dark:bg-gray-800">
+                                    {event.event_image ? (
+                                        <Image
+                                            src={getEventImageUrl(event.event_image) || '/fallback.jpg'}
+                                            alt={`${event.name || event.title} flyer`}
+                                            fill
+                                            className="object-cover"
+                                            sizes="176px"
+                                        />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full min-h-[100px]">
+                                            <ImageIcon className="h-8 w-8 text-gray-400" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1 p-4 flex flex-col justify-center min-w-0">
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0 flex-1">
+                                            <h3 className="font-semibold text-base sm:text-lg leading-tight line-clamp-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
+                                                {event.name || event.title}
+                                            </h3>
+                                            <p className="text-sm text-muted-foreground mt-1 line-clamp-1 hidden sm:block">
+                                                {event.short_description || event.description || 'No description available.'}
+                                            </p>
+                                        </div>
+                                        <Badge
+                                            variant={event.is_active ? "default" : "secondary"}
+                                            className={`shrink-0 text-[10px] ${event.is_active ? "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400" : ""}`}
+                                        >
+                                            {event.is_active ? 'Active' : 'Inactive'}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-xs text-muted-foreground">
+                                        <div className="flex items-center gap-1">
+                                            <Calendar className="h-3.5 w-3.5 text-orange-500" />
+                                            <span>{getDateRangeString(event)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <MapPin className="h-3.5 w-3.5 text-orange-500" />
+                                            <span className="truncate max-w-[200px]">{getLocationString(event)}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Tags */}
+                                    {event.tags && event.tags.length > 0 && (
+                                        <div className="flex flex-wrap gap-1 mt-2">
+                                            {event.tags.slice(0, 3).map((tag) => (
+                                                <span
+                                                    key={tag.id}
+                                                    className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
+                                                    style={{
+                                                        backgroundColor: `${tag.color}20`,
+                                                        color: tag.color,
+                                                        border: `1px solid ${tag.color}40`
+                                                    }}
+                                                >
+                                                    {tag.name}
+                                                </span>
+                                            ))}
+                                            {event.tags.length > 3 && (
+                                                <span className="text-[10px] text-muted-foreground">
+                                                    +{event.tags.length - 3} more
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        </Link>
                     ))}
                 </div>
             )}
