@@ -33,8 +33,16 @@ export interface OrganizationMember {
 }
 
 export interface AddMemberData {
-    username: string;
+    user: string; // user UUID
     role?: 'ADMIN' | 'MEMBER' | 'MODERATOR';
+}
+
+export interface UserSearchResult {
+    id: string;
+    username: string;
+    email: string;
+    first_name?: string;
+    last_name?: string;
 }
 
 export const organizationApi = {
@@ -122,9 +130,19 @@ export const organizationApi = {
         return response.data;
     },
 
-    // Add member to organization by slug
+    // Search users by username or email
+    async searchUsers(query: string): Promise<UserSearchResult[]> {
+        const response = await apiClient.get('/users/', {
+            params: { username: query }
+        });
+        return response.data;
+    },
+
+    // Add member to organization by slug (sends user UUID)
     async addOrganizationMember(slug: string, data: AddMemberData): Promise<OrganizationMember> {
-        const response = await apiClient.post(`/organizations/${slug}/members/`, data);
+        const response = await apiClient.post(`/organizations/${slug}/members/`, {
+            user: data.user,
+        });
         return response.data;
     },
 

@@ -62,9 +62,10 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
         }
 
         // Load events for all user's organizations
-        const allEvents = await eventsApi.getEvents()
+        const allEventsResponse = await eventsApi.getEvents()
+        const allEvents = Array.isArray(allEventsResponse) ? allEventsResponse : (allEventsResponse.results || [])
         // Filter events that belong to user's organizations
-        const userEvents = allEvents.filter(event =>
+        const userEvents = allEvents.filter((event: Event) =>
           approvedOrgs.some(org => event.organizer === org.id)
         )
         setEvents(userEvents)
@@ -89,8 +90,9 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       }
 
       try {
-        const allEvents = await eventsApi.getEvents()
-        const orgEvents = allEvents.filter(event =>
+        const allEventsResponse = await eventsApi.getEvents()
+        const allEvents = Array.isArray(allEventsResponse) ? allEventsResponse : (allEventsResponse.results || [])
+        const orgEvents = allEvents.filter((event: Event) =>
           event.organizer === selectedOrgId
         )
         setEvents(orgEvents)
@@ -130,7 +132,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
 
       await speakerRequestApi.createSpeakerRequest({
         organizer: selectedOrgId,
-        speaker: Number(id),
+        speaker: speaker!.id,  // Use the actual speaker profile ID, not the URL slug
         event: Number(selectedEventId),
         message: fullMessage,
         status: 'pending'
@@ -138,9 +140,21 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
 
       toast.success("Speaker request submitted successfully!")
       router.push(`/speakers/${id}?request=success`)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error submitting request:', error)
-      toast.error("Failed to submit request. Please try again.")
+      // The axios interceptor in base.ts converts errors to plain Error objects,
+      // so error.response?.data may not exist — check error.message instead
+      const errMsg = error.response?.data?.detail
+        || error.response?.data?.non_field_errors?.[0]
+        || error.message
+        || 'Failed to submit request. Please try again.'
+
+      // Map technical unique constraint error to user-friendly message
+      if (typeof errMsg === 'string' && errMsg.toLowerCase().includes('unique set')) {
+        toast.error('You have already sent a request to this speaker for this event.')
+      } else {
+        toast.error(errMsg)
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -214,7 +228,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
             </Avatar>
             <div>
               <CardTitle>Request {speaker.speaker_name}</CardTitle>
-              <CardDescription>{speaker.organization || speaker.bio}</CardDescription>
+              <CardDescription>{speaker.organization || speaker.short_bio}</CardDescription>
             </div>
           </div>
         </CardHeader>
