@@ -18,7 +18,7 @@ interface OrganizationMembersManagerProps {
 }
 
 export function OrganizationMembersManager({ organizations }: OrganizationMembersManagerProps) {
-    const [selectedOrgId, setSelectedOrgId] = useState<number>(organizations[0]?.id || 0)
+    const [selectedOrgId, setSelectedOrgId] = useState<string>(organizations[0]?.id || '')
 
     const selectedOrg = organizations.find(org => org.id === selectedOrgId)
 
@@ -32,15 +32,15 @@ export function OrganizationMembersManager({ organizations }: OrganizationMember
                         Select Organization
                     </Label>
                     <Select
-                        value={selectedOrgId.toString()}
-                        onValueChange={(value) => setSelectedOrgId(parseInt(value))}
+                        value={selectedOrgId}
+                        onValueChange={(value) => setSelectedOrgId(value)}
                     >
                         <SelectTrigger id="org-select" className="w-full max-w-md">
                             <SelectValue placeholder="Choose an organization" />
                         </SelectTrigger>
                         <SelectContent>
                             {organizations.map((org) => (
-                                <SelectItem key={org.id} value={org.id.toString()}>
+                                <SelectItem key={org.id} value={org.id}>
                                     <div className="flex items-center gap-2">
                                         <span className="font-medium">{org.name}</span>
                                         <span className="text-xs text-muted-foreground">
@@ -58,7 +58,7 @@ export function OrganizationMembersManager({ organizations }: OrganizationMember
             {selectedOrg && (
                 <OrganizationMembers
                     key={selectedOrgId}
-                    organizationId={selectedOrg.id}
+                    organizationId={selectedOrg.slug}
                     organizationName={selectedOrg.name}
                 />
             )}

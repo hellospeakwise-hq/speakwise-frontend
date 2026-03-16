@@ -140,7 +140,7 @@ export default function OrganizationsPage() {
                                                     {org.website}
                                                 </a>
                                             )}
-                                            <Link href={`/dashboard/organizer?org=${org.id}`} data-tour="org-dashboard-button">
+                                            <Link href={`/dashboard/organizer?org=${org.slug}`} data-tour="org-dashboard-button">
                                                 <Button className="w-full" variant="default">
                                                     Go to Organization Dashboard
                                                     <ArrowRight className="w-4 h-4 ml-2" />

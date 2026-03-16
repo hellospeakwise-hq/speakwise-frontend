@@ -149,9 +149,9 @@ export function EventManagementTable({
   return (
     <>
       <Card data-tour="event-table">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Event Management</CardTitle>
-          <Button onClick={handleCreateEvent} className="flex items-center gap-2" data-tour="create-event-button">
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <CardTitle className="text-lg sm:text-xl">Event Management</CardTitle>
+          <Button onClick={handleCreateEvent} className="flex items-center gap-2 w-full sm:w-auto" size="sm" data-tour="create-event-button">
             <Plus className="h-4 w-4" />
             Create Event
           </Button>
@@ -170,150 +170,261 @@ export function EventManagementTable({
               </Button>
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Event</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Dates</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Attendees</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {events.map((event) => {
-                    const status = getEventStatus(event)
-                    const upcoming = isEventUpcoming(event)
-                    const past = isEventPast(event)
+            <>
+              {/* Mobile Card Layout */}
+              <div className="space-y-3 md:hidden">
+                {events.map((event) => {
+                  const status = getEventStatus(event)
+                  const upcoming = isEventUpcoming(event)
+                  const past = isEventPast(event)
 
-                    return (
-                      <TableRow key={event.id}>
-                        <TableCell>
-                          <div className="space-y-1">
-                            <div className="font-medium">{event.title}</div>
-                            {event.event_nickname && (
-                              <div className="text-sm text-muted-foreground">
-                                {event.event_nickname}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="secondary"
-                              className={getEventStatusColor(status)}
+                  return (
+                    <div key={event.id} className="border rounded-lg p-3 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-sm truncate">{event.title}</div>
+                          {event.event_nickname && (
+                            <div className="text-xs text-muted-foreground truncate">
+                              {event.event_nickname}
+                            </div>
+                          )}
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-7 w-7 p-0 shrink-0">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem asChild>
+                              <Link href={`/events/${event.id}`}>
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Event
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditEvent(event)}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Edit Event
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/events/${event.id}/manage`}>
+                                <Settings className="mr-2 h-4 w-4" />
+                                Manage Event
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/events/${event.id}/manage-speakers`}>
+                                <Users className="mr-2 h-4 w-4" />
+                                Manage Speakers
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                              <Link href={`/events/${event.id}/manage-sessions`}>
+                                <Calendar className="mr-2 h-4 w-4" />
+                                Manage Sessions
+                              </Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleStatusToggle(event)}
+                              disabled={actionLoading === `status-${event.id}`}
                             >
-                              {getEventStatusText(status)}
-                            </Badge>
-                            {upcoming && (
-                              <Badge variant="outline" className="text-blue-600">
-                                Upcoming
-                              </Badge>
-                            )}
-                            {past && (
-                              <Badge variant="outline" className="text-gray-600">
-                                Past
-                              </Badge>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            {formatEventDateRange(event.start_date_time, event.end_date_time)}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {event.location ? (
-                            <div className="flex items-center gap-1 text-sm">
-                              <MapPin className="h-3 w-3 text-muted-foreground" />
+                              <BarChart3 className="mr-2 h-4 w-4" />
+                              {event.is_active ? 'Unpublish' : 'Publish'}
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteEvent(event)}
+                              className="text-red-600"
+                              disabled={actionLoading === `delete-${event.id}`}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Event
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge
+                          variant="secondary"
+                          className={`text-[10px] px-1.5 py-0 ${getEventStatusColor(status)}`}
+                        >
+                          {getEventStatusText(status)}
+                        </Badge>
+                        {upcoming && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-blue-600">
+                            Upcoming
+                          </Badge>
+                        )}
+                        {past && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-gray-600">
+                            Past
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{formatEventDateRange(event.start_date_time, event.end_date_time)}</span>
+                        </div>
+                        {event.location && (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 shrink-0" />
+                            <span className="truncate">
                               {typeof event.location === 'string'
                                 ? event.location
                                 : event.location?.venue || 'Location TBD'}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-sm">No location</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1 text-sm">
-                            <Users className="h-3 w-3 text-muted-foreground" />
-                            {event.attendees || 0}
+                            </span>
                           </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem asChild>
-                                <Link href={`/events/${event.id}`}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View Event
-                                </Link>
-                              </DropdownMenuItem>
+                        )}
+                        <div className="flex items-center gap-1">
+                          <Users className="h-3 w-3 shrink-0" />
+                          <span>{event.attendees || 0} attendees</span>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
 
-                              <DropdownMenuItem onClick={() => handleEditEvent(event)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Event
-                              </DropdownMenuItem>
+              {/* Desktop Table Layout */}
+              <div className="rounded-md border hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Event</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Dates</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Attendees</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {events.map((event) => {
+                      const status = getEventStatus(event)
+                      const upcoming = isEventUpcoming(event)
+                      const past = isEventPast(event)
 
-                              <DropdownMenuItem asChild>
-                                <Link href={`/events/${event.id}/manage`}>
-                                  <Settings className="mr-2 h-4 w-4" />
-                                  Manage Event
-                                </Link>
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem asChild>
-                                <Link href={`/events/${event.id}/manage-speakers`}>
-                                  <Users className="mr-2 h-4 w-4" />
-                                  Manage Speakers
-                                </Link>
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem asChild>
-                                <Link href={`/events/${event.id}/manage-sessions`}>
-                                  <Calendar className="mr-2 h-4 w-4" />
-                                  Manage Sessions
-                                </Link>
-                              </DropdownMenuItem>
-
-                              <DropdownMenuSeparator />
-
-                              <DropdownMenuItem
-                                onClick={() => handleStatusToggle(event)}
-                                disabled={actionLoading === `status-${event.id}`}
+                      return (
+                        <TableRow key={event.id}>
+                          <TableCell>
+                            <div className="space-y-1">
+                              <div className="font-medium">{event.title}</div>
+                              {event.event_nickname && (
+                                <div className="text-sm text-muted-foreground">
+                                  {event.event_nickname}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="secondary"
+                                className={getEventStatusColor(status)}
                               >
-                                <BarChart3 className="mr-2 h-4 w-4" />
-                                {event.is_active ? 'Unpublish' : 'Publish'}
-                              </DropdownMenuItem>
-
-                              <DropdownMenuSeparator />
-
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteEvent(event)}
-                                className="text-red-600"
-                                disabled={actionLoading === `delete-${event.id}`}
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Event
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                                {getEventStatusText(status)}
+                              </Badge>
+                              {upcoming && (
+                                <Badge variant="outline" className="text-blue-600">
+                                  Upcoming
+                                </Badge>
+                              )}
+                              {past && (
+                                <Badge variant="outline" className="text-gray-600">
+                                  Past
+                                </Badge>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 text-sm">
+                              <Clock className="h-3 w-3 text-muted-foreground" />
+                              {formatEventDateRange(event.start_date_time, event.end_date_time)}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {event.location ? (
+                              <div className="flex items-center gap-1 text-sm">
+                                <MapPin className="h-3 w-3 text-muted-foreground" />
+                                {typeof event.location === 'string'
+                                  ? event.location
+                                  : event.location?.venue || 'Location TBD'}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-sm">No location</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-1 text-sm">
+                              <Users className="h-3 w-3 text-muted-foreground" />
+                              {event.attendees || 0}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/events/${event.id}`}>
+                                    <Eye className="mr-2 h-4 w-4" />
+                                    View Event
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEditEvent(event)}>
+                                  <Edit className="mr-2 h-4 w-4" />
+                                  Edit Event
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/events/${event.id}/manage`}>
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    Manage Event
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/events/${event.id}/manage-speakers`}>
+                                    <Users className="mr-2 h-4 w-4" />
+                                    Manage Speakers
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem asChild>
+                                  <Link href={`/events/${event.id}/manage-sessions`}>
+                                    <Calendar className="mr-2 h-4 w-4" />
+                                    Manage Sessions
+                                  </Link>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleStatusToggle(event)}
+                                  disabled={actionLoading === `status-${event.id}`}
+                                >
+                                  <BarChart3 className="mr-2 h-4 w-4" />
+                                  {event.is_active ? 'Unpublish' : 'Publish'}
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteEvent(event)}
+                                  className="text-red-600"
+                                  disabled={actionLoading === `delete-${event.id}`}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete Event
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      )
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

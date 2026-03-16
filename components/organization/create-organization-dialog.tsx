@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { toast } from "sonner"
-import { Building2, Loader2 } from "lucide-react"
+import { Building2, Loader2, Upload, X, ImageIcon } from "lucide-react"
 
 interface CreateOrganizationDialogProps {
     open: boolean
@@ -22,8 +22,41 @@ export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: Crea
         description: "",
         email: "",
         website: "",
-        logo: "",
     })
+    const [logoFile, setLogoFile] = useState<File | null>(null)
+    const [logoPreview, setLogoPreview] = useState<string | null>(null)
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                toast.error("Please select a valid image file")
+                return
+            }
+            // Validate file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                toast.error("Image must be less than 10MB")
+                return
+            }
+            setLogoFile(file)
+            // Create preview URL
+            const previewUrl = URL.createObjectURL(file)
+            setLogoPreview(previewUrl)
+        }
+    }
+
+    const removeLogo = () => {
+        setLogoFile(null)
+        if (logoPreview) {
+            URL.revokeObjectURL(logoPreview)
+            setLogoPreview(null)
+        }
+        if (fileInputRef.current) {
+            fileInputRef.current.value = ""
+        }
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -52,15 +85,18 @@ export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: Crea
         setIsSubmitting(true)
 
         try {
-            // Prepare the request payload
-            const payload = {
-                name: formData.name.trim(),
-                description: formData.description.trim(),
-                email: formData.email.trim(),
-                website: formData.website.trim() || undefined,
-                logo: formData.logo.trim() || undefined,
-                is_active: false, // Default to false, requires admin approval
+            // Use FormData for multipart/form-data (required for file upload)
+            const submitData = new FormData()
+            submitData.append('name', formData.name.trim())
+            submitData.append('description', formData.description.trim())
+            submitData.append('email', formData.email.trim())
+            if (formData.website.trim()) {
+                submitData.append('website', formData.website.trim())
             }
+            if (logoFile) {
+                submitData.append('logo', logoFile)
+            }
+            submitData.append('is_active', 'false') // Default to false, requires admin approval
 
             const token = localStorage.getItem('accessToken')
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
@@ -68,15 +104,25 @@ export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: Crea
             const response = await fetch(`${apiUrl}/api/organizations/`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
+                    // Do NOT set Content-Type — browser sets it automatically
+                    // with the correct multipart boundary
                     'Authorization': `Bearer ${token}`,
                 },
-                body: JSON.stringify(payload),
+                body: submitData,
             })
 
             if (!response.ok) {
                 const errorData = await response.json()
-                throw new Error(errorData.message || 'Failed to create organization')
+                // Handle field-level errors from Django
+                const errorMessages = Object.entries(errorData)
+                    .map(([field, messages]) => {
+                        if (Array.isArray(messages)) {
+                            return `${field}: ${messages.join(', ')}`
+                        }
+                        return `${field}: ${messages}`
+                    })
+                    .join('\n')
+                throw new Error(errorMessages || 'Failed to create organization')
             }
 
             const data = await response.json()
@@ -92,13 +138,7 @@ export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: Crea
             )
 
             // Reset form and close dialog
-            setFormData({
-                name: "",
-                description: "",
-                email: "",
-                website: "",
-                logo: "",
-            })
+            resetForm()
             onOpenChange(false)
 
             // Trigger success callback to refresh organization list
@@ -119,14 +159,18 @@ export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: Crea
         }
     }
 
-    const handleCancel = () => {
+    const resetForm = () => {
         setFormData({
             name: "",
             description: "",
             email: "",
             website: "",
-            logo: "",
         })
+        removeLogo()
+    }
+
+    const handleCancel = () => {
+        resetForm()
         onOpenChange(false)
     }
 
@@ -211,23 +255,51 @@ export function CreateOrganizationDialog({ open, onOpenChange, onSuccess }: Crea
                             />
                         </div>
 
-                        {/* Logo URL */}
+                        {/* Logo Upload */}
                         <div className="space-y-2">
                             <Label htmlFor="logo" className="text-sm font-medium">
-                                Logo URL <span className="text-muted-foreground text-xs">(Optional)</span>
+                                Logo <span className="text-muted-foreground text-xs">(Optional)</span>
                             </Label>
-                            <Input
+                            {logoPreview ? (
+                                <div className="relative inline-block">
+                                    <img
+                                        src={logoPreview}
+                                        alt="Logo preview"
+                                        className="w-24 h-24 object-cover rounded-lg border"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={removeLogo}
+                                        className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90 transition-colors"
+                                    >
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div
+                                    onClick={() => fileInputRef.current?.click()}
+                                    className="border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                                >
+                                    <div className="flex flex-col items-center gap-2">
+                                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                                            <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium">Click to upload logo</p>
+                                            <p className="text-xs text-muted-foreground">PNG, JPG, WEBP up to 10MB</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            <input
+                                ref={fileInputRef}
+                                type="file"
                                 id="logo"
-                                type="url"
-                                placeholder="https://www.organization.com/logo.png"
-                                value={formData.logo}
-                                onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                                accept="image/*"
+                                onChange={handleLogoChange}
                                 disabled={isSubmitting}
-                                className="text-base"
+                                className="hidden"
                             />
-                            <p className="text-xs text-muted-foreground leading-tight">
-                                Provide a direct link to your organization&apos;s logo image
-                            </p>
                         </div>
                     </div>
 

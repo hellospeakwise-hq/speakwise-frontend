@@ -725,7 +725,7 @@ function ProfilePageContent() {
                         </Card>
                     )}
 
-                    {/* Organization Summary - HIDDEN: Focusing on speaker features for now
+                    {/* Organization Summary */}
                     <Card data-tour="organizations">
                         <CardHeader>
                             <CardTitle>Organizations</CardTitle>
@@ -784,7 +784,6 @@ function ProfilePageContent() {
                             )}
                         </CardContent>
                     </Card>
-                    */}
 
                     {/* Edit Profile Button - At the bottom */}
                     <Card>

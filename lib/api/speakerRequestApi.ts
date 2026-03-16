@@ -4,8 +4,8 @@ export interface SpeakerRequest {
     id?: number;
     status: 'pending' | 'accepted' | 'rejected';
     message: string;
-    organizer: number; // Organizer ID (User)
-    organization: number; // Organization ID
+    organizer: string; // Organizer/Organization UUID
+    organization: string; // Organization UUID
     speaker: number; // Speaker ID
     event: number; // Event ID
     created_at?: string;
@@ -15,7 +15,7 @@ export interface SpeakerRequest {
 export interface CreateSpeakerRequestData {
     status?: 'pending';
     message: string;
-    organizer: number;  // Backend expects 'organizer' for POST
+    organizer: string;  // Backend expects 'organizer' (org UUID) for POST
     speaker: number;
     event: number;
 }
@@ -25,7 +25,7 @@ export const speakerRequestApi = {
 
     // Get all speaker requests (for organizers)
     // REQUIRED: Organization ID must be provided
-    async getSpeakerRequests(organizationId: number): Promise<SpeakerRequest[]> {
+    async getSpeakerRequests(organizationId: string): Promise<SpeakerRequest[]> {
         const response = await apiClient.get('/speaker-requests/', {
             params: { organization: organizationId }
         });

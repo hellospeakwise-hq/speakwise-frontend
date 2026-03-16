@@ -36,7 +36,7 @@ import { organizationApi, type OrganizationMember } from "@/lib/api/organization
 import { toast } from "sonner"
 
 interface OrganizationMembersProps {
-    organizationId: number;
+    organizationId: string;
     organizationName: string;
 }
 
@@ -97,7 +97,7 @@ export function OrganizationMembers({ organizationId, organizationName }: Organi
     const handleRemoveMember = async (member: OrganizationMember) => {
         try {
             setRemovingMember(true)
-            await organizationApi.removeOrganizationMember(organizationId, member.id)
+            await organizationApi.removeOrganizationMember(organizationId, member.username)
             toast.success(`${member.username} removed from organization`)
             setRemoveMemberConfirm(null)
             loadMembers()
@@ -194,11 +194,7 @@ export function OrganizationMembers({ organizationId, organizationName }: Organi
                                                 )}
                                             </div>
                                             <p className="text-sm text-muted-foreground">
-                                                Added {new Date(member.created_at).toLocaleDateString('en-US', {
-                                                    month: 'short',
-                                                    day: 'numeric',
-                                                    year: 'numeric'
-                                                })}
+                                                Member of {organizationName}
                                             </p>
                                         </div>
                                     </div>

@@ -91,92 +91,96 @@ export function OrganizerDashboard() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-
-        <Button variant="outline" onClick={handleRefreshStats} disabled={loading || refreshing} data-tour="refresh-stats">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+        <div className="min-w-0">
+          {/* Title is in the parent page, so just the refresh button here */}
+        </div>
+        <Button variant="outline" size="sm" onClick={handleRefreshStats} disabled={loading || refreshing} data-tour="refresh-stats" className="self-start sm:self-auto">
           <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
           {refreshing ? 'Refreshing...' : 'Refresh Stats'}
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Organizer Stats */}
         <Card data-tour="stats-total-events">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-            <Calendar className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Events</CardTitle>
+            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="text-xl sm:text-2xl font-bold">
               {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
+                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
               ) : (
                 stats.totalEvents
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Organized events</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Organized events</p>
           </CardContent>
         </Card>
         <Card data-tour="stats-attendees">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Attendees</CardTitle>
-            <Users className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Total Attendees</CardTitle>
+            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="text-xl sm:text-2xl font-bold">
               {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
+                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
               ) : (
                 stats.totalAttendees.toLocaleString()
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Across all events</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Across all events</p>
           </CardContent>
         </Card>
         <Card data-tour="stats-feedback">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Feedback Rate</CardTitle>
-            <BarChart className="h-4 w-4 text-primary" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Feedback Rate</CardTitle>
+            <BarChart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="text-xl sm:text-2xl font-bold">
               {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
+                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
               ) : (
                 `${stats.feedbackRate}%`
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Of attendees provided feedback</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Of attendees provided feedback</p>
           </CardContent>
         </Card>
         <Card data-tour="stats-rating">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Speaker Rating</CardTitle>
-            <Star className="h-4 w-4 text-yellow-500" fill="currentColor" />
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
+            <CardTitle className="text-xs sm:text-sm font-medium">Avg. Speaker Rating</CardTitle>
+            <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-500" fill="currentColor" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
+          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
+            <div className="text-xl sm:text-2xl font-bold">
               {loading ? (
-                <Loader2 className="h-6 w-6 animate-spin" />
+                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
               ) : (
                 stats.avgRating.toFixed(1)
               )}
             </div>
-            <p className="text-xs text-muted-foreground">Across all speakers</p>
+            <p className="text-[10px] sm:text-xs text-muted-foreground">Across all speakers</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="events" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="events" data-tour="manage-events-tab">Manage Events</TabsTrigger>
-          <TabsTrigger value="organization">Organization</TabsTrigger>
-          <TabsTrigger value="speaker-requests">Speaker Requests</TabsTrigger>
-          <TabsTrigger value="speakers">Speakers</TabsTrigger>
-          <TabsTrigger value="attendees" data-tour="attendees-tab">Attendees</TabsTrigger>
-          <TabsTrigger value="feedback">Feedback</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 h-auto flex-wrap sm:flex-nowrap gap-1 sm:gap-0">
+            <TabsTrigger value="events" data-tour="manage-events-tab" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Events</TabsTrigger>
+            <TabsTrigger value="organization" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Organization</TabsTrigger>
+            <TabsTrigger value="speaker-requests" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Speaker Requests</TabsTrigger>
+            <TabsTrigger value="speakers" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Speakers</TabsTrigger>
+            <TabsTrigger value="attendees" data-tour="attendees-tab" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Attendees</TabsTrigger>
+            <TabsTrigger value="feedback" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Feedback</TabsTrigger>
+          </TabsList>
+        </div>
         <TabsContent value="events">
           <EventManagementTable
             events={events}
