@@ -33,7 +33,7 @@ export default function OrganizerDashboardPage() {
         }
 
         // Get the specific organization
-        const org = await organizationApi.getOrganization(parseInt(orgId))
+        const org = await organizationApi.getOrganization(orgId)
 
         // Check if this specific organization is approved
         if (!org.is_active) {
@@ -90,11 +90,11 @@ export default function OrganizerDashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="container py-10">
-        <div className="flex flex-col space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Organizer Dashboard</h1>
-            <p className="text-muted-foreground">Manage events, speakers, and attendees</p>
+      <div className="container px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
+        <div className="flex flex-col space-y-4 sm:space-y-6">
+          <div className="space-y-1 sm:space-y-2">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Organizer Dashboard</h1>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage events, speakers, and attendees</p>
           </div>
           <OrganizerDashboard />
         </div>

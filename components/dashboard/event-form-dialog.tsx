@@ -34,8 +34,10 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { CalendarIcon, Upload, X, Plus } from "lucide-react"
+import { toast } from "sonner"
 import { eventsApi, type CreateEventRequest } from "@/lib/api/events"
 import { type Event, type Country, type Tag } from "@/lib/types/api"
+import { countries as staticCountries } from "@/lib/data/countries"
 
 const eventFormSchema = z.object({
   title: z.string().min(1, "Event title is required"),
@@ -47,7 +49,7 @@ const eventFormSchema = z.object({
   start_date_time: z.string().min(1, "Start date and time are required"),
   end_date_time: z.string().min(1, "End date and time are required"),
   is_active: z.boolean().default(false),
-  country: z.number().optional(),
+  country: z.string().optional(),
   tags: z.array(z.number()).optional(),
 })
 
@@ -69,7 +71,7 @@ export function EventFormDialog({
   const [imagePreview, setImagePreview] = useState<string | null>(
     event?.event_image || null
   )
-  const [countries, setCountries] = useState<Country[]>([])
+  const [countries, setCountries] = useState(staticCountries)
   const [tags, setTags] = useState<Tag[]>([])
   const [selectedTags, setSelectedTags] = useState<number[]>(
     event?.tags?.map(tag => tag.id) || []
@@ -81,17 +83,12 @@ export function EventFormDialog({
   useEffect(() => {
     const loadData = async () => {
       try {
-        console.log('Loading countries and tags data...');
-        const [countriesData, tagsData] = await Promise.all([
-          eventsApi.getCountries(),
-          eventsApi.getTags()
-        ]);
-        console.log('Countries loaded:', countriesData);
+        console.log('Loading tags data...');
+        const tagsData = await eventsApi.getTags();
         console.log('Tags loaded:', tagsData);
-        setCountries(countriesData);
         setTags(tagsData);
       } catch (error) {
-        console.error('Error loading countries and tags:', error);
+        console.error('Error loading tags:', error);
       }
     };
     
@@ -128,7 +125,7 @@ export function EventFormDialog({
         ? new Date(event.end_date_time).toISOString().slice(0, 16) 
         : "",
       is_active: event?.is_active || false,
-      country: typeof event?.location === 'object' ? event.location?.country?.id : undefined,
+      country: typeof event?.location === 'object' && event?.location?.country ? event.location.country.name : "",
       tags: event?.tags?.map(tag => tag.id) || [],
     },
   })
@@ -151,7 +148,7 @@ export function EventFormDialog({
           ? new Date(event.end_date_time).toISOString().slice(0, 16) 
           : "",
         is_active: event.is_active || false,
-        country: typeof event.location === 'object' ? event.location?.country?.id : undefined,
+        country: typeof event.location === 'object' && event.location?.country ? event.location.country.name : "",
         tags: event.tags?.map(tag => tag.id) || [],
       });
       
@@ -178,10 +175,10 @@ export function EventFormDialog({
         return
       }
       
-      // Validate file size (max 5MB)
-      const maxSize = 5 * 1024 * 1024 // 5MB in bytes
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024 // 10MB in bytes
       if (file.size > maxSize) {
-        alert(`Image file size must be less than 5MB. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
+        alert(`Image file size must be less than 10MB. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
         e.target.value = '' // Clear the input
         return
       }
@@ -298,45 +295,43 @@ export function EventFormDialog({
       
       const eventData: CreateEventRequest = {
         ...values,
-        event_image: selectedImage ? selectedImage.name : undefined, // Convert File to string or handle file upload separately
-        tags: tagsArray, // Use the state instead of form values for tags
+        event_image: selectedImage || undefined,
+        tags: tagsArray,
       }
 
-      console.log('Submitting event data:', eventData)
-      console.log('Selected image:', selectedImage)
-      console.log('Selected tags:', selectedTags)
-      
-      // Additional debugging for image
-      if (selectedImage) {
-        console.log('Image file details before submission:', {
-          name: selectedImage.name,
-          type: selectedImage.type,
-          size: selectedImage.size,
-          lastModified: new Date(selectedImage.lastModified).toISOString()
-        })
-        
-        // Try to read a small portion of the file to verify it's not corrupted
-        const reader = new FileReader()
-        const slice = selectedImage.slice(0, 100) // Read first 100 bytes
-        reader.readAsArrayBuffer(slice)
-        reader.onload = () => {
-          const buffer = reader.result as ArrayBuffer
-          const bytes = new Uint8Array(buffer)
-          console.log('First few bytes of file:', Array.from(bytes.slice(0, 10)).map(b => b.toString(16).padStart(2, '0')).join(' '))
+      // Look up country code from the static list
+      if (values.country) {
+        const selectedCountry = countries.find(c => c.name === values.country);
+        if (selectedCountry) {
+          eventData.country_code = selectedCountry.code;
         }
       }
 
+      console.log('Submitting event data:', {
+        ...eventData,
+        event_image: selectedImage ? selectedImage.name : 'none',
+      })
+
       let savedEvent: Event
       if (event) {
-        // Update existing event
         savedEvent = await eventsApi.updateEvent(event.id.toString(), eventData)
       } else {
-        // Create new event
         savedEvent = await eventsApi.createEvent(eventData)
       }
 
       onEventSaved(savedEvent)
       onOpenChange(false)
+
+      toast.success(
+        `"${savedEvent.title}" ${event ? 'updated' : 'created'} successfully! 🎉`,
+        {
+          description: event 
+            ? "Your event has been updated." 
+            : "Your event has been created and is ready to go.",
+          duration: 4000,
+        }
+      )
+
       form.reset()
       setSelectedImage(null)
       setImagePreview(null)
@@ -390,7 +385,7 @@ export function EventFormDialog({
                     className="cursor-pointer"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
-                    Accepted formats: JPEG, PNG, GIF, WebP. Max size: 5MB
+                    Accepted formats: JPEG, PNG, GIF, WebP. Max size: 10MB
                   </p>
                 </div>
                 {imagePreview && (
@@ -523,7 +518,7 @@ export function EventFormDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Country</FormLabel>
-                  <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a country" />
@@ -531,7 +526,7 @@ export function EventFormDialog({
                     </FormControl>
                     <SelectContent>
                       {countries.map((country) => (
-                        <SelectItem key={country.id} value={country.id.toString()}>
+                        <SelectItem key={country.code} value={country.name}>
                           {country.name}
                         </SelectItem>
                       ))}

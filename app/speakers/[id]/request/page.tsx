@@ -91,7 +91,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       try {
         const allEvents = await eventsApi.getEvents()
         const orgEvents = allEvents.filter(event =>
-          event.organizer === Number(selectedOrgId)
+          event.organizer === selectedOrgId
         )
         setEvents(orgEvents)
       } catch (error) {
@@ -129,7 +129,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       }
 
       await speakerRequestApi.createSpeakerRequest({
-        organizer: Number(selectedOrgId),
+        organizer: selectedOrgId,
         speaker: Number(id),
         event: Number(selectedEventId),
         message: fullMessage,

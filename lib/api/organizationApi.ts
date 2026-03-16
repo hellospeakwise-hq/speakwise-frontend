@@ -1,15 +1,14 @@
 import apiClient from './base';
 
 export interface Organization {
-    id: number;
+    id: string;
     name: string;
+    slug: string;
     description: string;
     email: string;
     website?: string;
     logo?: string;
     is_active: boolean;
-    created_at: string;
-    updated_at: string;
     created_by: string;
     members: string[];
 }
@@ -19,20 +18,18 @@ export interface CreateOrganizationData {
     description: string;
     email: string;
     website?: string;
-    logo?: string;
+    logo?: File;
     is_active?: boolean;
 }
 
 export interface OrganizationMember {
-    id: number;
-    organization: number;
+    id: string;
+    organization: string;
     user: string;
     username: string;
     role: 'ADMIN' | 'MEMBER' | 'MODERATOR';
     is_active: boolean;
     added_by: string;
-    created_at: string;
-    updated_at: string;
 }
 
 export interface AddMemberData {
@@ -66,9 +63,9 @@ export const organizationApi = {
         }
     },
 
-    // Get single organization
-    async getOrganization(id: number): Promise<Organization> {
-        const response = await apiClient.get(`/organizations/${id}/`);
+    // Get single organization by slug
+    async getOrganization(slug: string): Promise<Organization> {
+        const response = await apiClient.get(`/organizations/${slug}/`);
         const org: Organization = response.data;
 
         // Get current user ID from localStorage
@@ -92,43 +89,47 @@ export const organizationApi = {
         }
     },
 
-    // Create organization
+    // Create organization (uses FormData for file upload support)
     async createOrganization(data: CreateOrganizationData): Promise<Organization> {
-        const response = await apiClient.post('/organizations/', data);
+        const formData = new FormData();
+        formData.append('name', data.name);
+        formData.append('description', data.description);
+        formData.append('email', data.email);
+        if (data.website) formData.append('website', data.website);
+        if (data.logo) formData.append('logo', data.logo);
+        if (data.is_active !== undefined) formData.append('is_active', String(data.is_active));
+
+        const response = await apiClient.post('/organizations/', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         return response.data;
     },
 
-    // Update organization
-    async updateOrganization(id: number, data: Partial<CreateOrganizationData>): Promise<Organization> {
-        const response = await apiClient.patch(`/organizations/${id}/`, data);
+    // Update organization by slug
+    async updateOrganization(slug: string, data: Partial<CreateOrganizationData>): Promise<Organization> {
+        const response = await apiClient.patch(`/organizations/${slug}/`, data);
         return response.data;
     },
 
-    // Delete organization
-    async deleteOrganization(id: number): Promise<void> {
-        await apiClient.delete(`/organizations/${id}/`);
+    // Delete organization by slug
+    async deleteOrganization(slug: string): Promise<void> {
+        await apiClient.delete(`/organizations/${slug}/`);
     },
 
-    // Get organization members
-    async getOrganizationMembers(organizationId: number): Promise<OrganizationMember[]> {
-        const response = await apiClient.get(`/organizations/${organizationId}/members/`);
+    // Get organization members by slug
+    async getOrganizationMembers(slug: string): Promise<OrganizationMember[]> {
+        const response = await apiClient.get(`/organizations/${slug}/members/`);
         return response.data;
     },
 
-    // Add member to organization
-    async addOrganizationMember(organizationId: number, data: AddMemberData): Promise<OrganizationMember> {
-        const response = await apiClient.post(`/organizations/${organizationId}/members/`, data);
+    // Add member to organization by slug
+    async addOrganizationMember(slug: string, data: AddMemberData): Promise<OrganizationMember> {
+        const response = await apiClient.post(`/organizations/${slug}/members/`, data);
         return response.data;
     },
 
-    // Remove member from organization
-    async removeOrganizationMember(organizationId: number, memberId: number): Promise<void> {
-        await apiClient.delete(`/organizations/${organizationId}/members/${memberId}/`);
-    },
-
-    // Update member role
-    async updateMemberRole(organizationId: number, memberId: number, role: 'ADMIN' | 'MEMBER' | 'MODERATOR'): Promise<OrganizationMember> {
-        const response = await apiClient.patch(`/organizations/${organizationId}/members/${memberId}/`, { role });
-        return response.data;
+    // Remove member from organization by org_slug and username
+    async removeOrganizationMember(orgSlug: string, username: string): Promise<void> {
+        await apiClient.delete(`/organizations/${orgSlug}/members/${username}/`);
     }
 };
