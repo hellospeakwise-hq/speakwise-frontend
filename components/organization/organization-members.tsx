@@ -77,18 +77,43 @@ export function OrganizationMembers({ organizationId, organizationName }: Organi
 
         try {
             setAddingMember(true)
+
+            // Step 1: Search for the user by username to get their UUID
+            const searchResults = await organizationApi.searchUsers(username.trim())
+            
+            // Find exact username match (search is icontains, so filter for exact)
+            const exactMatch = searchResults.find(
+                (u) => u.username.toLowerCase() === username.trim().toLowerCase()
+            )
+
+            if (!exactMatch) {
+                toast.error(`No user found with username "${username.trim()}". Please check the username and try again.`)
+                return
+            }
+
+            // Step 2: Add member using the user's UUID
             await organizationApi.addOrganizationMember(organizationId, {
-                username: username.trim(),
+                user: exactMatch.id,
                 role
             })
-            toast.success(`Successfully added ${username} to ${organizationName}`)
+            toast.success(`Successfully added ${exactMatch.username} to ${organizationName}`)
             setAddMemberOpen(false)
             setUsername("")
             setRole('MEMBER')
             loadMembers()
         } catch (error: any) {
             console.error('Error adding member:', error)
-            toast.error(error.response?.data?.message || error.response?.data?.username?.[0] || 'Failed to add member')
+            const responseData = error.response?.data
+            if (responseData) {
+                const errorMsg = responseData.detail
+                    || responseData.user?.[0]
+                    || responseData.non_field_errors?.[0]
+                    || responseData.message
+                    || 'Failed to add member'
+                toast.error(errorMsg)
+            } else {
+                toast.error('Failed to add member. Please check the username and try again.')
+            }
         } finally {
             setAddingMember(false)
         }

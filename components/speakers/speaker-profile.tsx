@@ -12,7 +12,6 @@ import {
   Star, ChevronRight, Sparkles, Link as LinkIcon,
 } from 'lucide-react';
 import { speakerApi, type Speaker, type FollowPerson } from '@/lib/api/speakerApi';
-import { organizationApi } from '@/lib/api/organizationApi';
 import { useAuth } from '@/contexts/auth-context';
 import { ExperiencesList } from './experiences-list';
 
@@ -35,7 +34,6 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   const [speaker, setSpeaker] = useState<Speaker | null>(initialData || null);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
-  const [hasApprovedOrg, setHasApprovedOrg] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'talks' | 'contact' | 'followers' | 'following'>('overview');
   const [totalTalks, setTotalTalks] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
@@ -47,17 +45,6 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   const [followList, setFollowList] = useState<FollowPerson[]>([]);
   const [followListLoading, setFollowListLoading] = useState(false);
   const followListRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const checkOrganizations = async () => {
-      if (!isAuthenticated) { setHasApprovedOrg(false); return; }
-      try {
-        const orgs = await organizationApi.getUserOrganizations();
-        setHasApprovedOrg(orgs.some((o) => o.is_active === true));
-      } catch { setHasApprovedOrg(false); }
-    };
-    checkOrganizations();
-  }, [isAuthenticated]);
 
   useEffect(() => {
     if (initialData) return;
@@ -284,29 +271,20 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
               </Button>
 
               {/* Request as speaker */}
-              {isAuthenticated && (
-                hasApprovedOrg ? (
-                  <Link href={`/speakers/${id}/request`}>
-                    <Button className="w-full h-8 text-sm font-medium rounded-md bg-orange-500 hover:bg-orange-600 text-white border-0 gap-1.5">
-                      <Mic className="h-3.5 w-3.5" />
-                      Request as Speaker
-                    </Button>
-                  </Link>
-                ) : (
-                  <div className="relative group">
-                    <Button disabled variant="outline" className="w-full h-8 text-sm font-medium rounded-md gap-1.5 cursor-not-allowed text-muted-foreground">
-                      <Mic className="h-3.5 w-3.5" />
-                      Request as Speaker
-                    </Button>
-                    <div className="absolute left-0 right-0 mt-1.5 p-2.5 bg-card border border-border rounded-md text-xs text-muted-foreground hidden group-hover:block z-10">
-                      <span className="flex items-center gap-1.5">
-                        <Building2 className="h-3.5 w-3.5 flex-shrink-0" />
-                        You need an approved org.{' '}
-                        <Link href="/organizations" className="text-orange-400 hover:underline">Create one →</Link>
-                      </span>
-                    </div>
-                  </div>
-                )
+              {isAuthenticated ? (
+                <Link href={`/speakers/${id}/request`}>
+                  <Button className="w-full h-8 text-sm font-medium rounded-md bg-orange-500 hover:bg-orange-600 text-white border-0 gap-1.5">
+                    <Mic className="h-3.5 w-3.5" />
+                    Request as Speaker
+                  </Button>
+                </Link>
+              ) : (
+                <Link href="/signin">
+                  <Button className="w-full h-8 text-sm font-medium rounded-md bg-orange-500 hover:bg-orange-600 text-white border-0 gap-1.5">
+                    <Mic className="h-3.5 w-3.5" />
+                    Request as Speaker
+                  </Button>
+                </Link>
               )}
             </div>
 
@@ -614,28 +592,18 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
 
                 {/* Request to speak */}
                 {isAuthenticated ? (
-                  hasApprovedOrg ? (
-                    <Link href={`/speakers/${id}/request`}>
-                      <div className="bg-card border border-orange-500/30 rounded-lg p-5 flex items-center justify-between hover:border-orange-500 transition-colors cursor-pointer group">
-                        <div>
-                          <p className="text-sm font-semibold flex items-center gap-2">
-                            <Mic className="h-4 w-4 text-orange-400" />
-                            Invite to your event
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">Send a speaker request from your organization</p>
-                        </div>
-                        <ChevronRight className="h-5 w-5 text-orange-500 group-hover:translate-x-1 transition-transform" />
+                  <Link href={`/speakers/${id}/request`}>
+                    <div className="bg-card border border-orange-500/30 rounded-lg p-5 flex items-center justify-between hover:border-orange-500 transition-colors cursor-pointer group">
+                      <div>
+                        <p className="text-sm font-semibold flex items-center gap-2">
+                          <Mic className="h-4 w-4 text-orange-400" />
+                          Invite to your event
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">Send a speaker request via organization or email</p>
                       </div>
-                    </Link>
-                  ) : (
-                    <div className="bg-card border border-border rounded-lg p-5">
-                      <p className="text-sm text-muted-foreground flex items-center gap-2">
-                        <Building2 className="h-4 w-4" />
-                        You need an approved organization to send a speaker request.{' '}
-                        <Link href="/organizations" className="text-orange-400 hover:underline">Create one →</Link>
-                      </p>
+                      <ChevronRight className="h-5 w-5 text-orange-500 group-hover:translate-x-1 transition-transform" />
                     </div>
-                  )
+                  </Link>
                 ) : (
                   <Link href="/signin">
                     <div className="bg-card border border-border rounded-lg p-5 flex items-center justify-between hover:border-orange-500 transition-colors cursor-pointer group">
