@@ -15,6 +15,7 @@ import { toast } from "sonner"
 import { speakerApi, SpeakerProfile, SkillTag } from "@/lib/api/speakerApi"
 import { AddExperienceDialog } from "@/components/speakers/add-experience-dialog"
 import { ExperiencesList } from "@/components/speakers/experiences-list"
+import { getAvatarUrl } from "@/lib/utils"
 
 export default function SpeakerProfilePage() {
     const { user } = useAuth()
@@ -163,7 +164,7 @@ export default function SpeakerProfilePage() {
                                 <div className="flex flex-col items-center space-y-4">
                                     <Avatar className="w-24 h-24">
                                         <AvatarImage
-                                            src={profile?.avatar}
+                                            src={getAvatarUrl(profile?.avatar)}
                                             alt={user?.first_name || "Speaker"}
                                         />
                                         <AvatarFallback>

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { speakerApi, type Speaker, getSpeakerSlug } from "@/lib/api/speakerApi";
+import { getAvatarUrl } from "@/lib/utils";
 
 interface EventSpeakersProps {
     eventId: string;
@@ -85,7 +86,7 @@ export function EventSpeakers({ eventId, isManagement = false }: EventSpeakersPr
                         <div className="flex items-center space-x-4 p-4">
                             <Avatar className="h-12 w-12">
                                 {speaker.avatar ? (
-                                    <AvatarImage src={speaker.avatar} alt={speaker.speaker_name} />
+                                    <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} />
                                 ) : (
                                     <AvatarFallback>
                                         {speaker.speaker_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
