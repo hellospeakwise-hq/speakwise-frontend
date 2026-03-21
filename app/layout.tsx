@@ -7,6 +7,7 @@ import { MainNav } from "@/components/main-nav"
 import { Footer } from "@/components/footer"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/contexts/auth-context"
+import { IdleTimeoutModal } from "@/components/idle-timeout-modal"
 import { DisableConsole } from "@/components/disable-console"
 import { CookieConsent } from "@/components/cookie-consent"
 import { SponsorBanner } from "@/components/sponsor-banner"
@@ -127,6 +128,7 @@ export default function RootLayout({
             </div>
             <CookieConsent />
             <PWAInstallPrompt />
+            <IdleTimeoutModal />
           </AuthProvider>
         </ThemeProvider>
       </body>
