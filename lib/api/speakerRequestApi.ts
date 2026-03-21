@@ -93,5 +93,52 @@ export const speakerRequestApi = {
     async getSpeakerRequestDetails(id: number): Promise<SpeakerRequest> {
         const response = await apiClient.get(`/speaker-requests/${id}/`);
         return response.data;
-    }
+    },
+
+    // EMAIL REQUEST ENDPOINTS - Request speakers via email (no org required)
+
+    // Get email requests sent or received by the authenticated user
+    async getEmailRequests(): Promise<EmailSpeakerRequest[]> {
+        const response = await apiClient.get('/speaker-requests/email-requests/');
+        return response.data;
+    },
+
+    // Create a new email speaker request
+    async createEmailRequest(data: CreateEmailRequestData): Promise<EmailSpeakerRequest> {
+        const requestData = {
+            event: data.event,
+            location: data.location,
+            message: data.message,
+            speaker_id: data.speaker_id,
+        };
+        console.log('Sending email speaker request with data:', requestData);
+        const response = await apiClient.post('/speaker-requests/email-requests/', requestData);
+        return response.data;
+    },
+
+    // Update an email speaker request status
+    async updateEmailRequest(id: string, status: string): Promise<EmailSpeakerRequest> {
+        const response = await apiClient.patch(`/speaker-requests/email-requests/${id}/`, { status });
+        return response.data;
+    },
 };
+
+// Email speaker request types
+export interface EmailSpeakerRequest {
+    id: string;  // UUID
+    event: string;  // Event name (free text)
+    location: string;
+    message: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    request_from: number;  // User ID
+    request_to: number;    // User ID
+    created_at?: string;
+    updated_at?: string;
+}
+
+export interface CreateEmailRequestData {
+    event: string;       // Event name (free text, not an FK)
+    location: string;
+    message: string;
+    speaker_id: string;  // The speaker's user_account UUID
+}
