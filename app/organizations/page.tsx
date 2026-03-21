@@ -169,7 +169,7 @@ export default function OrganizationsPage() {
                                                     <div className="flex items-start gap-3 flex-1 min-w-0">
                                                         <div className="w-12 h-12 rounded-lg bg-yellow-500/10 flex items-center justify-center flex-shrink-0">
                                                             {org.logo ? (
-                                                                <img src={org.logo} alt={org.name} className="w-full h-full rounded-lg object-cover opacity-50" />
+                                                                <img src={getEventImageUrl(org.logo)} alt={org.name} className="w-full h-full rounded-lg object-cover opacity-50" />
                                                             ) : (
                                                                 <Building2 className="w-6 h-6 text-yellow-600" />
                                                             )}

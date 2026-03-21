@@ -23,6 +23,7 @@ import { type Event } from "@/lib/types/api"
 import { speakerRequestApi } from "@/lib/api/speakerRequestApi"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
+import { getAvatarUrl } from "@/lib/utils"
 
 type RequestMethod = "select" | "organization" | "email"
 
@@ -283,7 +284,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
         <div className="flex items-center gap-4 mb-8">
           <Avatar className="h-16 w-16 border-2 border-border shadow-lg">
             {speaker.avatar ? (
-              <AvatarImage src={speaker.avatar} alt={speaker.speaker_name} />
+              <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} />
             ) : (
               <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold">
                 {speaker.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -437,7 +438,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 border-2 border-border">
                 {speaker.avatar ? (
-                  <AvatarImage src={speaker.avatar} alt={speaker.speaker_name} />
+                  <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} />
                 ) : (
                   <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold">
                     {speaker.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
@@ -587,7 +588,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 border-2 border-border">
                 {speaker.avatar ? (
-                  <AvatarImage src={speaker.avatar} alt={speaker.speaker_name} />
+                  <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} />
                 ) : (
                   <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold">
                     {speaker.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}

@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { speakerRequestApi, type SpeakerRequest } from "@/lib/api/speakerRequestApi"
 import { organizationApi, type Organization } from "@/lib/api/organizationApi"
 import { eventsApi } from "@/lib/api/events"
+import { getAvatarUrl } from "@/lib/utils"
 import { speakerApi, type Speaker } from "@/lib/api/speakerApi"
 import { type Event } from "@/lib/types/api"
 import { toast } from "sonner"
@@ -234,7 +235,7 @@ export function OrganizerSpeakerRequests() {
                                             <Avatar className="h-12 w-12">
                                                 {request.speakerDetails?.avatar ? (
                                                     <AvatarImage
-                                                        src={request.speakerDetails.avatar}
+                                                        src={getAvatarUrl(request.speakerDetails.avatar)}
                                                         alt={request.speakerDetails.speaker_name}
                                                     />
                                                 ) : (
