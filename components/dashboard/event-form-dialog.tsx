@@ -42,7 +42,7 @@ import { countries as staticCountries } from "@/lib/data/countries"
 const eventFormSchema = z.object({
   title: z.string().min(1, "Event title is required"),
   event_nickname: z.string().optional(),
-  short_description: z.string().optional(),
+  short_description: z.string().max(255, "Short description must be 255 characters or less").optional(),
   description: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   location: z.string().optional(),
@@ -444,12 +444,24 @@ export function EventFormDialog({
                     <Textarea 
                       placeholder="Brief description for event cards"
                       className="min-h-[80px]"
+                      maxLength={255}
                       {...field} 
                     />
                   </FormControl>
-                  <FormDescription>
-                    A brief description shown on event cards (recommended: 150 characters or less)
-                  </FormDescription>
+                  <div className="flex items-center justify-between">
+                    <FormDescription>
+                      A brief summary shown on event cards
+                    </FormDescription>
+                    <span className={`text-xs tabular-nums ${
+                      (field.value?.length || 0) > 240 
+                        ? 'text-red-500 font-semibold' 
+                        : (field.value?.length || 0) > 200 
+                          ? 'text-orange-500' 
+                          : 'text-muted-foreground'
+                    }`}>
+                      {field.value?.length || 0}/255
+                    </span>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
