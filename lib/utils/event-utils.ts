@@ -1,10 +1,12 @@
 // Helper to robustly parse date/time input from API (string or object)
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+
 // Ensures event image URL is always absolute
 export function getEventImageUrl(img?: string) {
   if (!img) return undefined;
   if (img.startsWith('http')) return img;
-  return `http://127.0.0.1:8000${img}`;
+  return `${API_BASE_URL}${img}`;
 }
 export enum EventStatus {
   DRAFT = 'draft',
