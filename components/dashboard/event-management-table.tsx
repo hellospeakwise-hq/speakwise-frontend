@@ -61,9 +61,9 @@ interface EventManagementTableProps {
   events: Event[]
   loading: boolean
   onEventUpdate: (event: Event) => void
-  onEventDelete: (eventId: number) => Promise<void>
+  onEventDelete: (eventSlug: string) => Promise<void>
   onEventCreate: (event: Event) => void
-  onEventStatusToggle: (eventId: number, isActive: boolean) => Promise<void>
+  onEventStatusToggle: (eventSlug: string, isActive: boolean) => Promise<void>
 }
 
 export function EventManagementTable({
@@ -100,7 +100,7 @@ export function EventManagementTable({
 
     try {
       setActionLoading(`delete-${eventToDelete.id}`)
-      await onEventDelete(eventToDelete.id)
+      await onEventDelete(eventToDelete.slug)
       setShowDeleteDialog(false)
       setEventToDelete(null)
     } catch (error) {
@@ -113,7 +113,7 @@ export function EventManagementTable({
   const handleStatusToggle = async (event: Event) => {
     try {
       setActionLoading(`status-${event.id}`)
-      await onEventStatusToggle(event.id, !event.is_active)
+      await onEventStatusToggle(event.slug, !event.is_active)
     } catch (error) {
       console.error('Error toggling event status:', error)
     } finally {
@@ -197,7 +197,7 @@ export function EventManagementTable({
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem asChild>
-                              <Link href={`/events/${event.id}`}>
+                              <Link href={`/events/${event.slug}`}>
                                 <Eye className="mr-2 h-4 w-4" />
                                 View Event
                               </Link>
@@ -207,19 +207,19 @@ export function EventManagementTable({
                               Edit Event
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/events/${event.id}/manage`}>
+                              <Link href={`/events/${event.slug}/manage`}>
                                 <Settings className="mr-2 h-4 w-4" />
                                 Manage Event
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/events/${event.id}/manage-speakers`}>
+                              <Link href={`/events/${event.slug}/manage-speakers`}>
                                 <Users className="mr-2 h-4 w-4" />
                                 Manage Speakers
                               </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
-                              <Link href={`/events/${event.id}/manage-sessions`}>
+                              <Link href={`/events/${event.slug}/manage-sessions`}>
                                 <Calendar className="mr-2 h-4 w-4" />
                                 Manage Sessions
                               </Link>
@@ -371,7 +371,7 @@ export function EventManagementTable({
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/events/${event.id}`}>
+                                  <Link href={`/events/${event.slug}`}>
                                     <Eye className="mr-2 h-4 w-4" />
                                     View Event
                                   </Link>
@@ -381,19 +381,19 @@ export function EventManagementTable({
                                   Edit Event
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/events/${event.id}/manage`}>
+                                  <Link href={`/events/${event.slug}/manage`}>
                                     <Settings className="mr-2 h-4 w-4" />
                                     Manage Event
                                   </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/events/${event.id}/manage-speakers`}>
+                                  <Link href={`/events/${event.slug}/manage-speakers`}>
                                     <Users className="mr-2 h-4 w-4" />
                                     Manage Speakers
                                   </Link>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem asChild>
-                                  <Link href={`/events/${event.id}/manage-sessions`}>
+                                  <Link href={`/events/${event.slug}/manage-sessions`}>
                                     <Calendar className="mr-2 h-4 w-4" />
                                     Manage Sessions
                                   </Link>

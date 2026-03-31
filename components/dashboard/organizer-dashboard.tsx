@@ -56,12 +56,12 @@ export function OrganizerDashboard() {
     refetch() // Refresh the events list
   }
 
-  const handleEventDelete = async (eventId: number) => {
-    await deleteEvent(eventId)
+  const handleEventDelete = async (eventSlug: string) => {
+    await deleteEvent(eventSlug)
   }
 
-  const handleEventStatusToggle = async (eventId: number, isActive: boolean) => {
-    await toggleEventStatus(eventId, isActive)
+  const handleEventStatusToggle = async (eventSlug: string, isActive: boolean) => {
+    await toggleEventStatus(eventSlug, isActive)
   }
 
   // Refresh attendee stats when attendee tab is selected or when needed

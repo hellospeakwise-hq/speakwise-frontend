@@ -32,7 +32,7 @@ interface AttendeeManagementProps {
 }
 
 export function AttendeeManagement({ events }: AttendeeManagementProps) {
-  const [selectedEventId, setSelectedEventId] = useState<number | null>(null)
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -230,10 +230,9 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
         </CardHeader>
         <CardContent>
           <Select
-            value={selectedEventId?.toString() || ""}
+            value={selectedEventId || ""}
             onValueChange={(value) => {
-              const eventId = parseInt(value)
-              setSelectedEventId(eventId || null)
+              setSelectedEventId(value || null)
             }}
           >
             <SelectTrigger className="w-full">
@@ -241,7 +240,7 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
             </SelectTrigger>
             <SelectContent>
               {activeEvents.map((event) => (
-                <SelectItem key={event.id} value={event.id.toString()}>
+                <SelectItem key={event.id} value={event.id}>
                   {event.title} ({event.attendees} attendees)
                 </SelectItem>
               ))}

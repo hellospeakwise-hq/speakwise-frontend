@@ -1,13 +1,13 @@
 // TypeScript interfaces for the API responses
 
 export interface Country {
-  id: number;
+  id: string; // UUID
   name: string;
   code: string;
 }
 
 export interface Location {
-  id: number;
+  id: string; // UUID
   country: Country;
   venue: string;
   address: string;
@@ -38,7 +38,8 @@ export interface Tag {
 }
 
 export interface Event {
-  id: number;
+  id: string;   // UUID — backend now uses uuid4 as primary key
+  slug: string; // used in all URLs (e.g. /events/<slug>/)
   event_image: string | null;
   tags: Tag[];
   website: string;
@@ -51,10 +52,10 @@ export interface Event {
   event_nickname: string;
   description: string;
   start_date_time: string; // ISO string
-  end_date_time: string; // ISO string
+  end_date_time: string;   // ISO string
   is_active: boolean;
-  attendees?: number; // Number of attendees
-  organizer: any | null; // Will be defined when organizer structure is known
+  attendees?: number;
+  organizer: any | null;
 }
 
 export interface EventsListResponse {

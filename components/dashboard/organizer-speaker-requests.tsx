@@ -69,7 +69,7 @@ export function OrganizerSpeakerRequests() {
                 const enrichedRequests: EnrichedOrganizerRequest[] = uniqueRequests.map(req => ({
                     ...req,
                     speakerDetails: speakers.find((speaker: Speaker) => speaker.id === req.speaker),
-                    eventDetails: events.find((event: Event) => event.id === req.event)
+                    eventDetails: events.find((event: Event) => event.id.toString() === req.event?.toString())
                 }))
 
                 // Sort by created date (newest first)

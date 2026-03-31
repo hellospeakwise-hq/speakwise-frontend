@@ -70,7 +70,7 @@ export function SpeakingRequests() {
             return {
               ...req,
               organizationDetails,
-              eventDetails: events.find((event: any) => event.id === req.event)
+              eventDetails: events.find((event: any) => event.id.toString() === req.event?.toString())
             }
           })
         )
@@ -181,7 +181,7 @@ export function SpeakingRequests() {
       }
 
       const events = Array.isArray(eventsResponse) ? eventsResponse : eventsResponse.results || []
-      const event = events.find((e: any) => e.id === requestDetail.event)
+      const event = events.find((e: any) => e.id.toString() === requestDetail.event?.toString())
 
       setSelectedRequest({
         ...requestDetail,

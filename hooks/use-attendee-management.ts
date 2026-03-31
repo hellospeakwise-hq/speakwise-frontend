@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { attendeeAPI, type Attendee, type AttendeeUpload } from '@/lib/api/attendeeApi'
 
-export function useAttendeeManagement(eventId: number | null) {
+export function useAttendeeManagement(eventId: string | null) {
   const [attendees, setAttendees] = useState<Attendee[]>([])
   const [uploads, setUploads] = useState<AttendeeUpload[]>([])
   const [loading, setLoading] = useState(false)
@@ -14,7 +14,7 @@ export function useAttendeeManagement(eventId: number | null) {
     setError(null)
     
     try {
-      const data = await attendeeAPI.getAttendeesByEvent(eventId)
+      const data = await attendeeAPI.getAttendeesByEvent(eventId as any)
       setAttendees(data)
     } catch (err) {
       console.error('Error loading attendees:', err)
@@ -28,7 +28,7 @@ export function useAttendeeManagement(eventId: number | null) {
     if (!eventId) return
     
     try {
-      const data = await attendeeAPI.getUploadHistory(eventId)
+      const data = await attendeeAPI.getUploadHistory(eventId as any)
       setUploads(data)
     } catch (err) {
       console.error('Error loading upload history:', err)
@@ -39,7 +39,7 @@ export function useAttendeeManagement(eventId: number | null) {
     if (!eventId) throw new Error('No event selected')
     
     try {
-      const upload = await attendeeAPI.uploadAttendeesCSV(eventId, file)
+      const upload = await attendeeAPI.uploadAttendeesCSV(eventId as any, file)
       await Promise.all([loadAttendees(), loadUploadHistory()])
       return upload
     } catch (err) {
@@ -56,7 +56,7 @@ export function useAttendeeManagement(eventId: number | null) {
     if (!eventId) throw new Error('No event selected')
     
     try {
-      await attendeeAPI.deleteAttendee(attendeeId, eventId)
+      await attendeeAPI.deleteAttendee(attendeeId, eventId as any)
       await loadAttendees()
     } catch (err) {
       console.error('Error deleting attendee:', err)
@@ -68,7 +68,7 @@ export function useAttendeeManagement(eventId: number | null) {
     if (!eventId) throw new Error('No event selected')
     
     try {
-      await attendeeAPI.deleteAllAttendees(eventId)
+      await attendeeAPI.deleteAllAttendees(eventId as any)
       await loadAttendees()
     } catch (err) {
       console.error('Error deleting all attendees:', err)
