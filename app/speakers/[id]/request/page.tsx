@@ -163,7 +163,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       await speakerRequestApi.createSpeakerRequest({
         organizer: selectedOrgId,
         speaker: speaker!.id,
-        event: Number(selectedEventId),
+        event: selectedEventId, // UUID string — must NOT use Number() on a UUID
         message: fullMessage,
         status: 'pending'
       })
@@ -274,152 +274,159 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       <div className="container py-10 max-w-3xl mx-auto">
         <Link
           href={`/speakers/${id}`}
-          className="inline-flex items-center mb-6 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+          className="inline-flex items-center mb-8 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
           Back to Speaker Profile
         </Link>
 
         {/* Speaker Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-10">
           <Avatar className="h-16 w-16 border-2 border-border shadow-lg">
             {speaker.avatar ? (
               <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} />
             ) : (
-              <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold">
+              <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold text-lg">
                 {speaker.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
             )}
           </Avatar>
           <div>
             <h1 className="text-2xl font-bold">Request {speaker.speaker_name}</h1>
-            <p className="text-muted-foreground text-sm">{speaker.organization || speaker.short_bio}</p>
+            <p className="text-muted-foreground text-sm mt-0.5">{speaker.organization || speaker.short_bio}</p>
           </div>
         </div>
 
-        {/* Method Selection */}
+        {/* Section label */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-1">How would you like to send your request?</h2>
+          <h2 className="text-base font-semibold mb-1">How would you like to send your request?</h2>
           <p className="text-sm text-muted-foreground">Choose the method that works best for you</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Organization Card */}
           <button
             onClick={() => {
               if (hasApprovedOrgs) {
                 setMethod("organization")
               } else {
-                toast.error("You need an approved organization to use this method. You can create one or use the email option instead.")
+                toast.error("You need an approved organization to use this method. Create one or use the email option instead.")
               }
             }}
-            className={`group relative text-left rounded-2xl overflow-hidden transition-all duration-300 ${
+            className={`group relative flex flex-col rounded-3xl overflow-hidden text-left shadow-md transition-all duration-300 ${
               hasApprovedOrgs
-                ? 'cursor-pointer hover:scale-[1.02] hover:shadow-2xl hover:shadow-orange-500/10'
-                : 'cursor-not-allowed opacity-75'
+                ? 'cursor-pointer hover:shadow-2xl hover:scale-[1.02]'
+                : 'cursor-not-allowed opacity-60'
             }`}
           >
-            {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950" />
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-            {/* Subtle top glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
-
-            {/* Content */}
-            <div className="relative flex flex-col items-center text-center p-8 min-h-[320px]">
-              {/* Icon */}
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300 ${
-                hasApprovedOrgs
-                  ? 'bg-orange-500/15 group-hover:bg-orange-500/25 group-hover:scale-110 shadow-lg shadow-orange-500/10'
-                  : 'bg-white/5'
-              }`}>
-                <Building2 className={`h-8 w-8 ${hasApprovedOrgs ? 'text-orange-400' : 'text-slate-500'}`} />
-              </div>
-
+            {/* Visual / image area */}
+            <div className="relative h-52 w-full overflow-hidden">
+              {/* Photo */}
+              <img
+                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80"
+                alt="Professional speaker"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              />
+              {/* Orange brand tint */}
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-600/60 via-amber-500/30 to-transparent mix-blend-multiply" />
+              {/* Bottom fade to card body */}
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-black/30 to-transparent" />
               {/* Title */}
-              <h3 className={`text-xl font-bold mb-3 ${hasApprovedOrgs ? 'text-white' : 'text-slate-400'}`}>
-                Organization
-              </h3>
-
-              {/* Description */}
-              <p className={`text-sm leading-relaxed mb-6 max-w-[240px] ${hasApprovedOrgs ? 'text-slate-400' : 'text-slate-600'}`}>
-                Send a request through your organization and select an existing event
-              </p>
-
-              {/* Spacer */}
-              <div className="flex-1" />
-
-              {/* CTA */}
-              {hasApprovedOrgs ? (
-                <div className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-3 px-6 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-all duration-300">
-                  Request via Organization
-                </div>
-              ) : (
-                <div className="w-full space-y-2">
-                  <div className="w-full rounded-xl bg-white/5 border border-white/10 py-3 px-6 text-sm font-medium text-slate-500">
-                    Requires an Organization
-                  </div>
-                  <Link
-                    href="/organizations"
-                    className="text-xs text-orange-400 hover:text-orange-300 hover:underline transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Create one →
-                  </Link>
-                </div>
-              )}
+              <div className="absolute bottom-0 left-0 p-5">
+                <h3 className="text-2xl font-bold text-white">Organization</h3>
+              </div>
             </div>
 
-            {/* Border glow on hover */}
-            <div className="absolute inset-0 rounded-2xl border border-white/10 group-hover:border-orange-500/30 transition-colors duration-300 pointer-events-none" />
+            {/* Card body */}
+            <div className="flex flex-col gap-4 bg-zinc-900 p-5">
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Send a request through your organization and link it to an existing event.
+              </p>
+
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-zinc-300">
+                  <Building2 className="h-3 w-3 text-orange-400" />
+                  {hasApprovedOrgs ? `${organizations.length} org${organizations.length !== 1 ? 's' : ''} available` : 'No org yet'}
+                </span>
+                <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-zinc-300">
+                  Linked to event
+                </span>
+              </div>
+
+              {/* CTA button */}
+              <div className={`w-full rounded-2xl py-3 text-center text-sm font-semibold transition-all duration-200 ${
+                hasApprovedOrgs
+                  ? 'bg-white text-zinc-900 group-hover:bg-orange-50'
+                  : 'bg-white/10 text-zinc-500'
+              }`}>
+                {hasApprovedOrgs ? 'Request via Organization' : (
+                  <span>
+                    Requires an org —{' '}
+                    <Link
+                      href="/organizations"
+                      className="text-orange-400 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      create one
+                    </Link>
+                  </span>
+                )}
+              </div>
+            </div>
           </button>
 
           {/* Email Card */}
           <button
             onClick={() => setMethod("email")}
-            className="group relative text-left rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10"
+            className="group relative flex flex-col rounded-3xl overflow-hidden text-left shadow-md cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
           >
-            {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950" />
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-            {/* Subtle top glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
-
-            {/* Content */}
-            <div className="relative flex flex-col items-center text-center p-8 min-h-[320px]">
-              {/* Icon */}
-              <div className="w-16 h-16 rounded-2xl bg-blue-500/15 group-hover:bg-blue-500/25 group-hover:scale-110 shadow-lg shadow-blue-500/10 flex items-center justify-center mb-6 transition-all duration-300">
-                <Mail className="h-8 w-8 text-blue-400" />
-              </div>
-
+            {/* Visual / image area */}
+            <div className="relative h-52 w-full overflow-hidden">
+              {/* Photo */}
+              <img
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80"
+                alt="Professional outreach"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              />
+              {/* Blue brand tint */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-700/60 via-indigo-500/30 to-transparent mix-blend-multiply" />
+              {/* Bottom fade to card body */}
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-black/30 to-transparent" />
               {/* Title */}
-              <h3 className="text-xl font-bold text-white mb-3">
-                Email
-              </h3>
-
-              {/* Description */}
-              <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-[240px]">
-                Send a direct email request to this speaker. No organization needed
-              </p>
-
-              {/* Spacer */}
-              <div className="flex-1" />
-
-              {/* CTA */}
-              <div className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 py-3 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-all duration-300">
-                Request via Email
+              <div className="absolute bottom-0 left-0 p-5">
+                <h3 className="text-2xl font-bold text-white">Email</h3>
               </div>
             </div>
 
-            {/* Border glow on hover */}
-            <div className="absolute inset-0 rounded-2xl border border-white/10 group-hover:border-blue-500/30 transition-colors duration-300 pointer-events-none" />
+            {/* Card body */}
+            <div className="flex flex-col gap-4 bg-zinc-900 p-5">
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Send a direct email request to this speaker. No organization needed.
+              </p>
+
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-zinc-300">
+                  <Mail className="h-3 w-3 text-blue-400" />
+                  No org required
+                </span>
+                <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-zinc-300">
+                  Direct outreach
+                </span>
+              </div>
+
+              {/* CTA button */}
+              <div className="w-full rounded-2xl bg-white py-3 text-center text-sm font-semibold text-zinc-900 transition-all duration-200 group-hover:bg-blue-50">
+                Request via Email
+              </div>
+            </div>
           </button>
         </div>
       </div>
     )
   }
+
 
   // ── ORGANIZATION REQUEST FORM ───────────────────────────────────────────────
   if (method === "organization") {

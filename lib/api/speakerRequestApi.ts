@@ -7,7 +7,7 @@ export interface SpeakerRequest {
     organizer: string; // Organizer/Organization UUID
     organization: string; // Organization UUID
     speaker: number; // Speaker ID
-    event: number; // Event ID
+    event: string; // Event UUID
     created_at?: string;
     updated_at?: string;
 }
@@ -17,7 +17,7 @@ export interface CreateSpeakerRequestData {
     message: string;
     organizer: string;  // Backend expects 'organizer' (org UUID) for POST
     speaker: number;
-    event: number;
+    event: string; // Event UUID
 }
 
 export const speakerRequestApi = {
@@ -43,7 +43,7 @@ export const speakerRequestApi = {
         const requestData = {
             organizer: data.organizer,
             speaker: data.speaker,
-            event: data.event,
+            event: data.event, // UUID string — do NOT convert with Number()
             message: data.message,
             status: data.status || 'pending'
         };
