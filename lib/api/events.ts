@@ -163,29 +163,8 @@ export const eventsApi = {
    * Get tags (extracted from events data)
    */
   async getTags(): Promise<any[]> {
-    try {
-      const eventsResponse = await this.getEvents();
-      const events = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || []);
-      
-      // Extract unique tags from events
-      const tagMap = new Map<number, any>();
-      events.forEach(event => {
-        if (event.tags && Array.isArray(event.tags)) {
-          event.tags.forEach(tag => {
-            tagMap.set(tag.id, {
-              id: tag.id,
-              name: tag.name,
-              color: tag.color
-            });
-          });
-        }
-      });
-      
-      return Array.from(tagMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-    } catch (error) {
-      console.error('Error extracting tags from events:', error);
-      throw error;
-    }
+    const response = await apiClient.get<any[]>('/events/tags/');
+    return response.data;
   },
 
   /**
