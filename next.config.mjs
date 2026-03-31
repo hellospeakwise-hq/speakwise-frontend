@@ -5,9 +5,9 @@ const isProd = process.env.NODE_ENV === 'production';
 
 const withPWA = withPWAInit({
   dest: "public",
-  disable: !isProd,          // ← KEY FIX: disable SW in dev (stops infinite recompile loop)
+  disable: true,             // ← disabled: workbox-build@7.x bug ('assignWith is not defined') in CI/Vercel
   cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: false,  // ← was causing SW reinstall freezes
+  aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
   swcMinify: true,
   fallbacks: {
