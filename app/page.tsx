@@ -27,7 +27,7 @@ const steps = [
   {
     n: "01",
     title: "Build your speaker profile",
-    desc: "Your topics, past talks, and speaking history — all in one place. Not a LinkedIn post. An actual record.",
+    desc: "Your topics, past talks, and speaking history all in one place. Not a LinkedIn post. An actual record.",
   },
   {
     n: "02",
@@ -269,7 +269,7 @@ export default function Home() {
               You&apos;ve booked a speaker on vibes before. It didn&apos;t always work out.
             </p>
             <p>
-              SpeakWise gives you actual performance data. Ratings across multiple events. Feedback trends. Topic expertise verified by audiences — not just claimed on a profile.
+              SpeakWise gives you actual performance data. Ratings across multiple events. Feedback trends. Topic expertise verified by audiences not just claimed on a profile.
             </p>
             <p>
               Find the right speaker for your event the way you&apos;d want your next hire evaluated. With evidence.
