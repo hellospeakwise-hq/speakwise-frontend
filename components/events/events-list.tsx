@@ -1,13 +1,12 @@
 "use client"
 import Link from "next/link"
 import Image from "next/image"
-import { Calendar, MapPin, Users, ImageIcon, Loader2, LayoutGrid, List } from "lucide-react"
+import { Calendar, MapPin, ImageIcon, Loader2, LayoutGrid, List } from "lucide-react"
 import { useMemo, useState } from "react"
 import type { DateTimeInfo } from "@/lib/types/api"
 import { formatDateFromMaybe } from '@/lib/utils/event-utils'
 import { getEventImageUrl } from '@/lib/utils/event-utils'
 import { useEvents } from "@/hooks/use-events"
-import { useAuth } from "@/contexts/auth-context"
 import type { Event } from "@/lib/types/api"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -94,24 +93,24 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                     {filteredEvents.length === 0 && !loading && " (No events found)"}
                     {((countryFilter && countryFilter.length > 0) || tagFilter) && ` (filtered)`}
                 </p>
-                <div className="flex items-center gap-1 border rounded-lg p-0.5">
+                <div className="flex items-center gap-1 rounded-xl border bg-muted/40 p-1">
                     <Button
                         variant={viewMode === "grid" ? "default" : "ghost"}
                         size="icon"
-                        className={`h-8 w-8 ${viewMode === "grid" ? "bg-orange-500 hover:bg-orange-600 text-white" : "hover:bg-muted"}`}
+                        className={`h-7 w-7 rounded-lg ${viewMode === "grid" ? "bg-foreground text-background shadow-sm hover:bg-foreground/90" : "hover:bg-muted"}`}
                         onClick={() => setViewMode("grid")}
                         aria-label="Grid view"
                     >
-                        <LayoutGrid className="h-4 w-4" />
+                        <LayoutGrid className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                         variant={viewMode === "list" ? "default" : "ghost"}
                         size="icon"
-                        className={`h-8 w-8 ${viewMode === "list" ? "bg-orange-500 hover:bg-orange-600 text-white" : "hover:bg-muted"}`}
+                        className={`h-7 w-7 rounded-lg ${viewMode === "list" ? "bg-foreground text-background shadow-sm hover:bg-foreground/90" : "hover:bg-muted"}`}
                         onClick={() => setViewMode("list")}
                         aria-label="List view"
                     >
-                        <List className="h-4 w-4" />
+                        <List className="h-3.5 w-3.5" />
                     </Button>
                 </div>
             </div>
@@ -127,91 +126,90 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                 </div>
             ) : viewMode === "grid" ? (
                 /* ========== GRID VIEW ========== */
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredEvents.map((event) => (
-                        <div key={event.id} className="rounded-lg border bg-card text-card-foreground shadow-sm flex flex-col h-full hover:shadow-md transition-shadow overflow-hidden">
-                            {/* Event Image Section */}
-                            <div className="relative h-48 w-full bg-gray-100 dark:bg-gray-800">
-                                {event.event_image ? (
-                                    <Image
-                                        src={getEventImageUrl(event.event_image) || '/fallback.jpg'}
-                                        alt={`${event.name || event.title} flyer`}
-                                        fill
-                                        className="object-cover"
-                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                    />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full">
-                                        <ImageIcon className="h-12 w-12 text-gray-400" />
-                                    </div>
-                                )}
-                            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {filteredEvents.map((event) => {
+                        const title = event.name || event.title
+                        const dateStr = getDateRangeString(event)
+                        const location = getLocationString(event)
 
-                            {/* Card Header */}
-                            <div className="flex flex-col space-y-1.5 p-6">
-                                <h3 className="text-2xl font-semibold leading-none tracking-tight line-clamp-2">
-                                    {event.name || event.title}
-                                </h3>
-                                <div className="text-sm text-muted-foreground">
-                                    <div className="flex items-center mt-2">
-                                        <Calendar className="h-4 w-4 mr-2 text-orange-500" />
-                                        <span className="text-xs">{getDateRangeString(event)}</span>
-                                    </div>
-                                    <div className="flex items-center mt-1">
-                                        <MapPin className="h-4 w-4 mr-2 text-orange-500" />
-                                        <span className="text-xs">{getLocationString(event)}</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Card Content */}
-                            <div className="p-6 pt-0 flex-1">
-                                <p className="text-sm text-muted-foreground line-clamp-3">
-                                    {event.short_description || event.description || 'No description available.'}
-                                </p>
-
-                                {/* Tags */}
-                                {event.tags && event.tags.length > 0 && (
-                                    <div className="flex flex-wrap gap-1 mt-3">
-                                        {event.tags.map((tag) => (
-                                            <span
-                                                key={tag.id}
-                                                className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                                                style={{
-                                                    backgroundColor: `${tag.color}33`,
-                                                    color: tag.color,
-                                                    border: `1px solid ${tag.color}`
+                        return (
+                            <Link
+                                key={event.id}
+                                href={`/events/${event.slug}`}
+                                className="group block rounded-3xl border bg-card shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                            >
+                                {/* Image — inset with padding, rounded corners */}
+                                <div className="p-3 pb-0">
+                                    <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
+                                        {event.event_image ? (
+                                            <img
+                                                src={getEventImageUrl(event.event_image)}
+                                                alt={`${title} flyer`}
+                                                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                                                onError={(e) => {
+                                                    const target = e.currentTarget
+                                                    target.style.display = 'none'
+                                                    target.nextElementSibling?.removeAttribute('hidden')
                                                 }}
-                                            >
-                                                {tag.name}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
+                                            />
+                                        ) : null}
+                                        <div
+                                            className="flex h-full items-center justify-center"
+                                            hidden={!!event.event_image}
+                                        >
+                                            <ImageIcon className="h-10 w-10 text-zinc-400" />
+                                        </div>
 
-                                <div className="flex items-center justify-between mt-4">
-                                    <div className="flex items-center">
-                                        <Users className="h-4 w-4 mr-1 text-orange-500" />
-                                        <span className="text-xs text-muted-foreground">
-                                            Event
-                                        </span>
-                                    </div>
-                                    <div className="text-xs text-muted-foreground">
-                                        {event.is_active ? 'Active' : 'Inactive'}
+                                        {/* Active pill — top right of image */}
+                                        {event.is_active && (
+                                            <span className="absolute top-3 right-3 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
+                                                Active
+                                            </span>
+                                        )}
+
+                                        {/* Date badge — bottom left of image */}
+                                        <div className="absolute bottom-3 left-3 rounded-xl bg-white/90 px-3 py-1.5 backdrop-blur-sm dark:bg-zinc-900/90">
+                                            <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-800 dark:text-zinc-200">
+                                                <Calendar className="h-3 w-3 shrink-0" />
+                                                <span className="leading-none">{dateStr}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Card Footer */}
-                            <div className="flex items-center p-6 pt-0">
-                                <Link href={`/events/${event.slug}`} className="w-full">
-                                    <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400">
-                                        View Event
-                                    </button>
-                                </Link>
-                            </div>
-                        </div>
-                    ))}
+                                {/* Card body */}
+                                <div className="p-4 pt-3">
+                                    {/* Tags */}
+                                    {event.tags && event.tags.length > 0 && (
+                                        <div className="mb-2 flex flex-wrap gap-1">
+                                            {event.tags.slice(0, 3).map((tag) => (
+                                                <span
+                                                    key={tag.id}
+                                                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
+                                                    style={{
+                                                        backgroundColor: `${tag.color}18`,
+                                                        color: tag.color,
+                                                        border: `1px solid ${tag.color}40`,
+                                                    }}
+                                                >
+                                                    {tag.name}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    <h3 className="font-semibold text-base leading-snug line-clamp-2 group-hover:opacity-70 transition-opacity">
+                                        {title}
+                                    </h3>
+
+                                    <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                                        <MapPin className="h-3.5 w-3.5 shrink-0" />
+                                        <span className="truncate">{location}</span>
+                                    </div>
+                                </div>
+                            </Link>
+                        )
+                    })}
                 </div>
             ) : (
                 /* ========== LIST VIEW ========== */
