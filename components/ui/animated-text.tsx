@@ -49,7 +49,7 @@ function AnimatedText({
             wordIndex === index ? (
               <motion.span
                 key={word}
-                className="absolute font-bold text-foreground whitespace-nowrap"
+                className="absolute font-bold whitespace-nowrap"
                 initial={{ opacity: 0, y: 50, scale: 0.8 }}
                 animate={{
                   y: 0,
