@@ -313,88 +313,120 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
                 toast.error("You need an approved organization to use this method. Create one or use the email option instead.")
               }
             }}
-            className={`group relative flex flex-col items-start space-y-4 rounded-2xl border p-6 text-left shadow-sm transition-all duration-300 ${
+            className={`group relative flex flex-col rounded-3xl overflow-hidden text-left shadow-md transition-all duration-300 ${
               hasApprovedOrgs
-                ? 'cursor-pointer bg-card hover:border-orange-500/50 hover:shadow-xl hover:shadow-orange-500/10 hover:-translate-y-1'
-                : 'cursor-not-allowed bg-card opacity-60'
+                ? 'cursor-pointer hover:shadow-2xl hover:scale-[1.02]'
+                : 'cursor-not-allowed opacity-60'
             }`}
           >
-            {/* Hover gradient overlay */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
-
-            {/* Icon */}
-            <div className={`relative flex h-12 w-12 items-center justify-center rounded-xl shadow-md transition-all duration-300 ${
-              hasApprovedOrgs
-                ? 'bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-500/20 group-hover:scale-105 group-hover:shadow-orange-500/40'
-                : 'bg-muted'
-            }`}>
-              <Building2 className={`h-6 w-6 ${hasApprovedOrgs ? 'text-white' : 'text-muted-foreground'}`} />
+            {/* Visual / image area */}
+            <div className="relative h-52 w-full overflow-hidden">
+              {/* Photo */}
+              <img
+                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80"
+                alt="Professional speaker"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              />
+              {/* Orange brand tint */}
+              <div className="absolute inset-0 bg-gradient-to-br from-orange-600/60 via-amber-500/30 to-transparent mix-blend-multiply" />
+              {/* Bottom fade to card body */}
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-black/30 to-transparent" />
+              {/* Title */}
+              <div className="absolute bottom-0 left-0 p-5">
+                <h3 className="text-2xl font-bold text-white">Organization</h3>
+              </div>
             </div>
 
-            {/* Text */}
-            <div className="relative space-y-1.5">
-              <h3 className="text-base font-bold">Organization</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+            {/* Card body */}
+            <div className="flex flex-col gap-4 bg-zinc-900 p-5">
+              <p className="text-sm text-zinc-400 leading-relaxed">
                 Send a request through your organization and link it to an existing event.
               </p>
-            </div>
 
-            {/* CTA row */}
-            <div className="relative mt-auto pt-2 w-full">
-              {hasApprovedOrgs ? (
-                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-500 group-hover:text-orange-400 transition-colors">
-                  Request via Organization
-                  <ChevronLeft className="h-4 w-4 rotate-180" />
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-zinc-300">
+                  <Building2 className="h-3 w-3 text-orange-400" />
+                  {hasApprovedOrgs ? `${organizations.length} org${organizations.length !== 1 ? 's' : ''} available` : 'No org yet'}
                 </span>
-              ) : (
-                <div className="space-y-1">
-                  <span className="text-sm font-medium text-muted-foreground">Requires an organization</span>
-                  <br />
-                  <Link
-                    href="/organizations"
-                    className="text-xs text-orange-500 hover:text-orange-400 hover:underline transition-colors"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    Create one →
-                  </Link>
-                </div>
-              )}
+                <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-zinc-300">
+                  Linked to event
+                </span>
+              </div>
+
+              {/* CTA button */}
+              <div className={`w-full rounded-2xl py-3 text-center text-sm font-semibold transition-all duration-200 ${
+                hasApprovedOrgs
+                  ? 'bg-white text-zinc-900 group-hover:bg-orange-50'
+                  : 'bg-white/10 text-zinc-500'
+              }`}>
+                {hasApprovedOrgs ? 'Request via Organization' : (
+                  <span>
+                    Requires an org —{' '}
+                    <Link
+                      href="/organizations"
+                      className="text-orange-400 hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      create one
+                    </Link>
+                  </span>
+                )}
+              </div>
             </div>
           </button>
 
           {/* Email Card */}
           <button
             onClick={() => setMethod("email")}
-            className="group relative flex flex-col items-start space-y-4 rounded-2xl border p-6 text-left bg-card shadow-sm cursor-pointer transition-all duration-300 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1"
+            className="group relative flex flex-col rounded-3xl overflow-hidden text-left shadow-md cursor-pointer transition-all duration-300 hover:shadow-2xl hover:scale-[1.02]"
           >
-            {/* Hover gradient overlay */}
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
-
-            {/* Icon */}
-            <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 shadow-md shadow-blue-500/20 group-hover:scale-105 group-hover:shadow-blue-500/40 transition-all duration-300">
-              <Mail className="h-6 w-6 text-white" />
+            {/* Visual / image area */}
+            <div className="relative h-52 w-full overflow-hidden">
+              {/* Photo */}
+              <img
+                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80"
+                alt="Professional outreach"
+                className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+              />
+              {/* Blue brand tint */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-700/60 via-indigo-500/30 to-transparent mix-blend-multiply" />
+              {/* Bottom fade to card body */}
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-black/30 to-transparent" />
+              {/* Title */}
+              <div className="absolute bottom-0 left-0 p-5">
+                <h3 className="text-2xl font-bold text-white">Email</h3>
+              </div>
             </div>
 
-            {/* Text */}
-            <div className="relative space-y-1.5">
-              <h3 className="text-base font-bold">Email</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+            {/* Card body */}
+            <div className="flex flex-col gap-4 bg-zinc-900 p-5">
+              <p className="text-sm text-zinc-400 leading-relaxed">
                 Send a direct email request to this speaker. No organization needed.
               </p>
-            </div>
 
-            {/* CTA row */}
-            <div className="relative mt-auto pt-2">
-              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-500 group-hover:text-blue-400 transition-colors">
+              {/* Badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-zinc-300">
+                  <Mail className="h-3 w-3 text-blue-400" />
+                  No org required
+                </span>
+                <span className="inline-flex items-center rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-zinc-300">
+                  Direct outreach
+                </span>
+              </div>
+
+              {/* CTA button */}
+              <div className="w-full rounded-2xl bg-white py-3 text-center text-sm font-semibold text-zinc-900 transition-all duration-200 group-hover:bg-blue-50">
                 Request via Email
-                <ChevronLeft className="h-4 w-4 rotate-180" />
-              </span>
+              </div>
             </div>
           </button>
         </div>
       </div>
     )
   }
+
 
   // ── ORGANIZATION REQUEST FORM ───────────────────────────────────────────────
   if (method === "organization") {
