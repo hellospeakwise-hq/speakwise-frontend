@@ -50,7 +50,7 @@ const eventFormSchema = z.object({
   end_date_time: z.string().min(1, "End date and time are required"),
   is_active: z.boolean().default(false),
   country: z.string().optional(),
-  tags: z.array(z.number()).optional(),
+  tags: z.array(z.string()).optional(),
 })
 
 interface EventFormDialogProps {
@@ -73,8 +73,8 @@ export function EventFormDialog({
   )
   const [countries, setCountries] = useState(staticCountries)
   const [tags, setTags] = useState<Tag[]>([])
-  const [selectedTags, setSelectedTags] = useState<number[]>(
-    event?.tags?.map(tag => tag.id) || []
+  const [selectedTags, setSelectedTags] = useState<string[]>(
+    event?.tags?.map(tag => String(tag.id)) || []
   )
   const [newTagName, setNewTagName] = useState("")
   const [isCreatingTag, setIsCreatingTag] = useState(false)
@@ -101,7 +101,7 @@ export function EventFormDialog({
   useEffect(() => {
     if (event?.tags) {
       console.log('Event tags detected:', event.tags);
-      setSelectedTags(event.tags.map(tag => tag.id));
+      setSelectedTags(event.tags.map(tag => String(tag.id)));
       setImagePreview(event.event_image || null);
     } else {
       console.log('No event tags detected');
@@ -126,7 +126,7 @@ export function EventFormDialog({
         : "",
       is_active: event?.is_active || false,
       country: typeof event?.location === 'object' && event?.location?.country ? event.location.country.name : "",
-      tags: event?.tags?.map(tag => tag.id) || [],
+      tags: event?.tags?.map(tag => String(tag.id)) || [],
     },
   })
 
@@ -149,7 +149,7 @@ export function EventFormDialog({
           : "",
         is_active: event.is_active || false,
         country: typeof event.location === 'object' && event.location?.country ? event.location.country.name : "",
-        tags: event.tags?.map(tag => tag.id) || [],
+        tags: event.tags?.map(tag => String(tag.id)) || [],
       });
       
       // Also update image preview if there's an event image
@@ -230,7 +230,7 @@ export function EventFormDialog({
   }
 
   // Add tag to selected tags
-  const addTag = (tagId: number) => {
+  const addTag = (tagId: string) => {
     if (!selectedTags.includes(tagId)) {
       console.log('Adding tag:', tagId);
       const newTags = [...selectedTags, tagId];
@@ -247,7 +247,7 @@ export function EventFormDialog({
   }
 
   // Remove tag from selected tags
-  const removeTag = (tagId: number) => {
+  const removeTag = (tagId: string) => {
     console.log('Removing tag:', tagId);
     const newTags = selectedTags.filter(id => id !== tagId);
     setSelectedTags(newTags);
@@ -296,7 +296,7 @@ export function EventFormDialog({
       const eventData: CreateEventRequest = {
         ...values,
         event_image: selectedImage || undefined,
-        tags: tagsArray,
+        tags: tagsArray as string[],
       }
 
       // Look up country code from the static list
@@ -560,7 +560,7 @@ export function EventFormDialog({
               {selectedTags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {selectedTags.map((tagId) => {
-                    const tag = tags.find(t => t.id === tagId)
+                    const tag = tags.find(t => String(t.id) === String(tagId))
                     if (!tag) {
                       console.log('Tag not found:', tagId, 'Available tags:', tags);
                       // Create a placeholder tag instead of returning null
@@ -604,12 +604,12 @@ export function EventFormDialog({
               {/* Tag Selection */}
               <div className="space-y-2">
                 <div className="flex gap-2">
-                  <Select onValueChange={(value) => addTag(parseInt(value))}>
+                  <Select onValueChange={(value) => addTag(value)}>
                     <SelectTrigger className="flex-1">
                       <SelectValue placeholder="Select tags" />
                     </SelectTrigger>
                     <SelectContent>
-                      {tags.filter(tag => !selectedTags.includes(tag.id)).map((tag) => (
+                      {tags.filter(tag => !selectedTags.includes(String(tag.id))).map((tag) => (
                         <SelectItem key={tag.id} value={tag.id.toString()}>
                           <div className="flex items-center gap-2">
                             <div

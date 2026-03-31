@@ -163,7 +163,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       await speakerRequestApi.createSpeakerRequest({
         organizer: selectedOrgId,
         speaker: speaker!.id,
-        event: Number(selectedEventId),
+        event: selectedEventId, // UUID string — must NOT use Number() on a UUID
         message: fullMessage,
         status: 'pending'
       })
@@ -274,95 +274,85 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       <div className="container py-10 max-w-3xl mx-auto">
         <Link
           href={`/speakers/${id}`}
-          className="inline-flex items-center mb-6 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+          className="inline-flex items-center mb-8 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
           Back to Speaker Profile
         </Link>
 
         {/* Speaker Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-10">
           <Avatar className="h-16 w-16 border-2 border-border shadow-lg">
             {speaker.avatar ? (
               <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} />
             ) : (
-              <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold">
+              <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold text-lg">
                 {speaker.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
             )}
           </Avatar>
           <div>
             <h1 className="text-2xl font-bold">Request {speaker.speaker_name}</h1>
-            <p className="text-muted-foreground text-sm">{speaker.organization || speaker.short_bio}</p>
+            <p className="text-muted-foreground text-sm mt-0.5">{speaker.organization || speaker.short_bio}</p>
           </div>
         </div>
 
-        {/* Method Selection */}
+        {/* Section label */}
         <div className="mb-6">
-          <h2 className="text-lg font-semibold mb-1">How would you like to send your request?</h2>
+          <h2 className="text-base font-semibold mb-1">How would you like to send your request?</h2>
           <p className="text-sm text-muted-foreground">Choose the method that works best for you</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Organization Card */}
           <button
             onClick={() => {
               if (hasApprovedOrgs) {
                 setMethod("organization")
               } else {
-                toast.error("You need an approved organization to use this method. You can create one or use the email option instead.")
+                toast.error("You need an approved organization to use this method. Create one or use the email option instead.")
               }
             }}
-            className={`group relative text-left rounded-2xl overflow-hidden transition-all duration-300 ${
+            className={`group relative flex flex-col items-start space-y-4 rounded-2xl border p-6 text-left shadow-sm transition-all duration-300 ${
               hasApprovedOrgs
-                ? 'cursor-pointer hover:scale-[1.02] hover:shadow-2xl hover:shadow-orange-500/10'
-                : 'cursor-not-allowed opacity-75'
+                ? 'cursor-pointer bg-card hover:border-orange-500/50 hover:shadow-xl hover:shadow-orange-500/10 hover:-translate-y-1'
+                : 'cursor-not-allowed bg-card opacity-60'
             }`}
           >
-            {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950" />
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/10 via-transparent to-amber-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Hover gradient overlay */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
 
-            {/* Subtle top glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
+            {/* Icon */}
+            <div className={`relative flex h-12 w-12 items-center justify-center rounded-xl shadow-md transition-all duration-300 ${
+              hasApprovedOrgs
+                ? 'bg-gradient-to-br from-orange-400 to-orange-600 shadow-orange-500/20 group-hover:scale-105 group-hover:shadow-orange-500/40'
+                : 'bg-muted'
+            }`}>
+              <Building2 className={`h-6 w-6 ${hasApprovedOrgs ? 'text-white' : 'text-muted-foreground'}`} />
+            </div>
 
-            {/* Content */}
-            <div className="relative flex flex-col items-center text-center p-8 min-h-[320px]">
-              {/* Icon */}
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-300 ${
-                hasApprovedOrgs
-                  ? 'bg-orange-500/15 group-hover:bg-orange-500/25 group-hover:scale-110 shadow-lg shadow-orange-500/10'
-                  : 'bg-white/5'
-              }`}>
-                <Building2 className={`h-8 w-8 ${hasApprovedOrgs ? 'text-orange-400' : 'text-slate-500'}`} />
-              </div>
-
-              {/* Title */}
-              <h3 className={`text-xl font-bold mb-3 ${hasApprovedOrgs ? 'text-white' : 'text-slate-400'}`}>
-                Organization
-              </h3>
-
-              {/* Description */}
-              <p className={`text-sm leading-relaxed mb-6 max-w-[240px] ${hasApprovedOrgs ? 'text-slate-400' : 'text-slate-600'}`}>
-                Send a request through your organization and select an existing event
+            {/* Text */}
+            <div className="relative space-y-1.5">
+              <h3 className="text-base font-bold">Organization</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Send a request through your organization and link it to an existing event.
               </p>
+            </div>
 
-              {/* Spacer */}
-              <div className="flex-1" />
-
-              {/* CTA */}
+            {/* CTA row */}
+            <div className="relative mt-auto pt-2 w-full">
               {hasApprovedOrgs ? (
-                <div className="w-full rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-3 px-6 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 group-hover:shadow-orange-500/40 transition-all duration-300">
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-500 group-hover:text-orange-400 transition-colors">
                   Request via Organization
-                </div>
+                  <ChevronLeft className="h-4 w-4 rotate-180" />
+                </span>
               ) : (
-                <div className="w-full space-y-2">
-                  <div className="w-full rounded-xl bg-white/5 border border-white/10 py-3 px-6 text-sm font-medium text-slate-500">
-                    Requires an Organization
-                  </div>
+                <div className="space-y-1">
+                  <span className="text-sm font-medium text-muted-foreground">Requires an organization</span>
+                  <br />
                   <Link
                     href="/organizations"
-                    className="text-xs text-orange-400 hover:text-orange-300 hover:underline transition-colors"
+                    className="text-xs text-orange-500 hover:text-orange-400 hover:underline transition-colors"
                     onClick={(e) => e.stopPropagation()}
                   >
                     Create one →
@@ -370,51 +360,36 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
                 </div>
               )}
             </div>
-
-            {/* Border glow on hover */}
-            <div className="absolute inset-0 rounded-2xl border border-white/10 group-hover:border-orange-500/30 transition-colors duration-300 pointer-events-none" />
           </button>
 
           {/* Email Card */}
           <button
             onClick={() => setMethod("email")}
-            className="group relative text-left rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl hover:shadow-blue-500/10"
+            className="group relative flex flex-col items-start space-y-4 rounded-2xl border p-6 text-left bg-card shadow-sm cursor-pointer transition-all duration-300 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/10 hover:-translate-y-1"
           >
-            {/* Background gradient */}
-            <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 dark:from-slate-900 dark:via-slate-900/95 dark:to-slate-950" />
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+            {/* Hover gradient overlay */}
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/0 to-blue-500/0 group-hover:from-blue-500/5 group-hover:to-transparent transition-all duration-300 pointer-events-none" />
 
-            {/* Subtle top glow */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl opacity-0 group-hover:opacity-60 transition-opacity duration-500" />
-
-            {/* Content */}
-            <div className="relative flex flex-col items-center text-center p-8 min-h-[320px]">
-              {/* Icon */}
-              <div className="w-16 h-16 rounded-2xl bg-blue-500/15 group-hover:bg-blue-500/25 group-hover:scale-110 shadow-lg shadow-blue-500/10 flex items-center justify-center mb-6 transition-all duration-300">
-                <Mail className="h-8 w-8 text-blue-400" />
-              </div>
-
-              {/* Title */}
-              <h3 className="text-xl font-bold text-white mb-3">
-                Email
-              </h3>
-
-              {/* Description */}
-              <p className="text-sm text-slate-400 leading-relaxed mb-6 max-w-[240px]">
-                Send a direct email request to this speaker. No organization needed
-              </p>
-
-              {/* Spacer */}
-              <div className="flex-1" />
-
-              {/* CTA */}
-              <div className="w-full rounded-xl bg-gradient-to-r from-blue-500 to-indigo-500 py-3 px-6 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-all duration-300">
-                Request via Email
-              </div>
+            {/* Icon */}
+            <div className="relative flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 shadow-md shadow-blue-500/20 group-hover:scale-105 group-hover:shadow-blue-500/40 transition-all duration-300">
+              <Mail className="h-6 w-6 text-white" />
             </div>
 
-            {/* Border glow on hover */}
-            <div className="absolute inset-0 rounded-2xl border border-white/10 group-hover:border-blue-500/30 transition-colors duration-300 pointer-events-none" />
+            {/* Text */}
+            <div className="relative space-y-1.5">
+              <h3 className="text-base font-bold">Email</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Send a direct email request to this speaker. No organization needed.
+              </p>
+            </div>
+
+            {/* CTA row */}
+            <div className="relative mt-auto pt-2">
+              <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-blue-500 group-hover:text-blue-400 transition-colors">
+                Request via Email
+                <ChevronLeft className="h-4 w-4 rotate-180" />
+              </span>
+            </div>
           </button>
         </div>
       </div>
