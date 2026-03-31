@@ -314,7 +314,7 @@ export function EventFormDialog({
 
       let savedEvent: Event
       if (event) {
-        savedEvent = await eventsApi.updateEvent(event.id.toString(), eventData)
+        savedEvent = await eventsApi.updateEvent(event.slug, eventData)
       } else {
         savedEvent = await eventsApi.createEvent(eventData)
       }

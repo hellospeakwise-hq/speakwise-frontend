@@ -49,8 +49,8 @@ export const eventsApi = {
   /**
    * Get single event
    */
-  async getEvent(id: string): Promise<Event> {
-    const response = await apiClient.get<Event>(`/events/${id}/`);
+  async getEvent(slug: string): Promise<Event> {
+    const response = await apiClient.get<Event>(`/events/${slug}/`);
     return response.data;
   },
 
@@ -95,10 +95,10 @@ export const eventsApi = {
   /**
    * Upload event image via FormData PATCH
    */
-  async _uploadEventImage(eventId: string | number, imageFile: File): Promise<Event> {
+  async _uploadEventImage(slug: string, imageFile: File): Promise<Event> {
     const formData = new FormData();
     formData.append('event_image', imageFile);
-    const response = await apiClient.patch<Event>(`/events/${eventId}/`, formData, {
+    const response = await apiClient.patch<Event>(`/events/${slug}/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
@@ -118,10 +118,10 @@ export const eventsApi = {
     });
     let savedEvent = response.data;
 
-    // Step 2: Upload image if provided
-    if (data.event_image) {
-      console.log('Uploading event image for event:', savedEvent.id);
-      savedEvent = await this._uploadEventImage(savedEvent.id, data.event_image);
+    // Step 2: Upload image if provided (use slug as the URL identifier)
+    if (data.event_image && savedEvent.slug) {
+      console.log('Uploading event image for event slug:', savedEvent.slug);
+      savedEvent = await this._uploadEventImage(savedEvent.slug, data.event_image);
     }
 
     return savedEvent;
@@ -132,21 +132,21 @@ export const eventsApi = {
    * Step 1: PATCH JSON with event data.
    * Step 2: If image provided, PATCH with FormData to upload the image.
    */
-  async updateEvent(id: string, data: Partial<CreateEventRequest>): Promise<Event> {
+  async updateEvent(slug: string, data: Partial<CreateEventRequest>): Promise<Event> {
     const imageFile = data.event_image;
 
     // Step 1: Update event data with JSON body
     const jsonBody = this._buildJsonBody(data);
     console.log('Updating event with JSON body:', jsonBody);
-    const response = await apiClient.patch<Event>(`/events/${id}/`, jsonBody, {
+    const response = await apiClient.patch<Event>(`/events/${slug}/`, jsonBody, {
       headers: { 'Content-Type': 'application/json' },
     });
     let savedEvent = response.data;
 
-    // Step 2: Upload image if provided
+    // Step 2: Upload image if provided (use slug as the URL identifier)
     if (imageFile) {
-      console.log('Uploading event image for event:', id);
-      savedEvent = await this._uploadEventImage(id, imageFile);
+      console.log('Uploading event image for event slug:', slug);
+      savedEvent = await this._uploadEventImage(slug, imageFile);
     }
 
     return savedEvent;
@@ -155,8 +155,8 @@ export const eventsApi = {
   /**
    * Delete event
    */
-  async deleteEvent(id: string): Promise<void> {
-    await apiClient.delete(`/events/${id}/`);
+  async deleteEvent(slug: string): Promise<void> {
+    await apiClient.delete(`/events/${slug}/`);
   },
 
   /**

@@ -14,7 +14,7 @@ import { Badge } from "@/components/ui/badge"
 
 
 interface EventsListProps {
-    countryFilter?: number[]
+    countryFilter?: string[]
     tagFilter?: number | null
 }
 
@@ -204,7 +204,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
 
                             {/* Card Footer */}
                             <div className="flex items-center p-6 pt-0">
-                                <Link href={`/events/${event.id}`} className="w-full">
+                                <Link href={`/events/${event.slug}`} className="w-full">
                                     <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2 w-full hover:bg-orange-50 hover:text-orange-600 dark:hover:bg-orange-900/20 dark:hover:text-orange-400">
                                         View Event
                                     </button>
@@ -219,7 +219,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                     {filteredEvents.map((event) => (
                         <Link
                             key={event.id}
-                            href={`/events/${event.id}`}
+                            href={`/events/${event.slug}`}
                             className="block group"
                         >
                             <div className="flex items-stretch rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-all hover:border-orange-200 dark:hover:border-orange-800 overflow-hidden">

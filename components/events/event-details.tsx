@@ -47,7 +47,7 @@ export function EventDetails({ id }: EventDetailsProps) {
         setError(null)
 
         // First, try to find the event in the already loaded events list
-        const eventFromList = allEvents.find(e => e.id.toString() === id)
+        const eventFromList = allEvents.find(e => e.slug === id)
 
         if (eventFromList && !eventsLoading) {
           // If we found the event in the list, use it directly

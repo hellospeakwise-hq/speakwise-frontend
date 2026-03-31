@@ -11,9 +11,9 @@ interface UseOrganizerEventsReturn {
     error: string | null
     refetch: () => Promise<void>
     createEvent: (data: any) => Promise<Event>
-    updateEvent: (id: number, data: any) => Promise<Event>
-    deleteEvent: (id: number) => Promise<void>
-    toggleEventStatus: (id: number, isActive: boolean) => Promise<Event>
+    updateEvent: (slug: string, data: any) => Promise<Event>
+    deleteEvent: (slug: string) => Promise<void>
+    toggleEventStatus: (slug: string, isActive: boolean) => Promise<Event>
     refreshAttendeeStats: () => Promise<void>
     stats: {
         totalEvents: number
@@ -56,7 +56,7 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
             // Get attendees for each event
             for (const event of eventsList) {
                 try {
-                    const attendees = await attendeeAPI.getAttendanceEmailsByEvent(event.id)
+                    const attendees = await attendeeAPI.getAttendanceEmailsByEvent(event.id as any)
                     total += attendees.length
                 } catch (err) {
                     console.warn(`Failed to get attendees for event ${event.id}:`, err)
@@ -84,12 +84,12 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
         }
     }
 
-    const updateEvent = async (id: number, data: any): Promise<Event> => {
+    const updateEvent = async (slug: string, data: any): Promise<Event> => {
         try {
-            const updatedEvent = await eventsApi.updateEvent(id.toString(), data)
-            setEvents(prevEvents => 
-                prevEvents.map(event => 
-                    event.id === id ? updatedEvent : event
+            const updatedEvent = await eventsApi.updateEvent(slug, data)
+            setEvents(prevEvents =>
+                prevEvents.map(event =>
+                    event.slug === slug ? updatedEvent : event
                 )
             )
             return updatedEvent
@@ -99,22 +99,22 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
         }
     }
 
-    const deleteEvent = async (id: number): Promise<void> => {
+    const deleteEvent = async (slug: string): Promise<void> => {
         try {
-            await eventsApi.deleteEvent(id.toString())
-            setEvents(prevEvents => prevEvents.filter(event => event.id !== id))
+            await eventsApi.deleteEvent(slug)
+            setEvents(prevEvents => prevEvents.filter(event => event.slug !== slug))
         } catch (error) {
             console.error('Error deleting event:', error)
             throw error
         }
     }
 
-    const toggleEventStatus = async (id: number, isActive: boolean): Promise<Event> => {
+    const toggleEventStatus = async (slug: string, isActive: boolean): Promise<Event> => {
         try {
-            const updatedEvent = await eventsApi.updateEvent(id.toString(), { is_active: isActive })
-            setEvents(prevEvents => 
-                prevEvents.map(event => 
-                    event.id === id ? updatedEvent : event
+            const updatedEvent = await eventsApi.updateEvent(slug, { is_active: isActive })
+            setEvents(prevEvents =>
+                prevEvents.map(event =>
+                    event.slug === slug ? updatedEvent : event
                 )
             )
             return updatedEvent
