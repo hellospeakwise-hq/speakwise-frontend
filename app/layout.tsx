@@ -107,6 +107,8 @@ export default function RootLayout({
         />
 
         {/* Chatwoot - Disabled for now */}
+        {/* Mastodon Verification */}
+        <link rel="me" href="https://mastodon.social/@speakwise" />
       </head>
       <body
         className={cn(
