@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "lint:ci": "next lint --max-warnings 50"
+    "lint:ci": "next lint --max-warnings 50",
+    "email": "email dev --dir emails --port 3001",
+    "export-emails": "tsx scripts/export-email-templates.tsx"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
@@ -40,6 +42,7 @@
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
+    "@react-email/components": "^1.0.12",
     "@tiptap/extension-image": "^3.13.0",
     "@tiptap/extension-link": "^3.13.0",
     "@tiptap/extension-placeholder": "^3.13.0",
@@ -64,6 +67,7 @@
     "react-day-picker": "8.10.1",
     "react-dom": "^19",
     "react-easy-crop": "^5.5.6",
+    "react-email": "^6.0.0",
     "react-hook-form": "^7.54.1",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.0",
@@ -74,6 +78,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@react-email/ui": "6.0.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/lodash": "^4.17.24",
     "@types/node": "^22",
@@ -83,6 +88,7 @@
     "eslint-config-next": "15.2.7",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
