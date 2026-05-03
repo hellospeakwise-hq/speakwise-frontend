@@ -27,20 +27,20 @@ export const TALK_CATEGORIES = [
 // ─── Types (mirrors TalkSerializer / TalkReviewCommentSerializer) ─────────────
 
 export interface Talk {
-  id: number;
+  id: string;
   slug: string | null;
   title: string;
   description: string;
-  speaker: number;               // FK id
+  speaker: string;               // FK UUID
   speaker_name: string;          // read-only from serializer method
   duration: number;              // minutes
   category: string;
   presentation_files: string | null;
   is_public: boolean;
   is_reviewable: boolean;
-  event: number;                 // FK id
+  event: string;                 // FK UUID
   session?: {
-    id: number;
+    id: string;
     type: string;
     duration: number;
   };
@@ -48,7 +48,7 @@ export interface Talk {
 
 export interface TalkReview {
   id: string;          // UUID
-  talk: number | null;
+  talk: string | null; // UUID
   rating: number;      // 1–5
   comment: string;
 }
@@ -61,7 +61,7 @@ export interface CreateTalkData {
   is_public?: boolean;
   is_reviewable?: boolean;
   /** Optional — only needed when the talk belongs to a specific event */
-  event?: number;
+  event?: string;
 }
 
 export interface UpdateTalkData {
@@ -94,13 +94,13 @@ export const talksApi = {
   },
 
   /** Full-update — PUT /api/talks/<id>/ */
-  async updateTalk(id: number, data: UpdateTalkData): Promise<Talk> {
+  async updateTalk(id: string, data: UpdateTalkData): Promise<Talk> {
     const res = await apiClient.patch(`/talks/${id}/`, data);
     return res.data;
   },
 
   /** Delete — DELETE /api/talks/<id>/ */
-  async deleteTalk(id: number): Promise<void> {
+  async deleteTalk(id: string): Promise<void> {
     await apiClient.delete(`/talks/${id}/`);
   },
 

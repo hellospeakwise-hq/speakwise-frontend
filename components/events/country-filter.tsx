@@ -12,20 +12,20 @@ import { ChevronDown, X } from 'lucide-react'
 import { useEvents } from '@/hooks/use-events'
 
 interface Country {
-  id: number
+  id: string
   name: string
   code: string
 }
 
 interface CountryFilterProps {
-  selectedCountries: number[]
-  onCountryChange: (countries: number[]) => void
+  selectedCountries: string[]
+  onCountryChange: (countries: string[]) => void
 }
 
 export function CountryFilter({ selectedCountries, onCountryChange }: CountryFilterProps) {
   const { countries } = useEvents()
 
-  const handleCountryToggle = (countryId: number) => {
+  const handleCountryToggle = (countryId: string) => {
     if (selectedCountries.includes(countryId)) {
       onCountryChange(selectedCountries.filter(id => id !== countryId))
     } else {
@@ -33,7 +33,7 @@ export function CountryFilter({ selectedCountries, onCountryChange }: CountryFil
     }
   }
 
-  const handleRemoveCountry = (countryId: number) => {
+  const handleRemoveCountry = (countryId: string) => {
     onCountryChange(selectedCountries.filter(id => id !== countryId))
   }
 

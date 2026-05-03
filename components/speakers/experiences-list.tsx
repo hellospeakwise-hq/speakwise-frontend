@@ -16,8 +16,8 @@ import { ExperienceDetailModal } from "./experience-detail-modal"
 import { TalkCoverImage } from "@/components/ui/talk-cover-image"
 
 interface ExperiencesListProps {
-    speakerId?: number
-    speakerSlug?: string  // Use slug for public profiles
+    speakerId?: string
+    speakerSlug?: string
 }
 
 export function ExperiencesList({ speakerId, speakerSlug }: ExperiencesListProps) {

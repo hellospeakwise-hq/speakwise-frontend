@@ -201,10 +201,27 @@ function ProfilePageContent() {
         } catch (error: any) {
             console.error('Failed to update profile:', error)
             console.error('Error response:', error.response?.data)
-            const errorMessage = error.response?.data?.detail
-                || error.response?.data?.message
-                || error.message
-                || "Failed to update profile"
+            const data = error.response?.data
+            let errorMessage = "Failed to update profile"
+            if (data) {
+                if (data.detail) {
+                    errorMessage = data.detail
+                } else if (data.message) {
+                    errorMessage = data.message
+                } else if (typeof data === 'object') {
+                    // Field-level validation errors e.g. { nationality: ["This field may not be blank."] }
+                    const fieldErrors = Object.entries(data)
+                        .map(([field, msgs]) => {
+                            const label = field.replace(/_/g, ' ')
+                            const msg = Array.isArray(msgs) ? msgs[0] : msgs
+                            return `${label.charAt(0).toUpperCase() + label.slice(1)}: ${msg}`
+                        })
+                        .join('\n')
+                    if (fieldErrors) errorMessage = fieldErrors
+                }
+            } else if (error.message) {
+                errorMessage = error.message
+            }
             toast.error(errorMessage)
         } finally {
             setIsSaving(false)
@@ -323,7 +340,7 @@ function ProfilePageContent() {
     }
 
     // Remove a skill from user's profile
-    const removeSkillTag = async (skillId: number) => {
+    const removeSkillTag = async (skillId: string) => {
         try {
             // DELETE /speakers/skills/{id}/ to remove from user's profile
             await speakerApi.deleteSkill(skillId)

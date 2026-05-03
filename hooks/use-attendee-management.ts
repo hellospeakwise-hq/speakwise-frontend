@@ -52,7 +52,7 @@ export function useAttendeeManagement(eventId: string | null) {
     await Promise.all([loadAttendees(), loadUploadHistory()])
   }
 
-  const deleteAttendee = async (attendeeId: number) => {
+  const deleteAttendee = async (attendeeId: string) => {
     if (!eventId) throw new Error('No event selected')
     
     try {

@@ -81,7 +81,7 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
                         </div>
 
                         <div className="bg-card rounded-md border p-6">
-                            <TagManager eventId={parseInt(id)} />
+                            <TagManager eventId={id} />
                         </div>
                     </div>
                 </TabsContent>

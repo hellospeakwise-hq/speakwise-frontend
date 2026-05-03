@@ -160,7 +160,7 @@ export function AddExperienceDialog({ onSuccess }: AddExperienceDialogProps) {
                                 Description <span className="text-red-500">*</span>
                             </Label>
                             <RichTextEditor
-                                content={formData.description}
+                                value={formData.description}
                                 onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
                                 placeholder="Describe what you talked about, key takeaways, audience size, and any notable moments..."
                                 className="w-full"

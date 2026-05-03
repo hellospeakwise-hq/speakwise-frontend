@@ -11,7 +11,7 @@ import { feedbackAPI, type Feedback as ApiFeedback } from "@/lib/api/feedbackApi
 import { FeedbackNavigation } from "@/components/dashboard/speaker/feedback-navigation"
 
 interface FeedbackDisplay {
-  id: number
+  id: string
   rating: number
   comment: string
   categories: string[]
@@ -22,11 +22,11 @@ interface FeedbackDisplay {
   speakerKnowledge: number
   practicalRelevance: number
   isAnonymous: boolean
-  sessionId: number
+  sessionId: string
 }
 
 interface SessionGroup {
-  sessionId: number
+  sessionId: string
   sessionTitle: string
   eventName: string
   feedbackCount: number
@@ -47,7 +47,7 @@ export default function SpeakerFeedbackByTalksPage() {
         const data = await feedbackAPI.getCurrentSpeakerFeedback()
 
         // Transform and group feedback by session
-        const sessionMap = new Map<number, SessionGroup>()
+        const sessionMap = new Map<string, SessionGroup>()
 
         data.forEach((item: ApiFeedback) => {
           const sessionId = item.session

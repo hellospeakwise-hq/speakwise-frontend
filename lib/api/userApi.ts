@@ -4,7 +4,7 @@ import { cachedFetch, CACHE_TTL, removeFromCache } from '../utils/cache';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 export interface SkillTag {
-    id: number;
+    id: string;
     name: string;
     description: string;
     duration: number;
@@ -20,7 +20,7 @@ export interface User {
 }
 
 export interface SpeakerProfile {
-    id: number;
+    id: string;
     social_links: any[];
     skill_tags: SkillTag[];
     speaker_name: string;
@@ -50,7 +50,7 @@ export interface UpdateSpeakerData {
     short_bio?: string;
     long_bio?: string;
     country?: string;
-    skill_tags?: number[];
+    skill_tags?: string[];
     social_links?: any[];
 }
 
@@ -106,13 +106,12 @@ export const userApi = {
     },
 
     // Upload avatar (PATCH /api/users/me/)
-    async uploadAvatar(file: File, speakerId?: number): Promise<UserProfileResponse> {
+    async uploadAvatar(file: File, speakerId?: string): Promise<UserProfileResponse> {
         const formData = new FormData();
         formData.append('avatar', file);
-        
-        // If we have a speaker ID, include it so backend knows which speaker to update
+
         if (speakerId) {
-            formData.append('speaker_id', speakerId.toString());
+            formData.append('speaker_id', speakerId);
         }
         
         console.log('📤 Uploading avatar for speaker ID:', speakerId);

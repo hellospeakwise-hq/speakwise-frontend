@@ -12,7 +12,7 @@ interface SpeakersCarouselProps {
 }
 
 export function SpeakersCarousel({ speakers, onSpeakerSelect, filteredCount }: SpeakersCarouselProps) {
-    const [hoveredSpeakerId, setHoveredSpeakerId] = useState<number | null>(null)
+    const [hoveredSpeakerId, setHoveredSpeakerId] = useState<string | null>(null)
 
     const displayedSpeakers = filteredCount !== undefined ? speakers.slice(0, filteredCount) : speakers
 

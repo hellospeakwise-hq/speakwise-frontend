@@ -425,8 +425,8 @@ function ShareModal({ talk, open, onClose }: { talk: Talk; open: boolean; onClos
 
 function TalkCard({ talk, onToggle, onDelete }: {
     talk: Talk
-    onToggle: (id: number, field: 'is_public' | 'is_reviewable', value: boolean) => Promise<void>
-    onDelete: (id: number) => void
+    onToggle: (id: string, field: 'is_public' | 'is_reviewable', value: boolean) => Promise<void>
+    onDelete: (id: string) => void
 }) {
     const [togglingPublic, setTogglingPublic] = useState(false)
     const [togglingReviewable, setTogglingReviewable] = useState(false)
@@ -590,7 +590,7 @@ export function MyTalksSection() {
 
     useEffect(() => { load() }, [load])
 
-    const handleToggle = async (id: number, field: 'is_public' | 'is_reviewable', value: boolean) => {
+    const handleToggle = async (id: string, field: 'is_public' | 'is_reviewable', value: boolean) => {
         try {
             const updated = await talksApi.updateTalk(id, { [field]: value })
             setTalks((prev) => prev.map((t) => (t.id === id ? updated : t)))
@@ -604,7 +604,7 @@ export function MyTalksSection() {
         }
     }
 
-    const handleDelete = async (id: number) => {
+    const handleDelete = async (id: string) => {
         try {
             await talksApi.deleteTalk(id)
             setTalks((prev) => prev.filter((t) => t.id !== id))

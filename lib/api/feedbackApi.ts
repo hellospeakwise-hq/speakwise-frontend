@@ -4,11 +4,9 @@ import { apiClient } from './base';
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api`;
 
 export interface FeedbackData {
-    session: number;
-    attendee: number | null;
-    // NEW: Backend requires explicit speaker id the feedback is for
-    // This links the feedback to the correct speaker dashboard
-    speaker: number;
+    session: string;
+    attendee: string | null;
+    speaker: string;
     overall_rating: number;
     engagement: number;
     clarity: number;
@@ -21,7 +19,7 @@ export interface FeedbackData {
 }
 
 export interface Feedback extends FeedbackData {
-    id: number;
+    id: string;
     created_at: string;
     updated_at: string;
     // Some responses may include these flags
@@ -30,7 +28,7 @@ export interface Feedback extends FeedbackData {
 
 export interface AttendeeVerification {
     email: string;
-    event?: number;
+    event?: string;
 }
 
 class FeedbackAPI {
@@ -54,7 +52,7 @@ class FeedbackAPI {
                 },
                 body: JSON.stringify({
                     email: email,
-                    event_id: parseInt(eventId, 10)
+                    event_id: eventId
                 }),
             });
 
@@ -141,7 +139,7 @@ class FeedbackAPI {
     }
 
     // Get feedback by ID
-    async getFeedbackById(feedbackId: number): Promise<Feedback> {
+    async getFeedbackById(feedbackId: string): Promise<Feedback> {
         try {
             const response = await fetch(`${API_BASE_URL}/feedbacks/${feedbackId}/`);
 
@@ -157,7 +155,7 @@ class FeedbackAPI {
     }
 
     // Update feedback (within 24 hours)
-    async updateFeedback(feedbackId: number, feedbackData: Partial<FeedbackData>): Promise<Feedback> {
+    async updateFeedback(feedbackId: string, feedbackData: Partial<FeedbackData>): Promise<Feedback> {
         try {
             const response = await fetch(`${API_BASE_URL}/feedbacks/${feedbackId}/`, {
                 method: 'PATCH',
@@ -200,7 +198,7 @@ class FeedbackAPI {
     }
 
     // Get feedback for a specific session
-    async getSessionFeedback(sessionId: number): Promise<Feedback[]> {
+    async getSessionFeedback(sessionId: string): Promise<Feedback[]> {
         try {
             const allFeedback = await this.getAllFeedback();
             return allFeedback.filter(feedback => feedback.session === sessionId);
@@ -211,7 +209,7 @@ class FeedbackAPI {
     }
 
     // Get feedback for a specific speaker (across all their sessions)
-    async getSpeakerFeedback(speakerId: number): Promise<Feedback[]> {
+    async getSpeakerFeedback(speakerId: string): Promise<Feedback[]> {
         try {
             // This would need to be implemented based on the relationship between speakers and sessions
             // For now, we'll need to fetch sessions by speaker first, then get feedback for those sessions
@@ -247,14 +245,14 @@ class FeedbackAPI {
     }
 
     // Get talk details by session ID (since sessions are linked to talks)
-    async getSessionDetails(sessionId: number): Promise<{ title: string; eventName: string; eventDate?: string }> {
+    async getSessionDetails(sessionId: string): Promise<{ title: string; eventName: string; eventDate?: string }> {
         // Try to get talk details directly using session ID as talk ID
         // If that fails, try to get session details first
         return await this.getTalkDetails(sessionId);
     }
 
     // Get talk details from talk API
-    async getTalkDetails(talkId: number): Promise<{ title: string; eventName: string; eventDate?: string }> {
+    async getTalkDetails(talkId: string): Promise<{ title: string; eventName: string; eventDate?: string }> {
         try {
             const token = localStorage.getItem('accessToken');
 
@@ -280,7 +278,7 @@ class FeedbackAPI {
             let eventName = `Event ${talkId}`;
             let eventDate = talkData.event?.date || talkData.event_date || talkData.date;
 
-            if (talkData.event && typeof talkData.event === 'number') {
+            if (talkData.event && typeof talkData.event === 'string') {
                 // Event is just an ID, fetch the event details (name and date)
                 console.log(`Attempting to fetch event details for ID: ${talkData.event}`);
                 try {
@@ -321,7 +319,7 @@ class FeedbackAPI {
     }
 
     // Get event details by event ID using the correct endpoint
-    async getEventDetails(eventId: number): Promise<{ name: string; date?: string }> {
+    async getEventDetails(eventId: string): Promise<{ name: string; date?: string }> {
         try {
             const token = localStorage.getItem('accessToken');
             console.log(`🎪 Fetching event details for event ID: ${eventId}`);
@@ -394,7 +392,7 @@ class FeedbackAPI {
     }
 
     // Generate sample session data for development/demo
-    private getSampleSessionData(sessionId: number): { title: string; eventName: string; eventDate?: string } {
+    private getSampleSessionData(sessionId: string): { title: string; eventName: string; eventDate?: string } {
         const sampleTitles = [
             "Introduction to Modern Web Development",
             "Building Scalable React Applications",
@@ -430,14 +428,14 @@ class FeedbackAPI {
         ];
 
         return {
-            title: sampleTitles[(sessionId - 1) % sampleTitles.length] || `Talk #${sessionId}`,
-            eventName: sampleEvents[(sessionId - 1) % sampleEvents.length] || `Event #${sessionId}`,
-            eventDate: sampleDates[(sessionId - 1) % sampleDates.length]
+            title: sampleTitles[0] || `Talk`,
+            eventName: sampleEvents[0] || `Event`,
+            eventDate: sampleDates[0]
         };
     }
 
     // Get multiple session details efficiently
-    async getMultipleSessionDetails(sessionIds: number[]): Promise<Map<number, { title: string; eventName: string; eventDate?: string }>> {
+    async getMultipleSessionDetails(sessionIds: string[]): Promise<Map<string, { title: string; eventName: string; eventDate?: string }>> {
         try {
             // Fetch all session details in parallel (which will get talk details)
             const sessionPromises = sessionIds.map(async (sessionId) => {
@@ -448,7 +446,7 @@ class FeedbackAPI {
             const results = await Promise.all(sessionPromises);
 
             // Convert results to Map
-            const sessionDetailsMap = new Map<number, { title: string; eventName: string; eventDate?: string }>();
+            const sessionDetailsMap = new Map<string, { title: string; eventName: string; eventDate?: string }>();
             results.forEach(({ sessionId, details }) => {
                 sessionDetailsMap.set(sessionId, details);
             });
@@ -458,7 +456,7 @@ class FeedbackAPI {
             console.error('Error fetching multiple session details:', error);
 
             // Return map with sample data
-            const fallbackMap = new Map<number, { title: string; eventName: string; eventDate?: string }>();
+            const fallbackMap = new Map<string, { title: string; eventName: string; eventDate?: string }>();
             sessionIds.forEach(sessionId => {
                 fallbackMap.set(sessionId, this.getSampleSessionData(sessionId));
             });
@@ -468,7 +466,7 @@ class FeedbackAPI {
     }
 
     // Get multiple talk details directly
-    async getMultipleTalkDetails(talkIds: number[]): Promise<Map<number, { title: string; eventName: string; eventDate?: string }>> {
+    async getMultipleTalkDetails(talkIds: string[]): Promise<Map<string, { title: string; eventName: string; eventDate?: string }>> {
         try {
             // Fetch all talk details in parallel
             const talkPromises = talkIds.map(async (talkId) => {
@@ -479,7 +477,7 @@ class FeedbackAPI {
             const results = await Promise.all(talkPromises);
 
             // Convert results to Map
-            const talkDetailsMap = new Map<number, { title: string; eventName: string; eventDate?: string }>();
+            const talkDetailsMap = new Map<string, { title: string; eventName: string; eventDate?: string }>();
             results.forEach(({ talkId, details }) => {
                 talkDetailsMap.set(talkId, details);
             });
@@ -489,7 +487,7 @@ class FeedbackAPI {
             console.error('Error fetching multiple talk details:', error);
 
             // Return map with sample data
-            const fallbackMap = new Map<number, { title: string; eventName: string; eventDate?: string }>();
+            const fallbackMap = new Map<string, { title: string; eventName: string; eventDate?: string }>();
             talkIds.forEach(talkId => {
                 fallbackMap.set(talkId, this.getSampleSessionData(talkId));
             });

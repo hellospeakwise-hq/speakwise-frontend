@@ -34,7 +34,7 @@ export default function SpeakerProfilePage() {
     const [shortBio, setShortBio] = useState("")
     const [longBio, setLongBio] = useState("")
     const [country, setCountry] = useState("")
-    const [selectedSkills, setSelectedSkills] = useState<number[]>([])
+    const [selectedSkills, setSelectedSkills] = useState<string[]>([])
 
     // Load speaker profile and skills on mount
     useEffect(() => {
@@ -120,7 +120,7 @@ export default function SpeakerProfilePage() {
         }
     }
 
-    const toggleSkill = (skillId: number) => {
+    const toggleSkill = (skillId: string) => {
         setSelectedSkills(prev =>
             prev.includes(skillId)
                 ? prev.filter(id => id !== skillId)
@@ -128,7 +128,7 @@ export default function SpeakerProfilePage() {
         )
     }
 
-    const removeSkill = (skillId: number) => {
+    const removeSkill = (skillId: string) => {
         setSelectedSkills(prev => prev.filter(id => id !== skillId))
     }
 

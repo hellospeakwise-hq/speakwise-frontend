@@ -26,15 +26,15 @@ import {
 } from "@/components/ui/popover";
 
 interface EventTalk {
-    id: number;
+    id: string;
     title: string;
-    speaker: number;
+    speaker: string;
     speaker_name: string;
     description: string;
     duration: number;
     category: string;
     presentation_files?: string;
-    event: number;
+    event: string;
 }
 
 interface TalkWithSpeaker extends EventTalk {
@@ -50,7 +50,7 @@ export function EventSessions({ eventId }: EventSessionsProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedSpeakerId, setSelectedSpeakerId] = useState<number | null>(null);
+    const [selectedSpeakerId, setSelectedSpeakerId] = useState<string | null>(null);
     const [speakerDropdownOpen, setSpeakerDropdownOpen] = useState(false);
 
     useEffect(() => {
@@ -70,7 +70,7 @@ export function EventSessions({ eventId }: EventSessionsProps) {
 
                 // Filter talks for this specific event and add speaker details
                 const eventTalks = allTalks
-                    .filter(talk => talk.event.toString() === eventId)
+                    .filter(talk => talk.event === eventId)
                     .map(talk => ({
                         ...talk,
                         speaker_details: speakers.find(speaker => speaker.id === talk.speaker)
@@ -92,7 +92,7 @@ export function EventSessions({ eventId }: EventSessionsProps) {
 
     // Get unique speakers from talks
     const uniqueSpeakers = useMemo(() => {
-        const speakerMap = new Map<number, { id: number; name: string; avatar?: string; organization?: string }>();
+        const speakerMap = new Map<string, { id: string; name: string; avatar?: string; organization?: string }>();
         talks.forEach(talk => {
             if (!speakerMap.has(talk.speaker)) {
                 speakerMap.set(talk.speaker, {

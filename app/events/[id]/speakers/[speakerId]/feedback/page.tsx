@@ -22,16 +22,16 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
   const [isVerified, setIsVerified] = useState(false)
   const [verifiedAttendeeData, setVerifiedAttendeeData] = useState<{
     email: string;
-    attendeeId?: number;
+    attendeeId?: string;
     isVirtual?: boolean;
   } | null>(null)
   const [sessionData, setSessionData] = useState<{
-    sessionId?: number;
+    sessionId?: string;
     sessionName?: string;
     speakerName?: string;
   } | null>(null)
   const [speakerData, setSpeakerData] = useState<{
-    id: number;
+    id: string;
     full_name: string;
     organization?: string;
     country?: string;
@@ -39,7 +39,7 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
     short_bio?: string;
   } | null>(null)
   const [eventData, setEventData] = useState<{
-    id: number;
+    id: string;
     title: string;
     event_nickname?: string;
     location?: string;
@@ -106,7 +106,7 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
       } else {
         // If no talk found, still allow feedback but with minimal info
         setSessionData({
-          sessionId: parseInt(speakerId), // Use speaker ID as fallback
+          sessionId: speakerId, // Use speaker ID as fallback
           sessionName: 'Speaker Session',
           speakerName: 'Speaker'
         })
@@ -118,7 +118,7 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
       // Don't show toast error for session data as it's not critical
       // Still allow feedback with fallback data
       setSessionData({
-        sessionId: parseInt(speakerId),
+        sessionId: speakerId,
         sessionName: 'Speaker Session',
         speakerName: 'Speaker'
       })
@@ -209,22 +209,17 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
 
       const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'
 
-      let attendeeId: number
+      let attendeeId: string | null = null
 
-      if (verifiedAttendeeData.isVirtual) {
-        attendeeId = 1
-      } else {
+      if (!verifiedAttendeeData.isVirtual) {
         try {
           const attendeeResponse = await fetch(`${API_BASE_URL}/api/attendees/by-email/${verifiedAttendeeData.email}/`)
           if (attendeeResponse.ok) {
             const attendeeData = await attendeeResponse.json()
             attendeeId = attendeeData.id
-          } else {
-            attendeeId = 1
           }
         } catch (error) {
           console.error('Error fetching attendee:', error)
-          attendeeId = 1
         }
       }
 
@@ -234,7 +229,7 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
       const feedbackData = {
         session: sessionData.sessionId,
         attendee: attendeeId,
-        speaker: parseInt(speakerId, 10),
+        speaker: speakerId,
         overall_rating: overallRating,
         engagement: ratings.engagement,
         clarity: ratings.clarity,

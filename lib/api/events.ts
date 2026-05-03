@@ -13,7 +13,7 @@ export interface CreateEventRequest {
   is_active?: boolean;
   country?: string; // country name
   country_code?: string; // ISO country code
-  tags?: number[];
+  tags?: string[];
   event_image?: File; // actual file for upload
 }
 

@@ -29,7 +29,7 @@ import { EditExperienceDialog } from "./edit-experience-dialog"
 export function ManageExperiences() {
     const [experiences, setExperiences] = useState<SpeakerExperience[]>([])
     const [loading, setLoading] = useState(true)
-    const [deleteId, setDeleteId] = useState<number | null>(null)
+    const [deleteId, setDeleteId] = useState<string | null>(null)
     const [deleting, setDeleting] = useState(false)
     const [editExperience, setEditExperience] = useState<SpeakerExperience | null>(null)
 
@@ -138,7 +138,7 @@ export function ManageExperiences() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onClick={() => setDeleteId(experience.id)}
+                                            onClick={() => setDeleteId(experience.id ?? null)}
                                             className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                                         >
                                             <Trash2 className="h-4 w-4" />

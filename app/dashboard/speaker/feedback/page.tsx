@@ -11,7 +11,7 @@ import { feedbackAPI, type Feedback as ApiFeedback } from "@/lib/api/feedbackApi
 import { FeedbackNavigation } from "@/components/dashboard/speaker/feedback-navigation"
 
 interface FeedbackDisplay {
-  id: number
+  id: string
   rating: number
   comment: string
   categories: string[]

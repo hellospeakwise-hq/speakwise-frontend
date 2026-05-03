@@ -1,13 +1,13 @@
 import apiClient from './base';
 
 export interface SpeakerRequest {
-    id?: number;
+    id?: string;
     status: 'pending' | 'accepted' | 'rejected';
     message: string;
-    organizer: string; // Organizer/Organization UUID
-    organization: string; // Organization UUID
-    speaker: number; // Speaker ID
-    event: string; // Event UUID
+    organizer: string;
+    organization: string;
+    speaker: string; // Speaker UUID
+    event: string;   // Event UUID
     created_at?: string;
     updated_at?: string;
 }
@@ -15,9 +15,9 @@ export interface SpeakerRequest {
 export interface CreateSpeakerRequestData {
     status?: 'pending';
     message: string;
-    organizer: string;  // Backend expects 'organizer' (org UUID) for POST
-    speaker: number;
-    event: string; // Event UUID
+    organizer: string;
+    speaker: string; // Speaker UUID
+    event: string;   // Event UUID
 }
 
 export const speakerRequestApi = {
@@ -33,7 +33,7 @@ export const speakerRequestApi = {
     },
 
     // Get a specific speaker request by ID
-    async getSpeakerRequest(id: number): Promise<SpeakerRequest> {
+    async getSpeakerRequest(id: string): Promise<SpeakerRequest> {
         const response = await apiClient.get(`/speaker-requests/${id}/`);
         return response.data;
     },
@@ -53,13 +53,13 @@ export const speakerRequestApi = {
     },
 
     // Update speaker request
-    async updateSpeakerRequest(id: number, data: Partial<SpeakerRequest>): Promise<SpeakerRequest> {
+    async updateSpeakerRequest(id: string, data: Partial<SpeakerRequest>): Promise<SpeakerRequest> {
         const response = await apiClient.patch(`/speaker-requests/${id}/`, data);
         return response.data;
     },
 
     // Delete speaker request
-    async deleteSpeakerRequest(id: number): Promise<void> {
+    async deleteSpeakerRequest(id: string): Promise<void> {
         await apiClient.delete(`/speaker-requests/${id}/`);
     },
 
@@ -72,7 +72,7 @@ export const speakerRequestApi = {
     },
 
     // Accept a speaker request (respond with status: 'accepted')
-    async acceptSpeakerRequest(id: number): Promise<SpeakerRequest> {
+    async acceptSpeakerRequest(id: string): Promise<SpeakerRequest> {
         const response = await apiClient.patch(`/speaker-requests/${id}/respond/`, {
             status: 'accepted'
         });
@@ -80,7 +80,7 @@ export const speakerRequestApi = {
     },
 
     // Reject a speaker request (respond with status: 'rejected')
-    async rejectSpeakerRequest(id: number): Promise<SpeakerRequest> {
+    async rejectSpeakerRequest(id: string): Promise<SpeakerRequest> {
         const response = await apiClient.patch(`/speaker-requests/${id}/respond/`, {
             status: 'rejected'
         });
@@ -90,7 +90,7 @@ export const speakerRequestApi = {
     // Get details of a specific incoming request (for speakers)
     // Note: Backend doesn't have /speaker/speaker-requests/{id}/ endpoint yet,
     // so we use the general endpoint which works for both speakers and organizers
-    async getSpeakerRequestDetails(id: number): Promise<SpeakerRequest> {
+    async getSpeakerRequestDetails(id: string): Promise<SpeakerRequest> {
         const response = await apiClient.get(`/speaker-requests/${id}/`);
         return response.data;
     },
@@ -130,8 +130,8 @@ export interface EmailSpeakerRequest {
     location: string;
     message: string;
     status: 'pending' | 'accepted' | 'rejected';
-    request_from: number;  // User ID
-    request_to: number;    // User ID
+    request_from: string;  // User UUID
+    request_to: string;    // User UUID
     created_at?: string;
     updated_at?: string;
 }

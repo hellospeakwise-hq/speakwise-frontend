@@ -27,7 +27,7 @@ export function SpeakingRequests() {
   const [requests, setRequests] = useState<EnrichedSpeakerRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null)
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
   const [selectedRequest, setSelectedRequest] = useState<EnrichedSpeakerRequest | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
   const [confirmAcceptRequest, setConfirmAcceptRequest] = useState<EnrichedSpeakerRequest | null>(null)
@@ -104,7 +104,7 @@ export function SpeakingRequests() {
     loadRequests()
   }, [])
 
-  const handleAccept = async (requestId: number) => {
+  const handleAccept = async (requestId: string) => {
     try {
       setActionLoading(true)
 
@@ -141,7 +141,7 @@ export function SpeakingRequests() {
     }
   }
 
-  const handleDecline = async (requestId: number) => {
+  const handleDecline = async (requestId: string) => {
     try {
       setActionLoading(true)
       // Use the new reject endpoint
@@ -159,7 +159,7 @@ export function SpeakingRequests() {
     }
   }
 
-  const handleViewDetails = async (requestId: number) => {
+  const handleViewDetails = async (requestId: string) => {
     try {
       setSelectedRequestId(requestId)
       setDetailLoading(true)
