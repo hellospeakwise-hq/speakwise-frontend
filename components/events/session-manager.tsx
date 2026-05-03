@@ -48,7 +48,7 @@ export function SessionManager({ eventId }: SessionManagerProps) {
                 setSpeakers(speakersData);
 
                 // Load existing sessions
-                const sessionsData = await sessionsAPI.getEventSessions(parseInt(eventId));
+                const sessionsData = await sessionsAPI.getEventSessions(eventId);
                 setSessions(sessionsData);
             } catch (err) {
                 console.error('Error fetching data:', err);
@@ -90,11 +90,11 @@ export function SessionManager({ eventId }: SessionManagerProps) {
             // Format the data for API
             const formattedData = {
                 ...sessionData,
-                speaker_id: parseInt(sessionData.speaker_id)
+                speaker_id: sessionData.speaker_id
             };
 
             // Create the session
-            const result = await sessionsAPI.createSessionWithSpeaker(parseInt(eventId), formattedData);
+            const result = await sessionsAPI.createSessionWithSpeaker(eventId, formattedData);
 
             // Success message
             toast({
@@ -113,7 +113,7 @@ export function SessionManager({ eventId }: SessionManagerProps) {
             });
 
             // Refresh sessions list
-            const updatedSessions = await sessionsAPI.getEventSessions(parseInt(eventId));
+            const updatedSessions = await sessionsAPI.getEventSessions(eventId);
             setSessions(updatedSessions);
         } catch (err) {
             console.error('Error creating session:', err);
@@ -127,7 +127,7 @@ export function SessionManager({ eventId }: SessionManagerProps) {
         }
     };
 
-    const handleDeleteSession = async (sessionId: number) => {
+    const handleDeleteSession = async (sessionId: string) => {
         if (!confirm('Are you sure you want to delete this session?')) {
             return;
         }

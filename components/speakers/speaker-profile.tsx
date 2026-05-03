@@ -415,9 +415,9 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
             {/* Stats strip */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { icon: Users, label: 'Followers', value: followersCount, color: 'text-orange-400', clickable: true },
-                { icon: Mic,   label: 'Talk Presentations', value: totalTalks, color: 'text-blue-400' },
-                { icon: Star,  label: 'Rating',    value: '—',            color: 'text-yellow-400' },
+                { icon: Users, label: 'Followers',          value: followersCount, color: 'text-orange-400', clickable: true },
+                { icon: Mic,   label: 'Talk Presentations', value: totalTalks,     color: 'text-blue-400',   clickable: false },
+                { icon: Star,  label: 'Rating',             value: '—',            color: 'text-yellow-400', clickable: false },
               ].map(({ icon: Icon, label, value, color, clickable }) => (
                 <div
                   key={label}

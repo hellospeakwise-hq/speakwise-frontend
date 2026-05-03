@@ -6,7 +6,7 @@ export interface SocialLink {
 }
 
 export interface TeamMember {
-  id: number
+  id: string
   name: string
   role: string
   short_bio: string
@@ -45,7 +45,7 @@ export async function fetchTeamMembers(): Promise<TeamMember[]> {
 /**
  * Fetch a single team member by ID
  */
-export async function fetchTeamMemberById(id: number): Promise<TeamMember> {
+export async function fetchTeamMemberById(id: string): Promise<TeamMember> {
   try {
     console.log('Fetching team member by ID:', id);
     const response = await fetch(`${API_BASE_URL}/api/teams/${id}/`, {

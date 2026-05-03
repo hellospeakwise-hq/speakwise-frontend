@@ -1,7 +1,7 @@
 import apiClient from './base';
 
 export interface SpeakerExperience {
-    id?: number;
+    id?: string;
     event_name: string;
     event_date: string;
     topic: string;
@@ -45,12 +45,12 @@ export const experiencesApi = {
     },
 
     // Get experiences for a specific speaker by ID (legacy - uses slug endpoint)
-    async getSpeakerExperiences(speakerId: number): Promise<SpeakerExperience[]> {
-        return this.getSpeakerExperiencesBySlug(speakerId.toString());
+    async getSpeakerExperiences(speakerId: string): Promise<SpeakerExperience[]> {
+        return this.getSpeakerExperiencesBySlug(speakerId);
     },
 
     // Get a specific experience by ID
-    async getExperience(id: number): Promise<SpeakerExperience> {
+    async getExperience(id: string): Promise<SpeakerExperience> {
         const response = await apiClient.get(`/speakers/experiences/${id}/`);
         return response.data;
     },
@@ -67,13 +67,13 @@ export const experiencesApi = {
     },
 
     // Update an experience
-    async updateExperience(id: number, data: Partial<CreateExperienceData>): Promise<SpeakerExperience> {
+    async updateExperience(id: string, data: Partial<CreateExperienceData>): Promise<SpeakerExperience> {
         const response = await apiClient.patch(`/speakers/experiences/${id}/`, data);
         return response.data;
     },
 
     // Delete an experience
-    async deleteExperience(id: number): Promise<void> {
+    async deleteExperience(id: string): Promise<void> {
         await apiClient.delete(`/speakers/experiences/${id}/`);
     }
 };

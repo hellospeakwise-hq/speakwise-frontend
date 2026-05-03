@@ -63,7 +63,7 @@ export function EditExperienceDialog({ experience, open, onOpenChange, onSuccess
 
         try {
             setLoading(true)
-            await experiencesApi.updateExperience(experience.id, formData)
+            await experiencesApi.updateExperience(experience.id!, formData)
             toast.success('Experience updated successfully!')
             onOpenChange(false)
 
@@ -155,7 +155,7 @@ export function EditExperienceDialog({ experience, open, onOpenChange, onSuccess
                                 Description <span className="text-red-500">*</span>
                             </Label>
                             <RichTextEditor
-                                content={formData.description}
+                                value={formData.description}
                                 onChange={(content) => setFormData(prev => ({ ...prev, description: content }))}
                                 placeholder="Describe what you talked about, key takeaways, audience size, and any notable moments..."
                                 className="w-full"

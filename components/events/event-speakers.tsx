@@ -40,7 +40,7 @@ export function EventSpeakers({ eventId, isManagement = false }: EventSpeakersPr
         }
     }, [eventId]);
 
-    const handleRemoveSpeaker = async (speakerId: number) => {
+    const handleRemoveSpeaker = async (speakerId: string) => {
         try {
             // For now, just remove from local state since removeSpeakerFromEvent doesn't exist
             setSpeakers(prev => prev.filter(s => s.id !== speakerId));

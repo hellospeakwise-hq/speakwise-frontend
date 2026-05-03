@@ -6,7 +6,7 @@ import { TagFilter } from "@/components/events/tag-filter"
 import { EventsList } from "@/components/events/events-list"
 
 export default function EventsPage() {
-  const [selectedCountries, setSelectedCountries] = useState<number[]>([])
+  const [selectedCountries, setSelectedCountries] = useState<string[]>([])
   const [selectedTag, setSelectedTag] = useState<number | null>(null)
 
   return (

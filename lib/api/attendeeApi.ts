@@ -1,7 +1,7 @@
 import { apiClient } from './base';
 
 export interface Attendee {
-  id: number;
+  id: string;
   first_name: string;
   last_name: string;
   email: string;
@@ -12,17 +12,17 @@ export interface Attendee {
 }
 
 export interface AttendanceEmail {
-  id: number;
+  id: string;
   email: string;
-  event: number;
+  event: string;
   is_given_feedback: boolean;
   created_at: string;
 }
 
 export interface AttendeeUpload {
-  id: number;
-  event: number;
-  organizer: number;
+  id: string;
+  event: string;
+  organizer: string;
   csv_file: string;
   uploaded_at: string;
   processed: boolean;
@@ -44,27 +44,25 @@ export const attendeeAPI = {
   /**
    * Get all attendance emails for an event
    */
-  async getAttendanceEmailsByEvent(eventId: number): Promise<AttendanceEmail[]> {
+  async getAttendanceEmailsByEvent(eventId: string): Promise<AttendanceEmail[]> {
     try {
       console.log('📥 Fetching attendees for event:', eventId);
-      
+
       const response = await apiClient.get(`/organizers/create-attendance/`, {
         params: { event: eventId }
       });
-      
+
       console.log('📦 Received attendance data:', response.data);
-      
+
       if (Array.isArray(response.data)) {
-        // Filter to ensure we only get attendees for this specific event
         const filtered = response.data.filter((item: AttendanceEmail) => item.event === eventId);
         console.log(`✅ Filtered ${filtered.length} attendees for event ${eventId}`);
         return filtered;
       }
-      
+
       return [];
     } catch (error) {
       console.error('Error fetching attendance emails:', error);
-      // Return empty array instead of throwing to avoid breaking the UI
       return [];
     }
   },
@@ -72,19 +70,18 @@ export const attendeeAPI = {
   /**
    * Get all attendees for an event
    */
-  async getAttendeesByEvent(eventId: number): Promise<Attendee[]> {
+  async getAttendeesByEvent(eventId: string): Promise<Attendee[]> {
     try {
       console.log('🔍 Getting attendees for event:', eventId);
-      
-      // Use attendance emails from create-attendance endpoint
+
       const attendanceEmails = await this.getAttendanceEmailsByEvent(eventId);
-      
+
       console.log(`📋 Converting ${attendanceEmails.length} attendance emails to attendees`);
-      
+
       return attendanceEmails.map((email) => {
         const emailParts = email.email.split('@')[0];
         const nameParts = emailParts.split(/[._-]/);
-        
+
         return {
           id: email.id,
           first_name: nameParts[0] || 'Unknown',
@@ -105,25 +102,25 @@ export const attendeeAPI = {
   /**
    * Upload a CSV file of attendees for an event
    */
-  async uploadAttendeesCSV(eventId: number, csvFile: File): Promise<any> {
+  async uploadAttendeesCSV(eventId: string, csvFile: File): Promise<any> {
     try {
       const formData = new FormData();
       formData.append('file', csvFile);
-      formData.append('event', eventId.toString());
-      
+      formData.append('event', eventId);
+
       console.log('📤 Uploading attendees CSV:', {
         eventId,
         fileName: csvFile.name,
         fileSize: csvFile.size,
         fileType: csvFile.type
       });
-      
+
       const response = await apiClient.post(`/organizers/create-attendance/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      
+
       console.log('✅ Upload successful:', response.data);
       return response.data;
     } catch (error: any) {
@@ -140,7 +137,7 @@ export const attendeeAPI = {
   /**
    * Get upload history for an event
    */
-  async getUploadHistory(eventId: number): Promise<AttendeeUpload[]> {
+  async getUploadHistory(eventId: string): Promise<AttendeeUpload[]> {
     try {
       const response = await apiClient.get(`/events/${eventId}/attendees/uploads/`);
       return response.data;
@@ -153,7 +150,7 @@ export const attendeeAPI = {
   /**
    * Get upload status
    */
-  async getUploadStatus(uploadId: number): Promise<UploadStatus> {
+  async getUploadStatus(uploadId: string): Promise<UploadStatus> {
     try {
       const response = await apiClient.get(`/attendee-uploads/${uploadId}/status/`);
       return response.data;
@@ -166,14 +163,14 @@ export const attendeeAPI = {
   /**
    * Delete a single attendee
    */
-  async deleteAttendee(attendeeId: number, eventId: number): Promise<void> {
+  async deleteAttendee(attendeeId: string, eventId: string): Promise<void> {
     try {
       console.log('🗑️ Deleting attendee:', { attendeeId, eventId });
-      
+
       await apiClient.delete(`/organizers/create-attendance/${attendeeId}/`, {
         params: { event: eventId }
       });
-      
+
       console.log('✅ Attendee deleted successfully');
     } catch (error) {
       console.error('Error deleting attendee:', error);
@@ -184,14 +181,14 @@ export const attendeeAPI = {
   /**
    * Delete all attendees for an event
    */
-  async deleteAllAttendees(eventId: number): Promise<void> {
+  async deleteAllAttendees(eventId: string): Promise<void> {
     try {
       console.log('🗑️ Deleting all attendees for event:', eventId);
-      
+
       await apiClient.delete(`/organizers/create-attendance/`, {
         params: { event: eventId }
       });
-      
+
       console.log('✅ All attendees deleted successfully');
     } catch (error) {
       console.error('Error deleting all attendees:', error);

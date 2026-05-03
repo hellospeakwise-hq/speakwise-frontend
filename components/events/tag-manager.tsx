@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 interface TagManagerProps {
-    eventId: number
+    eventId: string
     onTagsChange?: (event: Event) => void
 }
 
@@ -36,7 +36,7 @@ export function TagManager({ eventId, onTagsChange }: TagManagerProps) {
             setLoading(true)
             setError(null)
             const [eventData, tagsData] = await Promise.all([
-                eventsApi.getEvent(eventId.toString()),
+                eventsApi.getEvent(eventId),
                 eventsApi.getTags()
             ])
             setEvent(eventData)

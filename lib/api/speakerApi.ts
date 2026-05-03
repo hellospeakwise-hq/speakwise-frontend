@@ -2,21 +2,21 @@ import { apiClient } from './base';
 import { cachedFetch, CACHE_TTL } from '../utils/cache';
 
 export interface SpeakerProfile {
-    id: number;
-    speaker_user: number;
+    id: string;
+    speaker_user: string;
     organization: string;
     short_bio: string;
     long_bio: string;
     country: string;
     avatar?: string;
-    skill_tags: number[];
-    events_spoken: number[];
+    skill_tags: string[];
+    events_spoken: string[];
     created_at: string;
     updated_at: string;
 }
 
 export interface SkillTag {
-    id: number;
+    id: string;
     name: string;
     description?: string;
     duration?: number;
@@ -29,13 +29,13 @@ export interface CreateSkillData {
 }
 
 export interface SocialLink {
-    id: number;
+    id: string;
     name: string;
     link: string;
 }
 
 export interface Speaker {
-    id: number;
+    id: string;
     social_links: SocialLink[];
     skill_tags: SkillTag[];
     speaker_name: string;
@@ -65,7 +65,7 @@ export interface FollowActionResponse {
 }
 
 export interface FollowPerson {
-    id: number;
+    id: string;
     username: string;
     full_name: string;
     avatar: string | null;
@@ -77,7 +77,7 @@ export interface FollowPerson {
 }
 
 export interface SpeakerFollower {
-    id: number;
+    id: string;
     follower: string;
     follower_username: string;
     created_at: string;
@@ -95,7 +95,7 @@ export interface SpeakerFollowingResponse {
 
 // Helper to get the slug for a speaker (fallback to id if no username)
 export function getSpeakerSlug(speaker: Speaker): string {
-    return speaker.slug || speaker.user_account || speaker.username || speaker.id.toString();
+    return speaker.slug || speaker.user_account || speaker.username || speaker.id;
 }
 
 export interface UpdateSpeakerProfileData {
@@ -103,7 +103,7 @@ export interface UpdateSpeakerProfileData {
     short_bio?: string;
     long_bio?: string;
     country?: string;
-    skill_tags?: number[];
+    skill_tags?: string[];
 }
 
 export const speakerApi = {
@@ -198,7 +198,7 @@ export const speakerApi = {
     },
 
     // Get skill by ID
-    async getSkillById(id: number): Promise<SkillTag> {
+    async getSkillById(id: string): Promise<SkillTag> {
         const response = await apiClient.get<SkillTag>(`/speakers/skills/${id}/`);
         return response.data;
     },
@@ -210,13 +210,13 @@ export const speakerApi = {
     },
 
     // Update a skill
-    async updateSkill(id: number, data: Partial<CreateSkillData>): Promise<SkillTag> {
+    async updateSkill(id: string, data: Partial<CreateSkillData>): Promise<SkillTag> {
         const response = await apiClient.patch<SkillTag>(`/speakers/skills/${id}/`, data);
         return response.data;
     },
 
     // Delete a skill
-    async deleteSkill(id: number): Promise<void> {
+    async deleteSkill(id: string): Promise<void> {
         await apiClient.delete(`/speakers/skills/${id}/`);
     },
 

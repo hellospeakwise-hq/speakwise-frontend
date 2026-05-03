@@ -15,7 +15,7 @@ interface UseEventsReturn {
 
 export function useEvents(): UseEventsReturn {
     const [events, setEvents] = useState<Event[]>([])
-    const [countries, setCountries] = useState<Array<{id: number; name: string; code: string}>>([])
+    const [countries, setCountries] = useState<Array<{id: string; name: string; code: string}>>([])
     const [tags, setTags] = useState<Array<{id: number; name: string; color?: string}>>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -35,7 +35,7 @@ export function useEvents(): UseEventsReturn {
                 setEvents(events)
                 
                 // Extract unique countries from events
-                const countryMap = new Map<number, {id: number; name: string; code: string}>()
+                const countryMap = new Map<string, {id: string; name: string; code: string}>()
                 events.forEach(event => {
                     if (event.location && typeof event.location === 'object' && event.location.country) {
                         const country = event.location.country

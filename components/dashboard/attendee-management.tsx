@@ -122,7 +122,7 @@ export function AttendeeManagement({ events }: AttendeeManagementProps) {
     }
   }
 
-  const handleDeleteAttendee = async (attendeeId: number, attendeeEmail: string) => {
+  const handleDeleteAttendee = async (attendeeId: string, attendeeEmail: string) => {
     const loadingToast = toast.loading('Deleting attendee...', {
       description: `Removing ${attendeeEmail}`
     })

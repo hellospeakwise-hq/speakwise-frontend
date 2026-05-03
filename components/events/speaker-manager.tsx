@@ -45,7 +45,7 @@ export function SpeakerManager({ eventId }: SpeakerManagerProps) {
         }
     };
 
-    const handleAddSpeaker = async (speakerId: number) => {
+    const handleAddSpeaker = async (speakerId: string) => {
         setIsAdding(true);
         try {
             // For now, just update the UI since addSpeakerToEvent doesn't exist

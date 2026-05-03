@@ -7,12 +7,12 @@ import { scheduleTokenRefresh, cancelTokenRefresh, initializeTokenRefresh } from
 
 type User = {
     id: string;
-    speaker_id?: number;
+    speaker_id?: string;
     first_name: string;
     last_name: string;
     email: string;
     role: {
-        id: number;
+        id: string;
         role: 'attendee' | 'speaker' | 'organizer' | 'admin';
     };
     userType: 'attendee' | 'speaker' | 'organizer' | 'admin';
@@ -23,7 +23,7 @@ interface AuthContextType {
     setUser: (user: User | null) => void;
     loading: boolean;
     login: (email: string, password: string) => Promise<string>;
-    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string) => Promise<string>;
+    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string) => Promise<boolean>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -145,7 +145,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 first_name: response.first_name,
                 last_name: response.last_name,
                 email: response.email,
-                role: response.role || { id: 2, role: 'speaker' }, // Default to speaker if role not provided
+                role: response.role || { id: '2', role: 'speaker' }, // Default to speaker if role not provided
                 userType: response.role?.role || 'speaker' // Default to speaker
             };
 

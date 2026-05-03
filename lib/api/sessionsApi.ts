@@ -2,11 +2,10 @@
 import { Speaker } from './speakerApi';
 const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api`;
 
-// Location interface to match the actual backend response
 export interface Location {
-    id: number;
+    id: string;
     country: {
-        id: number;
+        id: string;
         name: string;
         code?: string;
     };
@@ -21,19 +20,19 @@ export interface Location {
 }
 
 export interface Session {
-    id: number;
+    id: string;
     name: string;
     description: string;
     start_date_time: string;
     end_date_time: string;
-    location: string | Location; // Can be either string or Location object
-    event: number;
-    speaker?: number;
+    location: string | Location;
+    event: string;
+    speaker?: string;
     speaker_details?: Speaker;
 }
 
 class SessionsAPI {
-    async getEventSessions(eventId: number): Promise<Session[]> {
+    async getEventSessions(eventId: string): Promise<Session[]> {
         try {
             const response = await fetch(`${API_BASE_URL}/events/${eventId}/sessions/`);
             if (!response.ok) {
@@ -46,7 +45,7 @@ class SessionsAPI {
         }
     }
 
-    async createSessionWithSpeaker(eventId: number, sessionData: Partial<Session>): Promise<Session> {
+    async createSessionWithSpeaker(eventId: string, sessionData: Partial<Session>): Promise<Session> {
         try {
             const response = await fetch(`${API_BASE_URL}/events/${eventId}/sessions/create/`, {
                 method: 'POST',
@@ -67,7 +66,7 @@ class SessionsAPI {
         }
     }
 
-    async updateSession(sessionId: number, sessionData: Partial<Session>): Promise<Session> {
+    async updateSession(sessionId: string, sessionData: Partial<Session>): Promise<Session> {
         try {
             const response = await fetch(`${API_BASE_URL}/events/sessions/${sessionId}/`, {
                 method: 'PUT',
@@ -88,7 +87,7 @@ class SessionsAPI {
         }
     }
 
-    async deleteSession(sessionId: number): Promise<void> {
+    async deleteSession(sessionId: string): Promise<void> {
         try {
             const response = await fetch(`${API_BASE_URL}/events/sessions/${sessionId}/`, {
                 method: 'DELETE'
@@ -104,5 +103,4 @@ class SessionsAPI {
     }
 }
 
-// Create and export a singleton instance
 export const sessionsAPI = new SessionsAPI();
