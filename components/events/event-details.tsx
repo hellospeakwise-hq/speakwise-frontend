@@ -15,6 +15,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { useEvents } from "@/hooks/use-events"
 import { apiClient } from "@/lib/api/base"
 import Link from "next/link"
+import { SubmitCFPDialog } from "@/components/cfp/submit-cfp-dialog"
 
 interface EventDetailsProps {
   id: string
@@ -157,21 +158,27 @@ export function EventDetails({ id }: EventDetailsProps) {
 
         {/* Content */}
         <div className="relative h-full flex flex-col justify-end p-6 md:p-8">
-          {/* Management buttons - top right */}
-          {canManageEvent && (
-            <div className="absolute top-4 right-4 flex space-x-2">
-              <Link href={`/events/${id}/manage-sessions`}>
-                <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
-                  Manage Sessions
-                </Button>
-              </Link>
-              <Link href={`/events/${id}/manage-speakers`}>
-                <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
-                  Manage Speakers
-                </Button>
-              </Link>
-            </div>
-          )}
+          {/* Action buttons - top right */}
+          <div className="absolute top-4 right-4 flex space-x-2">
+            {canManageEvent && (
+              <>
+                <Link href={`/events/${id}/manage-sessions`}>
+                  <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
+                    Manage Sessions
+                  </Button>
+                </Link>
+                <Link href={`/events/${id}/manage-speakers`}>
+                  <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
+                    Manage Speakers
+                  </Button>
+                </Link>
+              </>
+            )}
+            <SubmitCFPDialog
+              eventSlug={id}
+              eventTitle={event.name || event.title || id}
+            />
+          </div>
 
           {/* Event Title and Info */}
           <div className="space-y-4">

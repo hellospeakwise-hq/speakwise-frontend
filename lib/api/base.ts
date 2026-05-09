@@ -159,11 +159,12 @@ apiClient.interceptors.response.use(
 
     // Handle API errors for non-auth endpoints
     const errorData = error.response?.data as any;
-    const errorMessage = errorData?.message || 
-                        errorData?.detail || 
-                        errorData?.non_field_errors?.[0] ||
-                        error.message || 
-                        'An unexpected error occurred';
+    const errorMessage = (Array.isArray(errorData) && errorData[0])
+                        || errorData?.message
+                        || errorData?.detail
+                        || errorData?.non_field_errors?.[0]
+                        || error.message
+                        || 'An unexpected error occurred';
 
     throw new Error(errorMessage);
   }
