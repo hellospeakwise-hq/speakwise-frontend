@@ -1,9 +1,21 @@
 import { useState, useEffect } from "react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Calendar, Users, BarChart, Loader2, Star, RefreshCw, Building2 } from "lucide-react"
+import { cn } from "@/lib/utils"
+import {
+  Calendar,
+  Users,
+  Loader2,
+  RefreshCw,
+  Building2,
+  Mic2,
+  MessageSquare,
+  Megaphone,
+  LayoutDashboard,
+  UserCheck,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react"
 import { useOrganizerEvents } from "@/hooks/use-organizer-events"
 import { EventManagementTable } from "@/components/dashboard/event-management-table"
 import { AttendeeManagement } from "@/components/dashboard/attendee-management"
@@ -13,6 +25,43 @@ import { OrganizerCFPSettingsView } from "@/components/cfp/organizer-cfp-setting
 import { OrganizationMembersManager } from "@/components/organization/organization-members-manager"
 import { organizationApi, type Organization } from "@/lib/api/organizationApi"
 import { toast } from "sonner"
+
+type Section =
+  | "overview"
+  | "events"
+  | "organization"
+  | "speaker-requests"
+  | "speakers"
+  | "attendees"
+  | "feedback"
+  | "cfp-submissions"
+  | "cfp-settings"
+
+interface NavItem {
+  id: Section
+  label: string
+  icon: React.ElementType
+  children?: { id: Section; label: string }[]
+}
+
+const NAV: NavItem[] = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "events", label: "Events", icon: Calendar },
+  { id: "organization", label: "Organization", icon: Building2 },
+  { id: "speaker-requests", label: "Speaker Requests", icon: UserCheck },
+  { id: "speakers", label: "Speakers", icon: Mic2 },
+  { id: "attendees", label: "Attendees", icon: Users },
+  { id: "feedback", label: "Feedback", icon: MessageSquare },
+  {
+    id: "cfp-submissions",
+    label: "CFP",
+    icon: Megaphone,
+    children: [
+      { id: "cfp-submissions", label: "Submissions" },
+      { id: "cfp-settings", label: "Settings" },
+    ],
+  },
+]
 
 export function OrganizerDashboard() {
   const {
@@ -25,9 +74,11 @@ export function OrganizerDashboard() {
     deleteEvent,
     toggleEventStatus,
     refreshAttendeeStats,
-    stats
+    stats,
   } = useOrganizerEvents()
 
+  const [section, setSection] = useState<Section>("overview")
+  const [cfpOpen, setCfpOpen] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [organizations, setOrganizations] = useState<Organization[]>([])
   const [loadingOrgs, setLoadingOrgs] = useState(true)
@@ -40,33 +91,14 @@ export function OrganizerDashboard() {
     try {
       setLoadingOrgs(true)
       const orgs = await organizationApi.getUserOrganizations()
-      const activeOrgs = orgs.filter(org => org.is_active)
-      setOrganizations(activeOrgs)
-    } catch (error) {
-      console.error('Error loading organizations:', error)
-      toast.error('Failed to load organizations')
+      setOrganizations(orgs.filter((o) => o.is_active))
+    } catch {
+      toast.error("Failed to load organizations")
     } finally {
       setLoadingOrgs(false)
     }
   }
 
-  const handleEventCreate = (event: any) => {
-    refetch() // Refresh the events list
-  }
-
-  const handleEventUpdate = (event: any) => {
-    refetch() // Refresh the events list
-  }
-
-  const handleEventDelete = async (eventSlug: string) => {
-    await deleteEvent(eventSlug)
-  }
-
-  const handleEventStatusToggle = async (eventSlug: string, isActive: boolean) => {
-    await toggleEventStatus(eventSlug, isActive)
-  }
-
-  // Refresh attendee stats when attendee tab is selected or when needed
   const handleRefreshStats = async () => {
     setRefreshing(true)
     try {
@@ -76,218 +108,275 @@ export function OrganizerDashboard() {
     }
   }
 
+  const navigate = (id: Section) => {
+    if (id === "cfp-submissions" || id === "cfp-settings") setCfpOpen(true)
+    setSection(id)
+  }
+
   if (error) {
     return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-center py-8">
-              <div className="text-red-600 mb-2">Error loading dashboard</div>
-              <p className="text-muted-foreground mb-4">{error}</p>
-              <Button onClick={refetch}>Try Again</Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <Card>
+        <CardContent className="pt-6 text-center py-8">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Button onClick={refetch}>Try Again</Button>
+        </CardContent>
+      </Card>
     )
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-        <div className="min-w-0">
-          {/* Title is in the parent page, so just the refresh button here */}
-        </div>
-        <Button variant="outline" size="sm" onClick={handleRefreshStats} disabled={loading || refreshing} data-tour="refresh-stats" className="self-start sm:self-auto">
-          <RefreshCw className={`h-4 w-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh Stats'}
-        </Button>
-      </div>
+    <div className="flex min-h-[calc(100vh-80px)] border rounded-xl overflow-hidden bg-background">
+      {/* ── Sidebar ── */}
+      <aside className="w-52 shrink-0 border-r bg-muted/20 flex flex-col py-4">
+        {NAV.map((item) => {
+          const Icon = item.icon
+          const isCFP = !!item.children
+          const isParentActive =
+            isCFP && (section === "cfp-submissions" || section === "cfp-settings")
+          const isActive = !isCFP && section === item.id
 
-      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        {/* Organizer Stats */}
-        <Card data-tour="stats-total-events">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-            <CardTitle className="text-xs sm:text-sm font-medium">Total Events</CardTitle>
-            <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="text-xl sm:text-2xl font-bold">
-              {loading ? (
-                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
-              ) : (
-                stats.totalEvents
-              )}
-            </div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Organized events</p>
-          </CardContent>
-        </Card>
-        <Card data-tour="stats-attendees">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-            <CardTitle className="text-xs sm:text-sm font-medium">Total Attendees</CardTitle>
-            <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="text-xl sm:text-2xl font-bold">
-              {loading ? (
-                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
-              ) : (
-                stats.totalAttendees.toLocaleString()
-              )}
-            </div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Across all events</p>
-          </CardContent>
-        </Card>
-        <Card data-tour="stats-feedback">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-            <CardTitle className="text-xs sm:text-sm font-medium">Feedback Rate</CardTitle>
-            <BarChart className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary" />
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="text-xl sm:text-2xl font-bold">
-              {loading ? (
-                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
-              ) : (
-                `${stats.feedbackRate}%`
-              )}
-            </div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Of attendees provided feedback</p>
-          </CardContent>
-        </Card>
-        <Card data-tour="stats-rating">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 px-3 sm:px-6 pt-3 sm:pt-6">
-            <CardTitle className="text-xs sm:text-sm font-medium">Avg. Speaker Rating</CardTitle>
-            <Star className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-yellow-500" fill="currentColor" />
-          </CardHeader>
-          <CardContent className="px-3 sm:px-6 pb-3 sm:pb-6">
-            <div className="text-xl sm:text-2xl font-bold">
-              {loading ? (
-                <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 animate-spin" />
-              ) : (
-                stats.avgRating.toFixed(1)
-              )}
-            </div>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Across all speakers</p>
-          </CardContent>
-        </Card>
-      </div>
+          if (isCFP) {
+            return (
+              <div key={item.id}>
+                <button
+                  onClick={() => {
+                    setCfpOpen((o) => !o)
+                    if (!cfpOpen) navigate("cfp-submissions")
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-2.5 px-4 py-2 text-sm font-medium transition-colors",
+                    isParentActive
+                      ? "text-orange-500"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  )}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span className="flex-1 text-left">{item.label}</span>
+                  {cfpOpen ? (
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  ) : (
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  )}
+                </button>
+                {cfpOpen &&
+                  item.children!.map((child) => (
+                    <button
+                      key={child.id}
+                      onClick={() => navigate(child.id)}
+                      className={cn(
+                        "w-full flex items-center gap-2 pl-10 pr-4 py-1.5 text-sm transition-colors",
+                        section === child.id
+                          ? "text-orange-500 font-medium"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      {section === child.id && (
+                        <span className="absolute left-0 w-0.5 h-5 bg-orange-500 rounded-r" />
+                      )}
+                      {child.label}
+                    </button>
+                  ))}
+              </div>
+            )
+          }
 
-      <Tabs defaultValue="events" className="space-y-4">
-        <div className="overflow-x-auto -mx-1 px-1">
-          <TabsList className="inline-flex w-auto min-w-full sm:min-w-0 h-auto flex-wrap sm:flex-nowrap gap-1 sm:gap-0">
-            <TabsTrigger value="events" data-tour="manage-events-tab" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Events</TabsTrigger>
-            <TabsTrigger value="organization" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Organization</TabsTrigger>
-            <TabsTrigger value="speaker-requests" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Speaker Requests</TabsTrigger>
-            <TabsTrigger value="speakers" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Speakers</TabsTrigger>
-            <TabsTrigger value="attendees" data-tour="attendees-tab" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Attendees</TabsTrigger>
-            <TabsTrigger value="feedback" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Feedback</TabsTrigger>
-            <TabsTrigger value="cfp" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">CFP</TabsTrigger>
-          </TabsList>
-        </div>
-        <TabsContent value="events">
-          <EventManagementTable
-            events={events}
-            loading={loading}
-            onEventCreate={handleEventCreate}
-            onEventUpdate={handleEventUpdate}
-            onEventDelete={handleEventDelete}
-            onEventStatusToggle={handleEventStatusToggle}
-          />
-        </TabsContent>
-        <TabsContent value="organization">
-          {loadingOrgs ? (
+          return (
+            <button
+              key={item.id}
+              onClick={() => navigate(item.id)}
+              className={cn(
+                "relative flex items-center gap-2.5 px-4 py-2 text-sm font-medium transition-colors",
+                isActive
+                  ? "text-orange-500 bg-orange-500/8"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+              )}
+            >
+              {isActive && (
+                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-orange-500 rounded-r" />
+              )}
+              <Icon className="h-4 w-4 shrink-0" />
+              {item.label}
+            </button>
+          )
+        })}
+      </aside>
+
+      {/* ── Main content ── */}
+      <main className="flex-1 min-w-0 p-6 overflow-auto">
+        {/* Overview */}
+        {section === "overview" && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-semibold">Overview</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">Your organizer summary</p>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefreshStats}
+                disabled={loading || refreshing}
+              >
+                <RefreshCw className={cn("h-4 w-4 mr-2", refreshing && "animate-spin")} />
+                {refreshing ? "Refreshing…" : "Refresh"}
+              </Button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {[
+                { label: "Total Events", value: stats.totalEvents, sub: "All time", icon: Calendar },
+                { label: "Upcoming", value: stats.upcomingEvents, sub: "Events ahead", icon: Calendar },
+                { label: "Past Events", value: stats.pastEvents, sub: "Completed", icon: Calendar },
+                { label: "Attendees", value: stats.totalAttendees.toLocaleString(), sub: "Across all events", icon: Users },
+              ].map(({ label, value, sub, icon: Icon }) => (
+                <Card key={label}>
+                  <CardHeader className="flex flex-row items-center justify-between pb-1 pt-4 px-4">
+                    <CardTitle className="text-xs font-medium text-muted-foreground">{label}</CardTitle>
+                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4">
+                    <div className="text-2xl font-bold">
+                      {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : value}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{sub}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Quick links */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                { label: "Manage Events", target: "events" as Section, icon: Calendar, desc: "Create and edit events" },
+                { label: "CFP Submissions", target: "cfp-submissions" as Section, icon: Megaphone, desc: "Review proposals" },
+                { label: "Attendees", target: "attendees" as Section, icon: Users, desc: "Track attendance" },
+              ].map(({ label, target, icon: Icon, desc }) => (
+                <button
+                  key={label}
+                  onClick={() => navigate(target)}
+                  className="flex items-start gap-3 p-4 rounded-lg border bg-card hover:bg-muted/40 transition-colors text-left"
+                >
+                  <div className="mt-0.5 p-1.5 rounded-md bg-orange-500/10">
+                    <Icon className="h-4 w-4 text-orange-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{label}</p>
+                    <p className="text-xs text-muted-foreground">{desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Events */}
+        {section === "events" && (
+          <div className="space-y-4">
+            <SectionHeader title="Events" desc="Create and manage your events" />
+            <EventManagementTable
+              events={events}
+              loading={loading}
+              onEventCreate={() => refetch()}
+              onEventUpdate={() => refetch()}
+              onEventDelete={deleteEvent}
+              onEventStatusToggle={async (slug, isActive) => { await toggleEventStatus(slug, isActive) }}
+            />
+          </div>
+        )}
+
+        {/* Organization */}
+        {section === "organization" && (
+          <div className="space-y-4">
+            <SectionHeader title="Organization" desc="Manage your team members" />
+            {loadingOrgs ? (
+              <div className="flex items-center gap-2 py-8 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" /> Loading…
+              </div>
+            ) : organizations.length > 0 ? (
+              <OrganizationMembersManager organizations={organizations} />
+            ) : (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <Building2 className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground">No active organizations yet.</p>
+                  <p className="text-sm text-muted-foreground mt-1">Create an organization to manage team members.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+
+        {/* Speaker Requests */}
+        {section === "speaker-requests" && (
+          <div className="space-y-4">
+            <SectionHeader title="Speaker Requests" desc="Incoming and outgoing speaker invitations" />
+            <OrganizerSpeakerRequests />
+          </div>
+        )}
+
+        {/* Speakers */}
+        {section === "speakers" && (
+          <div className="space-y-4">
+            <SectionHeader title="Speakers" desc="Speakers associated with your events" />
             <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
-                  <span className="ml-2 text-muted-foreground">Loading organizations...</span>
-                </div>
+              <CardContent className="py-12 text-center">
+                <Mic2 className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">Select an event to view its speakers.</p>
               </CardContent>
             </Card>
-          ) : organizations.length > 0 ? (
-            <OrganizationMembersManager organizations={organizations} />
-          ) : (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="h-5 w-5" />
-                  Organization Management
-                </CardTitle>
-                <CardDescription>Manage your organization members</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-8">
-                  <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground mb-2">You don't have any active organizations</p>
-                  <p className="text-sm text-muted-foreground">
-                    Create an organization to start managing team members
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-        <TabsContent value="speaker-requests">
-          <OrganizerSpeakerRequests />
-        </TabsContent>
-        <TabsContent value="speakers">
-          <Card>
-            <CardHeader>
-              <CardTitle>Event Speakers</CardTitle>
-              <CardDescription>Manage speakers for your events</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Select an event to view and manage its speakers.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="attendees">
-          <div onFocus={handleRefreshStats}>
+          </div>
+        )}
+
+        {/* Attendees */}
+        {section === "attendees" && (
+          <div className="space-y-4">
+            <SectionHeader title="Attendees" desc="Track attendance across your events" />
             <AttendeeManagement events={events} />
           </div>
-        </TabsContent>
-        <TabsContent value="feedback">
-          <Card>
-            <CardHeader>
-              <CardTitle>Feedback Reports</CardTitle>
-              <CardDescription>View and export feedback for your events</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Select an event to view aggregated feedback and reports.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="cfp">
-          <Tabs defaultValue="submissions" className="space-y-4">
-            <TabsList className="w-fit">
-              <TabsTrigger value="submissions">Submissions</TabsTrigger>
-              <TabsTrigger value="settings">CFP Settings</TabsTrigger>
-            </TabsList>
-            <TabsContent value="submissions">
-              <Card>
-                <CardHeader>
-                  <CardTitle>CFP Submissions</CardTitle>
-                  <CardDescription>Review and respond to Call for Papers submissions from speakers</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <OrganizerCFPView events={events.map(e => ({ id: e.id, slug: e.slug, title: e.title || e.name }))} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-            <TabsContent value="settings">
-              <Card>
-                <CardHeader>
-                  <CardTitle>CFP Settings</CardTitle>
-                  <CardDescription>Configure the CFP page, description, and dates for each of your events</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <OrganizerCFPSettingsView events={events.map(e => ({ id: e.id, slug: e.slug, title: e.title || e.name }))} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </TabsContent>
-      </Tabs>
+        )}
+
+        {/* Feedback */}
+        {section === "feedback" && (
+          <div className="space-y-4">
+            <SectionHeader title="Feedback" desc="Aggregated feedback from your events" />
+            <Card>
+              <CardContent className="py-12 text-center">
+                <MessageSquare className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">Feedback reports coming soon.</p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* CFP Submissions */}
+        {section === "cfp-submissions" && (
+          <div className="space-y-4">
+            <SectionHeader title="CFP Submissions" desc="Review and respond to speaker proposals" />
+            <OrganizerCFPView
+              events={events.map((e) => ({ id: e.id, slug: e.slug, title: e.title || e.name }))}
+            />
+          </div>
+        )}
+
+        {/* CFP Settings */}
+        {section === "cfp-settings" && (
+          <div className="space-y-4">
+            <SectionHeader title="CFP Settings" desc="Configure the CFP page, description, and dates for each event" />
+            <OrganizerCFPSettingsView
+              events={events.map((e) => ({ id: e.id, slug: e.slug, title: e.title || e.name }))}
+            />
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
+
+function SectionHeader({ title, desc }: { title: string; desc: string }) {
+  return (
+    <div className="mb-2">
+      <h2 className="text-xl font-semibold">{title}</h2>
+      <p className="text-sm text-muted-foreground mt-0.5">{desc}</p>
     </div>
   )
 }
