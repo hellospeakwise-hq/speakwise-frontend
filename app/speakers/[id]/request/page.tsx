@@ -385,7 +385,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
             <div className="relative h-52 w-full overflow-hidden">
               {/* Photo */}
               <img
-                src="/email-request.png"
+                src="/email-request.jpg"
                 alt="Email outreach"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
               />
