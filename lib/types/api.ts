@@ -56,6 +56,13 @@ export interface Event {
   is_active: boolean;
   attendees?: number;
   organizer: any | null;
+  // CFP configuration
+  accepts_cfp: boolean;
+  cfp_open: boolean;
+  cfp_description: string;
+  cfp_open_date: string | null;
+  cfp_deadline: string | null;
+  cfp_speaker_notification_date: string | null;
 }
 
 export interface EventsListResponse {

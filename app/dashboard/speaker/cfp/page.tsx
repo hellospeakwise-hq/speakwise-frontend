@@ -1,17 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { FileText, Clock, CheckCircle, XCircle, Trash2, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { Plus, Loader2, CheckCircle, XCircle, Clock, Pencil, ExternalLink, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { cfpApi, type CFPSubmission, TALK_TYPE_LABELS, AUDIENCE_LABELS, CFP_CATEGORIES } from '@/lib/api/cfpApi'
+import { cfpApi, type CFPSubmission, TALK_TYPE_LABELS } from '@/lib/api/cfpApi'
 import { toast } from 'sonner'
 
 const STATUS_CONFIG = {
-    pending:  { label: 'Pending',  icon: Clock,         class: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
-    accepted: { label: 'Accepted', icon: CheckCircle,   class: 'bg-green-500/10 text-green-500 border-green-500/20' },
-    rejected: { label: 'Rejected', icon: XCircle,       class: 'bg-red-500/10 text-red-500 border-red-500/20' },
+    pending:  { label: 'Submitted', icon: Clock,       class: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
+    accepted: { label: 'Accepted',  icon: CheckCircle, class: 'bg-green-500/10 text-green-600 border-green-500/20' },
+    rejected: { label: 'Rejected',  icon: XCircle,     class: 'bg-red-500/10 text-red-500 border-red-500/20' },
 }
 
 export default function SpeakerCFPPage() {
@@ -20,122 +20,171 @@ export default function SpeakerCFPPage() {
     const [deletingId, setDeletingId] = useState<string | null>(null)
 
     useEffect(() => {
-        try {
-            const stored = JSON.parse(localStorage.getItem('cfp_submissions') || '[]')
-            setSubmissions(stored)
-        } catch {
-            setSubmissions([])
-        } finally {
-            setLoading(false)
-        }
+        cfpApi.myCFPs()
+            .then(setSubmissions)
+            .catch(() => {
+                // fallback to localStorage if API fails (offline / no endpoint yet)
+                try {
+                    const stored = JSON.parse(localStorage.getItem('cfp_submissions') || '[]')
+                    setSubmissions(stored)
+                } catch {
+                    setSubmissions([])
+                }
+            })
+            .finally(() => setLoading(false))
     }, [])
 
     const handleDelete = async (id: string) => {
-        if (!confirm('Delete this CFP submission?')) return
+        if (!confirm('Withdraw this CFP submission? This cannot be undone.')) return
         try {
             setDeletingId(id)
             await cfpApi.deleteCFP(id)
             setSubmissions(prev => {
                 const updated = prev.filter(s => s.id !== id)
-                localStorage.setItem('cfp_submissions', JSON.stringify(updated))
+                // also clean localStorage
+                try { localStorage.setItem('cfp_submissions', JSON.stringify(updated)) } catch {}
                 return updated
             })
-            toast.success('Submission deleted')
-        } catch {
-            toast.error('Failed to delete submission')
+            toast.success('Submission withdrawn')
+        } catch (err: any) {
+            toast.error(err?.message || 'Failed to withdraw submission')
         } finally {
             setDeletingId(null)
         }
     }
 
-    const getCategoryLabel = (value: string) =>
-        CFP_CATEGORIES.find(c => c.value === value)?.label ?? value
-
     if (loading) {
         return (
-            <div className="flex items-center justify-center h-64">
+            <div className="flex items-center justify-center min-h-[60vh]">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
         )
     }
 
     return (
-        <div className="container max-w-4xl py-8 space-y-6">
+        <div className="container max-w-4xl py-10 space-y-6">
             <div>
-                <h1 className="text-2xl font-bold">My CFP Submissions</h1>
+                <h1 className="text-2xl font-bold">My Proposals</h1>
                 <p className="text-muted-foreground text-sm mt-1">
-                    Track the status of all your Call for Papers submissions
+                    All your Call for Papers submissions across events
                 </p>
             </div>
 
             {submissions.length === 0 ? (
-                <Card>
-                    <CardContent className="flex flex-col items-center justify-center py-16 text-center gap-3">
-                        <FileText className="h-10 w-10 text-muted-foreground/40" />
-                        <p className="font-medium">No submissions yet</p>
-                        <p className="text-sm text-muted-foreground max-w-sm">
-                            Browse events and click <span className="font-medium text-orange-500">Submit CFP</span> on any event page to propose a talk.
-                        </p>
-                    </CardContent>
-                </Card>
+                <div className="border rounded-xl py-16 text-center space-y-3">
+                    <p className="font-medium text-muted-foreground">No proposals yet</p>
+                    <p className="text-sm text-muted-foreground">
+                        Browse events and submit a talk proposal to get started.
+                    </p>
+                    <Button asChild className="mt-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full">
+                        <Link href="/events">Browse Events</Link>
+                    </Button>
+                </div>
             ) : (
-                <div className="space-y-4">
-                    {submissions.map(sub => {
-                        const status = STATUS_CONFIG[sub.status]
-                        const StatusIcon = status.icon
-                        const isPending = sub.status === 'pending'
+                <div className="border rounded-xl overflow-hidden">
+                    {/* Table header */}
+                    <div className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-5 py-3 bg-muted/40 border-b text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                        <span>Title</span>
+                        <span>State</span>
+                        <span className="w-16 text-right">Actions</span>
+                    </div>
 
-                        return (
-                            <Card key={sub.id} className="border">
-                                <CardContent className="p-5 space-y-3">
-                                    {/* Header row */}
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="space-y-1 flex-1 min-w-0">
-                                            <p className="font-semibold truncate">{sub.elevator_pitch}</p>
-                                            <p className="text-sm text-muted-foreground">{getCategoryLabel(sub.category)}</p>
-                                        </div>
-                                        <Badge variant="outline" className={`shrink-0 flex items-center gap-1 ${status.class}`}>
-                                            <StatusIcon className="h-3 w-3" />
-                                            {status.label}
-                                        </Badge>
+                    {/* Rows */}
+                    <div className="divide-y">
+                        {submissions.map(sub => {
+                            const status = STATUS_CONFIG[sub.status]
+                            const StatusIcon = status.icon
+                            const isPending = sub.status === 'pending'
+                            const isDeleting = deletingId === sub.id
+
+                            return (
+                                <div
+                                    key={sub.id}
+                                    className="grid grid-cols-[1fr_auto_auto] items-center gap-4 px-5 py-4 hover:bg-muted/20 transition-colors"
+                                >
+                                    {/* Title + meta */}
+                                    <div className="min-w-0 space-y-0.5">
+                                        <p className="font-medium truncate">
+                                            {sub.title || sub.elevator_pitch}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground truncate">
+                                            {sub.event_title || 'Unknown event'}
+                                            {sub.talk_type && (
+                                                <span className="ml-2 opacity-70">· {TALK_TYPE_LABELS[sub.talk_type]}</span>
+                                            )}
+                                        </p>
                                     </div>
 
-                                    {/* Tags */}
-                                    <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                                        <span className="bg-muted px-2 py-0.5 rounded-full">
-                                            {TALK_TYPE_LABELS[sub.talk_type]}
-                                        </span>
-                                        <span className="bg-muted px-2 py-0.5 rounded-full">
-                                            {AUDIENCE_LABELS[sub.audience]}
-                                        </span>
-                                    </div>
+                                    {/* Status badge */}
+                                    <Badge
+                                        variant="outline"
+                                        className={`flex items-center gap-1 shrink-0 ${status.class}`}
+                                    >
+                                        <StatusIcon className="h-3 w-3" />
+                                        {status.label}
+                                    </Badge>
 
-                                    {/* Abstract preview */}
-                                    <p className="text-sm text-muted-foreground line-clamp-2">{sub.abstract}</p>
+                                    {/* Action buttons */}
+                                    <div className="flex items-center gap-1 shrink-0">
+                                        {/* View CFP page */}
+                                        {sub.event_slug && (
+                                            <Link href={`/events/${sub.event_slug}/cfp`} target="_blank">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                                    title="View CFP page"
+                                                >
+                                                    <ExternalLink className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </Link>
+                                        )}
 
-                                    {/* Actions */}
-                                    {isPending && (
-                                        <div className="flex justify-end pt-1">
+                                        {/* Edit — only for pending */}
+                                        {isPending && (
+                                            <Link href={`/dashboard/speaker/cfp/${sub.id}/edit`}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                                    title="Edit proposal"
+                                                >
+                                                    <Pencil className="h-3.5 w-3.5" />
+                                                </Button>
+                                            </Link>
+                                        )}
+
+                                        {/* Withdraw — only for pending */}
+                                        {isPending && (
                                             <Button
                                                 variant="ghost"
-                                                size="sm"
-                                                className="text-red-500 hover:text-red-600 hover:bg-red-500/10"
-                                                disabled={deletingId === sub.id}
+                                                size="icon"
+                                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                                disabled={isDeleting}
+                                                title="Withdraw proposal"
                                                 onClick={() => handleDelete(sub.id)}
                                             >
-                                                {deletingId === sub.id
-                                                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                                                    : <><Trash2 className="h-4 w-4 mr-1" />Withdraw</>
+                                                {isDeleting
+                                                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                    : <Trash2 className="h-3.5 w-3.5" />
                                                 }
                                             </Button>
-                                        </div>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        )
-                    })}
+                                        )}
+                                    </div>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
             )}
+
+            {/* Submit new proposal */}
+            <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white rounded-full">
+                <Link href="/events">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Submit a new proposal
+                </Link>
+            </Button>
         </div>
     )
 }

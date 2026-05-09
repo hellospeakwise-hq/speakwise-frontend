@@ -7,6 +7,7 @@ import { EventDetails } from "@/components/events/event-details"
 import { SpeakersList } from "@/components/events/speakers-list"
 import { TagManager } from "@/components/events/tag-manager"
 import { TagCreator } from "@/components/events/tag-creator"
+import { CFPSettings } from "@/components/cfp/cfp-settings"
 import { ChevronLeft } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
@@ -55,6 +56,7 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
                         <TabsTrigger value="details">Event Details</TabsTrigger>
                         <TabsTrigger value="speakers">Speakers</TabsTrigger>
                         <TabsTrigger value="tags">Manage Tags</TabsTrigger>
+                        <TabsTrigger value="cfp">CFP Settings</TabsTrigger>
                     </TabsList>
                 </div>
 
@@ -64,6 +66,10 @@ export default function EventManagementPage({ params }: { params: Promise<{ id: 
 
                 <TabsContent value="speakers" className="space-y-10">
                     <SpeakersList eventId={id} />
+                </TabsContent>
+
+                <TabsContent value="cfp" className="space-y-6">
+                    <CFPSettings eventSlug={id} />
                 </TabsContent>
 
                 <TabsContent value="tags">

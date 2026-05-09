@@ -11,6 +11,12 @@ export interface CreateEventRequest {
   start_date_time: string;
   end_date_time: string;
   is_active?: boolean;
+  accepts_cfp?: boolean;
+  cfp_open?: boolean;
+  cfp_description?: string;
+  cfp_open_date?: string | null;
+  cfp_deadline?: string | null;
+  cfp_speaker_notification_date?: string | null;
   country?: string; // country name
   country_code?: string; // ISO country code
   tags?: string[];
@@ -69,6 +75,12 @@ export const eventsApi = {
     if (data.start_date_time !== undefined) body.start_date_time = data.start_date_time;
     if (data.end_date_time !== undefined) body.end_date_time = data.end_date_time;
     if (data.is_active !== undefined) body.is_active = data.is_active;
+    if (data.accepts_cfp !== undefined) body.accepts_cfp = data.accepts_cfp;
+    if (data.cfp_open !== undefined) body.cfp_open = data.cfp_open;
+    if (data.cfp_description !== undefined) body.cfp_description = data.cfp_description;
+    if (data.cfp_open_date !== undefined) body.cfp_open_date = data.cfp_open_date || null;
+    if (data.cfp_deadline !== undefined) body.cfp_deadline = data.cfp_deadline || null;
+    if (data.cfp_speaker_notification_date !== undefined) body.cfp_speaker_notification_date = data.cfp_speaker_notification_date || null;
 
     // Build nested location object matching the backend schema:
     // { venue: "...", country: { name: "Ghana", code: "GH" } }

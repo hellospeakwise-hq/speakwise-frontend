@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { cfpApi, type CFPSubmission, TALK_TYPE_LABELS, AUDIENCE_LABELS, CFP_CATEGORIES } from '@/lib/api/cfpApi'
+import { MarkdownContent } from '@/components/ui/markdown-content'
 import { toast } from 'sonner'
 
 interface CFPSubmissionsListProps {
@@ -79,9 +80,12 @@ export function CFPSubmissionsList({ eventSlug }: CFPSubmissionsListProps) {
                 <CardContent className="p-5 space-y-3">
                     {/* Header */}
                     <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0 space-y-1">
-                            <p className="font-semibold">{sub.elevator_pitch}</p>
-                            <p className="text-sm text-muted-foreground">
+                        <div className="flex-1 min-w-0 space-y-0.5">
+                            <p className="font-semibold leading-snug">{sub.title || sub.elevator_pitch}</p>
+                            {sub.title && (
+                                <p className="text-sm text-muted-foreground italic line-clamp-1">{sub.elevator_pitch}</p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
                                 {sub.submitter_email} · {getCategoryLabel(sub.category)}
                             </p>
                         </div>
@@ -95,6 +99,12 @@ export function CFPSubmissionsList({ eventSlug }: CFPSubmissionsListProps) {
                     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                         <span className="bg-muted px-2 py-0.5 rounded-full">{TALK_TYPE_LABELS[sub.talk_type]}</span>
                         <span className="bg-muted px-2 py-0.5 rounded-full">{AUDIENCE_LABELS[sub.audience]}</span>
+                        {sub.duration && (
+                            <span className="bg-muted px-2 py-0.5 rounded-full">{sub.duration} min</span>
+                        )}
+                        {sub.language && sub.language !== 'English' && (
+                            <span className="bg-muted px-2 py-0.5 rounded-full">{sub.language}</span>
+                        )}
                     </div>
 
                     {/* Expand toggle */}
@@ -107,15 +117,41 @@ export function CFPSubmissionsList({ eventSlug }: CFPSubmissionsListProps) {
                     </button>
 
                     {isExpanded && (
-                        <div className="space-y-3 pt-1 border-t text-sm">
+                        <div className="space-y-3 pt-2 border-t text-sm">
                             <div>
                                 <p className="font-medium mb-1">Abstract</p>
-                                <p className="text-muted-foreground whitespace-pre-wrap">{sub.abstract}</p>
+                                <MarkdownContent content={sub.abstract} className="text-muted-foreground text-sm" />
                             </div>
+                            {sub.outline && (
+                                <div>
+                                    <p className="font-medium mb-1">Outline</p>
+                                    <MarkdownContent content={sub.outline} className="text-muted-foreground text-sm" />
+                                </div>
+                            )}
+                            {sub.notes_for_organizers && (
+                                <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-md p-3">
+                                    <p className="font-medium mb-1 text-yellow-600 dark:text-yellow-400">Notes for Organizers</p>
+                                    <p className="text-muted-foreground">{sub.notes_for_organizers}</p>
+                                </div>
+                            )}
                             {sub.other_speakers_text && (
                                 <div>
                                     <p className="font-medium mb-1">Co-speakers (external)</p>
                                     <p className="text-muted-foreground">{sub.other_speakers_text}</p>
+                                </div>
+                            )}
+                            {(sub.slides_url || sub.recording_url) && (
+                                <div className="flex gap-4">
+                                    {sub.slides_url && (
+                                        <a href={sub.slides_url} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">
+                                            View Slides
+                                        </a>
+                                    )}
+                                    {sub.recording_url && (
+                                        <a href={sub.recording_url} target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:underline">
+                                            View Recording
+                                        </a>
+                                    )}
                                 </div>
                             )}
                             {sub.other_comments && (
@@ -124,6 +160,18 @@ export function CFPSubmissionsList({ eventSlug }: CFPSubmissionsListProps) {
                                     <p className="text-muted-foreground">{sub.other_comments}</p>
                                 </div>
                             )}
+                            <div className="flex flex-wrap gap-3 text-xs text-muted-foreground pt-1">
+                                {sub.is_first_time_speaker && (
+                                    <span className="bg-blue-500/10 text-blue-500 border border-blue-500/20 px-2 py-0.5 rounded-full">
+                                        First-time speaker
+                                    </span>
+                                )}
+                                {sub.travel_support_needed && (
+                                    <span className="bg-purple-500/10 text-purple-500 border border-purple-500/20 px-2 py-0.5 rounded-full">
+                                        Needs travel support
+                                    </span>
+                                )}
+                            </div>
                         </div>
                     )}
 
