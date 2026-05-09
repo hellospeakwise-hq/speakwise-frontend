@@ -20,8 +20,6 @@ interface UseOrganizerEventsReturn {
         upcomingEvents: number
         pastEvents: number
         totalAttendees: number
-        avgRating: number
-        feedbackRate: number
     }
 }
 
@@ -135,9 +133,7 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
             if (!event.end_date_time) return false
             return new Date(event.end_date_time) < new Date()
         }).length,
-        totalAttendees: totalAttendees, // Use calculated total from attendance emails
-        avgRating: 4.7, // This would come from feedback API in real implementation
-        feedbackRate: 68, // This would come from feedback API in real implementation
+        totalAttendees: totalAttendees,
     }
 
     const refreshAttendeeStats = async () => {
