@@ -323,8 +323,8 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
             <div className="relative h-52 w-full overflow-hidden">
               {/* Photo */}
               <img
-                src="https://images.unsplash.com/photo-1560250097-0b93528c311a?w=800&q=80"
-                alt="Professional speaker"
+                src="/speak-org.png"
+                alt="Organization"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
               />
               {/* Orange brand tint */}
@@ -385,8 +385,8 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
             <div className="relative h-52 w-full overflow-hidden">
               {/* Photo */}
               <img
-                src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&q=80"
-                alt="Professional outreach"
+                src="/email-request.png"
+                alt="Email outreach"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
               />
               {/* Blue brand tint */}
