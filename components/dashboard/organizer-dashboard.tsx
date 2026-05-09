@@ -9,6 +9,7 @@ import { EventManagementTable } from "@/components/dashboard/event-management-ta
 import { AttendeeManagement } from "@/components/dashboard/attendee-management"
 import { OrganizerSpeakerRequests } from "@/components/dashboard/organizer-speaker-requests"
 import { OrganizerCFPView } from "@/components/cfp/organizer-cfp-view"
+import { OrganizerCFPSettingsView } from "@/components/cfp/organizer-cfp-settings-view"
 import { OrganizationMembersManager } from "@/components/organization/organization-members-manager"
 import { organizationApi, type Organization } from "@/lib/api/organizationApi"
 import { toast } from "sonner"
@@ -180,7 +181,7 @@ export function OrganizerDashboard() {
             <TabsTrigger value="speakers" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Speakers</TabsTrigger>
             <TabsTrigger value="attendees" data-tour="attendees-tab" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Attendees</TabsTrigger>
             <TabsTrigger value="feedback" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">Feedback</TabsTrigger>
-            <TabsTrigger value="cfp" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">CFP Submissions</TabsTrigger>
+            <TabsTrigger value="cfp" className="text-xs sm:text-sm px-2.5 sm:px-3 py-1.5">CFP</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="events">
@@ -257,15 +258,34 @@ export function OrganizerDashboard() {
           </Card>
         </TabsContent>
         <TabsContent value="cfp">
-          <Card>
-            <CardHeader>
-              <CardTitle>CFP Submissions</CardTitle>
-              <CardDescription>Review and respond to Call for Papers submissions from speakers</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <OrganizerCFPView events={events.map(e => ({ id: e.id, slug: e.slug, title: e.title || e.name }))} />
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="submissions" className="space-y-4">
+            <TabsList className="w-fit">
+              <TabsTrigger value="submissions">Submissions</TabsTrigger>
+              <TabsTrigger value="settings">CFP Settings</TabsTrigger>
+            </TabsList>
+            <TabsContent value="submissions">
+              <Card>
+                <CardHeader>
+                  <CardTitle>CFP Submissions</CardTitle>
+                  <CardDescription>Review and respond to Call for Papers submissions from speakers</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <OrganizerCFPView events={events.map(e => ({ id: e.id, slug: e.slug, title: e.title || e.name }))} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            <TabsContent value="settings">
+              <Card>
+                <CardHeader>
+                  <CardTitle>CFP Settings</CardTitle>
+                  <CardDescription>Configure the CFP page, description, and dates for each of your events</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <OrganizerCFPSettingsView events={events.map(e => ({ id: e.id, slug: e.slug, title: e.title || e.name }))} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </div>

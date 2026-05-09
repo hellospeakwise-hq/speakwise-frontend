@@ -43,29 +43,49 @@ export const CFP_CATEGORIES = [
 export interface CFPSubmission {
     id: string
     event: string
+    event_slug: string
+    event_title: string
     submitter: string
     submitter_email: string
+    title: string
     talk_type: TalkType
+    duration: number | null
     audience: AudienceLevel
     category: string
+    language: string
     elevator_pitch: string
     abstract: string
+    outline: string
+    slides_url: string | null
+    recording_url: string | null
     co_speakers: string[]
     co_speakers_detail: { id: string; slug: string; name: string }[]
     other_speakers_text: string
+    notes_for_organizers: string
     other_comments: string
+    is_first_time_speaker: boolean
+    travel_support_needed: boolean
     status: CFPStatus
 }
 
 export interface CreateCFPData {
+    title: string
     talk_type: TalkType
+    duration?: number | null
     audience: AudienceLevel
     category: string
+    language?: string
     elevator_pitch: string
     abstract: string
+    outline?: string
+    slides_url?: string
+    recording_url?: string
     co_speakers?: string[]
     other_speakers_text?: string
+    notes_for_organizers?: string
     other_comments?: string
+    is_first_time_speaker?: boolean
+    travel_support_needed?: boolean
 }
 
 export const cfpApi = {
@@ -86,6 +106,11 @@ export const cfpApi = {
 
     async updateCFP(id: string, data: Partial<CreateCFPData>): Promise<CFPSubmission> {
         const response = await apiClient.patch(`/cfp/${id}/`, data)
+        return response.data
+    },
+
+    async myCFPs(): Promise<CFPSubmission[]> {
+        const response = await apiClient.get('/cfp/mine/')
         return response.data
     },
 

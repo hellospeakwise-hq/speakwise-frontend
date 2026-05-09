@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, MapPin, Users, Clock, Loader2, Globe } from "lucide-react"
+import { Calendar, MapPin, Users, Clock, Loader2, Globe, Send } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -15,7 +15,6 @@ import { useAuth } from "@/contexts/auth-context"
 import { useEvents } from "@/hooks/use-events"
 import { apiClient } from "@/lib/api/base"
 import Link from "next/link"
-import { SubmitCFPDialog } from "@/components/cfp/submit-cfp-dialog"
 
 interface EventDetailsProps {
   id: string
@@ -174,10 +173,21 @@ export function EventDetails({ id }: EventDetailsProps) {
                 </Link>
               </>
             )}
-            <SubmitCFPDialog
-              eventSlug={id}
-              eventTitle={event.name || event.title || id}
-            />
+            {event.accepts_cfp && (
+              <Link href={`/events/${id}/cfp`}>
+                {event.cfp_open ? (
+                  <Button className="rounded-full bg-orange-500 hover:bg-orange-600 text-white px-5">
+                    <Send className="h-4 w-4 mr-2" />
+                    Submit CFP
+                  </Button>
+                ) : (
+                  <Button variant="secondary" className="rounded-full px-5 bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
+                    <Send className="h-4 w-4 mr-2" />
+                    CFP Closed
+                  </Button>
+                )}
+              </Link>
+            )}
           </div>
 
           {/* Event Title and Info */}

@@ -24,6 +24,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
+import { Checkbox } from '@/components/ui/checkbox'
 import { cfpApi, CFP_CATEGORIES, type CreateCFPData } from '@/lib/api/cfpApi'
 import { toast } from 'sonner'
 
@@ -34,13 +35,22 @@ interface SubmitCFPDialogProps {
 }
 
 const EMPTY_FORM: CreateCFPData = {
+    title: '',
     talk_type: 'short',
+    duration: null,
     audience: 'all',
     category: '',
+    language: 'English',
     elevator_pitch: '',
     abstract: '',
+    outline: '',
+    slides_url: '',
+    recording_url: '',
     other_speakers_text: '',
+    notes_for_organizers: '',
     other_comments: '',
+    is_first_time_speaker: false,
+    travel_support_needed: false,
 }
 
 export function SubmitCFPDialog({ eventSlug, eventTitle, onSuccess }: SubmitCFPDialogProps) {
@@ -111,14 +121,23 @@ export function SubmitCFPDialog({ eventSlug, eventTitle, onSuccess }: SubmitCFPD
                 <form onSubmit={handleSubmit}>
                     <div className="grid gap-5 py-4">
 
-                        {/* Talk Type + Audience Level */}
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* Title */}
+                        <div className="space-y-2">
+                            <Label>Talk Title <span className="text-red-500">*</span></Label>
+                            <Input
+                                placeholder="e.g. Building Scalable APIs with Python"
+                                value={form.title}
+                                onChange={e => set('title', e.target.value)}
+                                required
+                            />
+                        </div>
+
+                        {/* Talk Type + Duration + Audience */}
+                        <div className="grid grid-cols-3 gap-4">
                             <div className="space-y-2">
                                 <Label>Talk Type <span className="text-red-500">*</span></Label>
                                 <Select value={form.talk_type} onValueChange={v => set('talk_type', v as any)}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="short">Short Talk</SelectItem>
                                         <SelectItem value="demo">Demo</SelectItem>
@@ -126,13 +145,22 @@ export function SubmitCFPDialog({ eventSlug, eventTitle, onSuccess }: SubmitCFPD
                                     </SelectContent>
                                 </Select>
                             </div>
-
                             <div className="space-y-2">
-                                <Label>Audience Level <span className="text-red-500">*</span></Label>
+                                <Label>Duration</Label>
+                                <Select value={form.duration?.toString() ?? ''} onValueChange={v => setForm(p => ({ ...p, duration: v ? Number(v) : null }))}>
+                                    <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="15">15 min</SelectItem>
+                                        <SelectItem value="30">30 min</SelectItem>
+                                        <SelectItem value="45">45 min</SelectItem>
+                                        <SelectItem value="60">60 min</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Audience <span className="text-red-500">*</span></Label>
                                 <Select value={form.audience} onValueChange={v => set('audience', v as any)}>
-                                    <SelectTrigger>
-                                        <SelectValue />
-                                    </SelectTrigger>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="beginner">Beginner</SelectItem>
                                         <SelectItem value="intermediate">Intermediate</SelectItem>
@@ -143,31 +171,37 @@ export function SubmitCFPDialog({ eventSlug, eventTitle, onSuccess }: SubmitCFPD
                             </div>
                         </div>
 
-                        {/* Category */}
-                        <div className="space-y-2">
-                            <Label>Category <span className="text-red-500">*</span></Label>
-                            <Select value={form.category} onValueChange={v => set('category', v)}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {CFP_CATEGORIES.map(c => (
-                                        <SelectItem key={c.value} value={c.value}>
-                                            {c.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        {/* Category + Language */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Category <span className="text-red-500">*</span></Label>
+                                <Select value={form.category} onValueChange={v => set('category', v)}>
+                                    <SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger>
+                                    <SelectContent>
+                                        {CFP_CATEGORIES.map(c => (
+                                            <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Language</Label>
+                                <Input
+                                    placeholder="English"
+                                    value={form.language}
+                                    onChange={e => set('language', e.target.value)}
+                                />
+                            </div>
                         </div>
 
                         {/* Elevator Pitch */}
                         <div className="space-y-2">
                             <div className="flex justify-between">
                                 <Label>Elevator Pitch <span className="text-red-500">*</span></Label>
-                                <span className="text-xs text-muted-foreground">{form.elevator_pitch.length}/300</span>
+                                <span className="text-xs text-muted-foreground">{(form.elevator_pitch ?? '').length}/300</span>
                             </div>
                             <Input
-                                placeholder="A short summary of your talk (max 300 characters)"
+                                placeholder="One sentence that sells your talk (max 300 characters)"
                                 maxLength={300}
                                 value={form.elevator_pitch}
                                 onChange={e => set('elevator_pitch', e.target.value)}
@@ -179,15 +213,50 @@ export function SubmitCFPDialog({ eventSlug, eventTitle, onSuccess }: SubmitCFPD
                         <div className="space-y-2">
                             <Label>Abstract <span className="text-red-500">*</span></Label>
                             <Textarea
-                                placeholder="Full description of your talk — what will attendees learn? What's the structure?"
-                                rows={5}
+                                placeholder="Full description — what will attendees learn? What's the structure?"
+                                rows={4}
                                 value={form.abstract}
                                 onChange={e => set('abstract', e.target.value)}
                                 required
                             />
                         </div>
 
-                        {/* Co-speakers (free text) */}
+                        {/* Outline (private) */}
+                        <div className="space-y-2">
+                            <Label>
+                                Outline <span className="text-xs text-muted-foreground">(optional · private to organizers)</span>
+                            </Label>
+                            <Textarea
+                                placeholder="Structured breakdown: intro, sections, conclusion, timing..."
+                                rows={3}
+                                value={form.outline}
+                                onChange={e => set('outline', e.target.value)}
+                            />
+                        </div>
+
+                        {/* Slides + Recording */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Slides URL <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                                <Input
+                                    type="url"
+                                    placeholder="https://slides.com/..."
+                                    value={form.slides_url ?? ''}
+                                    onChange={e => set('slides_url', e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Recording URL <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                                <Input
+                                    type="url"
+                                    placeholder="https://youtube.com/..."
+                                    value={form.recording_url ?? ''}
+                                    onChange={e => set('recording_url', e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Co-speakers */}
                         <div className="space-y-2">
                             <Label>Co-speakers not on SpeakWise <span className="text-xs text-muted-foreground">(optional)</span></Label>
                             <Input
@@ -197,15 +266,52 @@ export function SubmitCFPDialog({ eventSlug, eventTitle, onSuccess }: SubmitCFPD
                             />
                         </div>
 
-                        {/* Other comments */}
+                        {/* Notes for organizers (private) */}
+                        <div className="space-y-2">
+                            <Label>
+                                Notes for Organizers <span className="text-xs text-muted-foreground">(optional · private)</span>
+                            </Label>
+                            <Textarea
+                                placeholder="Anything organizers should know that isn't in your abstract (e.g. given this talk before, need AV setup)"
+                                rows={2}
+                                value={form.notes_for_organizers}
+                                onChange={e => set('notes_for_organizers', e.target.value)}
+                            />
+                        </div>
+
+                        {/* Additional comments */}
                         <div className="space-y-2">
                             <Label>Additional Comments <span className="text-xs text-muted-foreground">(optional)</span></Label>
                             <Textarea
-                                placeholder="Anything else you'd like the organizers to know"
-                                rows={3}
+                                placeholder="Anything else"
+                                rows={2}
                                 value={form.other_comments}
                                 onChange={e => set('other_comments', e.target.value)}
                             />
+                        </div>
+
+                        {/* Checkboxes */}
+                        <div className="space-y-3">
+                            <div className="flex items-center gap-2">
+                                <Checkbox
+                                    id="first_time"
+                                    checked={!!form.is_first_time_speaker}
+                                    onCheckedChange={v => setForm(p => ({ ...p, is_first_time_speaker: !!v }))}
+                                />
+                                <Label htmlFor="first_time" className="font-normal cursor-pointer">
+                                    This is my first time speaking at a conference
+                                </Label>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Checkbox
+                                    id="travel"
+                                    checked={!!form.travel_support_needed}
+                                    onCheckedChange={v => setForm(p => ({ ...p, travel_support_needed: !!v }))}
+                                />
+                                <Label htmlFor="travel" className="font-normal cursor-pointer">
+                                    I need travel or accommodation support
+                                </Label>
+                            </div>
                         </div>
                     </div>
 

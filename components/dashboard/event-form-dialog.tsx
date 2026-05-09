@@ -49,6 +49,8 @@ const eventFormSchema = z.object({
   start_date_time: z.string().min(1, "Start date and time are required"),
   end_date_time: z.string().min(1, "End date and time are required"),
   is_active: z.boolean().default(false),
+  accepts_cfp: z.boolean().default(false),
+  cfp_open: z.boolean().default(false),
   country: z.string().optional(),
   tags: z.array(z.string()).optional(),
 })
@@ -125,6 +127,8 @@ export function EventFormDialog({
         ? new Date(event.end_date_time).toISOString().slice(0, 16) 
         : "",
       is_active: event?.is_active || false,
+      accepts_cfp: event?.accepts_cfp || false,
+      cfp_open: event?.cfp_open || false,
       country: typeof event?.location === 'object' && event?.location?.country ? event.location.country.name : "",
       tags: event?.tags?.map(tag => String(tag.id)) || [],
     },
@@ -148,6 +152,8 @@ export function EventFormDialog({
           ? new Date(event.end_date_time).toISOString().slice(0, 16) 
           : "",
         is_active: event.is_active || false,
+        accepts_cfp: event.accepts_cfp || false,
+        cfp_open: event.cfp_open || false,
         country: typeof event.location === 'object' && event.location?.country ? event.location.country.name : "",
         tags: event.tags?.map(tag => String(tag.id)) || [],
       });
@@ -297,6 +303,8 @@ export function EventFormDialog({
         ...values,
         event_image: selectedImage || undefined,
         tags: tagsArray as string[],
+        accepts_cfp: values.accepts_cfp,
+        cfp_open: values.accepts_cfp ? values.cfp_open : false,
       }
 
       // Look up country code from the static list
@@ -714,6 +722,54 @@ export function EventFormDialog({
                 </FormItem>
               )}
             />
+
+            {/* CFP toggles */}
+            <FormField
+              control={form.control}
+              name="accepts_cfp"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Accept CFP Submissions</FormLabel>
+                    <FormDescription>
+                      Enable a Call for Papers page where speakers can submit proposals
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={v => {
+                        field.onChange(v)
+                        if (!v) form.setValue('cfp_open', false)
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {form.watch('accepts_cfp') && (
+              <FormField
+                control={form.control}
+                name="cfp_open"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 ml-4 border-orange-500/20 bg-orange-500/5">
+                    <div className="space-y-0.5">
+                      <FormLabel className="text-base">CFP is Open</FormLabel>
+                      <FormDescription>
+                        Allow speakers to submit proposals right now
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            )}
 
             <DialogFooter>
               <Button
