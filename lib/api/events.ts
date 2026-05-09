@@ -96,9 +96,9 @@ export const eventsApi = {
       body.location = locationObj;
     }
 
-    // Tags as array of objects with { id }
+    // Tags as array of UUID strings
     if (data.tags && data.tags.length > 0) {
-      body.tags = data.tags.map(tagId => ({ id: tagId }));
+      body.tags = data.tags;
     }
 
     return body;
