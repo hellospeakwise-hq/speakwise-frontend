@@ -12,7 +12,7 @@ import { ProfileCompletionBanner } from "@/components/dashboard/speaker/profile-
 import { MyTalksSection } from "@/components/dashboard/speaker/my-talks-section"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Award, Mic } from "lucide-react"
+import { Award, Mic, FileText } from "lucide-react"
 
 const TAB_CLASS = "rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4"
 
@@ -25,7 +25,13 @@ export function SpeakerDashboardView() {
       <Notifications />
 
       {/* Quick Actions */}
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-2">
+        <Button asChild variant="outline" className="gap-2">
+          <Link href="/dashboard/speaker/cfp">
+            <FileText className="h-4 w-4" />
+            My CFP Submissions
+          </Link>
+        </Button>
         <Button asChild variant="outline" className="gap-2">
           <Link href="/dashboard/speaker/experiences">
             <Award className="h-4 w-4" />
