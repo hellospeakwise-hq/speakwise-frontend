@@ -3,7 +3,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi, type AuthResponse } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
-import { scheduleTokenRefresh, cancelTokenRefresh, initializeTokenRefresh } from '@/lib/utils/tokenRefresh';
+import { scheduleTokenRefresh, cancelTokenRefresh, initializeTokenRefresh, setSessionCallbacks } from '@/lib/utils/tokenRefresh'
+import { SessionExpiryDialog } from '@/components/auth/session-expiry-dialog';
 
 type User = {
     id: string;
@@ -50,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     const [loading, setLoading] = useState<boolean>(false);
+    const [showExpiryWarning, setShowExpiryWarning] = useState(false);
     const router = useRouter();
 
     // Check if user is already logged in on initial load
@@ -112,6 +114,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         checkAuth();
     }, []);
+
+    useEffect(() => {
+        setSessionCallbacks(
+            () => setShowExpiryWarning(true),
+            () => {
+                setUser(null);
+                setIsAuthenticated(false);
+                setShowExpiryWarning(false);
+                router.push('/signin?session=expired');
+            }
+        );
+    }, [router]);
 
     const login = async (email: string, password: string) => {
         setLoading(true);
@@ -237,6 +251,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return (
         <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, isAuthenticated }}>
             {children}
+            <SessionExpiryDialog
+                open={showExpiryWarning}
+                onStayLoggedIn={() => setShowExpiryWarning(false)}
+                onLoggedOut={() => {
+                    setUser(null);
+                    setIsAuthenticated(false);
+                    setShowExpiryWarning(false);
+                    router.push('/signin?session=expired');
+                }}
+            />
         </AuthContext.Provider>
     );
 }
