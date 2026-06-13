@@ -4,25 +4,10 @@ import { useState, useEffect } from "react"
 import { X, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { speakerApi, type Speaker } from "@/lib/api/speakerApi"
 import { useAuth } from "@/contexts/auth-context"
+import { userApi, type SpeakerProfile, type User } from "@/lib/api/userApi"
 import { cn } from "@/lib/utils"
-
-interface ProfileField {
-  key: keyof Speaker
-  label: string
-  weight: number
-}
-
-const PROFILE_FIELDS: ProfileField[] = [
-  { key: "avatar", label: "Profile photo", weight: 20 },
-  { key: "short_bio", label: "Short bio", weight: 20 },
-  { key: "long_bio", label: "Detailed bio", weight: 15 },
-  { key: "organization", label: "Organization", weight: 15 },
-  { key: "country", label: "Location", weight: 10 },
-  { key: "skill_tags", label: "Skills/Expertise", weight: 10 },
-  { key: "social_links", label: "Social links", weight: 10 },
-]
+import { calculateProfileCompletion } from "@/lib/utils/profile-completion"
 
 // Fun messages based on completion percentage
 const getMotivationalMessage = (percentage: number, missingFields: string[]) => {
@@ -78,26 +63,20 @@ export function ProfileCompletionBanner() {
 
     const fetchSpeakerProfile = async () => {
       try {
-        // Get current user's speaker profile from the speakers list
-        const speakers = await speakerApi.getSpeakers()
-        
-        // Find the current user's speaker profile using speaker_id from auth context
-        let currentSpeaker: Speaker | undefined
-        
-        if (user?.speaker_id) {
-          currentSpeaker = speakers.find(s => s.id === user.speaker_id)
+        // Use the same source as the profile page so completion matches exactly
+        const profile = await userApi.getUserProfile() as any
+
+        // Handle user data - could be nested under 'user' or at root level
+        const profileUser = profile?.user || profile
+
+        // Handle speaker data - could be nested object, array, or at root
+        let speakerData = profile?.speaker
+        if (Array.isArray(speakerData)) {
+          speakerData = speakerData[0]
         }
-        
-        // Fallback: try to match by user_account or name
-        if (!currentSpeaker && user) {
-          currentSpeaker = speakers.find(s => 
-            s.user_account === user.id || 
-            s.speaker_name?.toLowerCase() === `${user.first_name} ${user.last_name}`.toLowerCase()
-          )
-        }
-        
-        if (currentSpeaker && mounted) {
-          calculateCompletion(currentSpeaker)
+
+        if (mounted && profileUser && speakerData) {
+          calculateCompletion(profileUser, speakerData)
         }
       } catch (error) {
         console.error("Error fetching speaker profile:", error)
@@ -130,35 +109,18 @@ export function ProfileCompletionBanner() {
     }
   }, [loading, dismissed, completionPercentage])
 
-  const calculateCompletion = (speaker: Speaker) => {
-    let totalWeight = 0
-    let completedWeight = 0
-    const missing: string[] = []
-
-    PROFILE_FIELDS.forEach((field) => {
-      totalWeight += field.weight
-      const value = speaker[field.key]
-
-      let isComplete = false
-
-      if (field.key === "avatar") {
-        isComplete = !!value && typeof value === 'string' && value !== "" && !value.includes("default")
-      } else if (field.key === "skill_tags" || field.key === "social_links") {
-        isComplete = Array.isArray(value) && value.length > 0
-      } else {
-        isComplete = !!value && value !== ""
-      }
-
-      if (isComplete) {
-        completedWeight += field.weight
-      } else {
-        missing.push(field.label)
-      }
+  const calculateCompletion = (profileUser: User, speaker: SpeakerProfile) => {
+    const { percentage, missingFields: missing } = calculateProfileCompletion({
+      user: {
+        first_name: profileUser.first_name,
+        last_name: profileUser.last_name,
+        username: profileUser.username,
+      },
+      speaker,
     })
 
-    const percentage = Math.round((completedWeight / totalWeight) * 100)
     setCompletionPercentage(percentage)
-    setMissingFields(missing)
+    setMissingFields(missing.map((field) => field.label))
   }
 
   const handleDismiss = () => {
