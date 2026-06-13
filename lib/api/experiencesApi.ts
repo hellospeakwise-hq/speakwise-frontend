@@ -56,9 +56,10 @@ export const experiencesApi = {
     },
 
     // Create a new experience
-    async createExperience(data: CreateExperienceData): Promise<SpeakerExperience> {
+    async createExperience(data: CreateExperienceData | FormData): Promise<SpeakerExperience> {
         try {
-            const response = await apiClient.post('/speakers/experiences/', data);
+            const config = data instanceof FormData ? { headers: { 'Content-Type': undefined } } : undefined;
+            const response = await apiClient.post('/speakers/experiences/', data, config);
             return response.data;
         } catch (error: any) {
             console.error('Failed to create experience:', error);
