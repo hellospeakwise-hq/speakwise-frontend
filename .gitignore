@@ -1,4 +1,11 @@
 
+# macOS
+.DS_Store
+**/.DS_Store
+
+# impeccable skill config
+.impeccable/
+
 # dependencies
 /node_modules
 

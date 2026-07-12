@@ -19,6 +19,9 @@ const withPWA = withPWAInit({
 })
 
 const nextConfig = {
+  env: {
+    MAINTENANCE_MODE: process.env.MAINTENANCE_MODE ?? 'false',
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
