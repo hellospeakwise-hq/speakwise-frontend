@@ -68,6 +68,29 @@ export interface CFPSubmission {
     status: CFPStatus
 }
 
+export interface CFPReview {
+    id: string
+    submission: string
+    reviewer: string
+    reviewer_email: string
+    reviewer_name: string
+    score: number
+    notes: string
+    created_at: string
+}
+
+export interface CFPSubmissionWithScore extends CFPSubmission {
+    avg_score: number | null
+    review_count: number
+    my_score: number | null
+    reviews_detail: CFPReview[]
+}
+
+export interface CFPReviewQueueResponse {
+    submission: CFPSubmissionWithScore
+    progress: { reviewed: number; total: number }
+}
+
 export interface CreateCFPData {
     title: string
     talk_type: TalkType
@@ -121,5 +144,25 @@ export const cfpApi = {
     async updateStatus(id: string, status: 'accepted' | 'rejected'): Promise<CFPSubmission> {
         const response = await apiClient.patch(`/cfp/${id}/status/`, { status })
         return response.data
+    },
+
+    async submitReview(id: string, score: number, notes?: string): Promise<CFPReview> {
+        const response = await apiClient.post(`/cfp/${id}/review/`, { score, notes: notes ?? '' })
+        return response.data
+    },
+
+    async listReviews(id: string): Promise<CFPReview[]> {
+        const response = await apiClient.get(`/cfp/${id}/reviews/`)
+        return response.data
+    },
+
+    async getReviewQueue(eventSlug: string): Promise<CFPReviewQueueResponse | null> {
+        try {
+            const response = await apiClient.get(`/events/${eventSlug}/cfp/review-queue/`)
+            if (response.status === 204) return null
+            return response.data
+        } catch {
+            return null
+        }
     },
 }
