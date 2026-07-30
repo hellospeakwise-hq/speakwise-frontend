@@ -172,6 +172,17 @@ export const eventsApi = {
   },
 
   /**
+   * Toggle speaker deck upload for an event.
+   * When enabled, sends email notifications to all accepted speakers.
+   */
+  async toggleSpeakerDeckUpload(slug: string): Promise<{ speaker_deck_upload_enabled: boolean }> {
+    const response = await apiClient.post<{ speaker_deck_upload_enabled: boolean }>(
+      `/events/${slug}/toggle-speaker-deck-upload/`
+    );
+    return response.data;
+  },
+
+  /**
    * Get tags (extracted from events data)
    */
   async getTags(): Promise<any[]> {

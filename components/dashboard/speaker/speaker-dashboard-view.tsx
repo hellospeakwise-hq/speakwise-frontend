@@ -10,14 +10,18 @@ import { FeedbackTrends } from "@/components/dashboard/speaker/feedback-trends"
 import { Notifications } from "@/components/dashboard/speaker/notifications"
 import { ProfileCompletionBanner } from "@/components/dashboard/speaker/profile-completion-banner"
 import { MyTalksSection } from "@/components/dashboard/speaker/my-talks-section"
+import { SpeakerDecks } from "@/components/dashboard/speaker/speaker-decks"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Award, Mic, FileText } from "lucide-react"
+import { Award, Mic, FileText, Presentation } from "lucide-react"
+import { useSpeakerAcceptedEvents } from "@/hooks/use-speaker-events"
 
 const TAB_CLASS = "rounded-none border-b-2 border-transparent data-[state=active]:border-orange-500 data-[state=active]:bg-transparent px-4"
 
 export function SpeakerDashboardView() {
   const [activeTab, setActiveTab] = useState("overview")
+  const { events: acceptedEvents } = useSpeakerAcceptedEvents()
+  const hasDeckUploads = acceptedEvents.some((e) => e.speaker_deck_upload_enabled)
 
   return (
     <div className="space-y-6">
@@ -46,13 +50,20 @@ export function SpeakerDashboardView() {
 
       <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b rounded-none p-0 h-auto gap-0 flex-nowrap">
-          <TabsTrigger value="overview"  className={TAB_CLASS}>Overview</TabsTrigger>
-          <TabsTrigger value="upcoming"  className={TAB_CLASS}>Upcoming Events</TabsTrigger>
-          <TabsTrigger value="requests"  className={TAB_CLASS}>Speaking Requests</TabsTrigger>
-          <TabsTrigger value="feedback"  className={TAB_CLASS}>Feedback & Performance</TabsTrigger>
-          <TabsTrigger value="talks"     className={`${TAB_CLASS} gap-1.5 flex items-center`}>
+          <TabsTrigger value="overview"       className={TAB_CLASS}>Overview</TabsTrigger>
+          <TabsTrigger value="upcoming"       className={TAB_CLASS}>Upcoming Events</TabsTrigger>
+          <TabsTrigger value="requests"       className={TAB_CLASS}>Speaking Requests</TabsTrigger>
+          <TabsTrigger value="feedback"       className={TAB_CLASS}>Feedback & Performance</TabsTrigger>
+          <TabsTrigger value="talks"          className={`${TAB_CLASS} gap-1.5 flex items-center`}>
             <Mic className="h-4 w-4" />
             My Talks
+          </TabsTrigger>
+          <TabsTrigger value="presentations"  className={`${TAB_CLASS} gap-1.5 flex items-center`}>
+            <Presentation className="h-4 w-4" />
+            Presentations
+            {hasDeckUploads && (
+              <span className="ml-1 h-2 w-2 rounded-full bg-orange-500" aria-label="Upload available" />
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -81,6 +92,10 @@ export function SpeakerDashboardView() {
 
         <TabsContent value="talks">
           <MyTalksSection />
+        </TabsContent>
+
+        <TabsContent value="presentations">
+          <SpeakerDecks events={acceptedEvents} />
         </TabsContent>
       </Tabs>
     </div>

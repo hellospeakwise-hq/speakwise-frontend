@@ -38,6 +38,7 @@ export function CFPSettings({ eventSlug }: CFPSettingsProps) {
     const [event, setEvent] = useState<Event | null>(null)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
+    const [togglingDeck, setTogglingDeck] = useState(false)
     const [form, setForm] = useState<CFPForm>({
         accepts_cfp: false,
         cfp_open: false,
@@ -63,6 +64,24 @@ export function CFPSettings({ eventSlug }: CFPSettingsProps) {
             .catch(() => toast.error('Failed to load event'))
             .finally(() => setLoading(false))
     }, [eventSlug])
+
+    const handleToggleDeckUpload = async () => {
+        if (!event) return
+        setTogglingDeck(true)
+        try {
+            const result = await eventsApi.toggleSpeakerDeckUpload(event.slug)
+            setEvent(ev => ev ? { ...ev, speaker_deck_upload_enabled: result.speaker_deck_upload_enabled } : ev)
+            if (result.speaker_deck_upload_enabled) {
+                toast.success('Speaker deck upload enabled — accepted speakers have been notified')
+            } else {
+                toast.success('Speaker deck upload disabled')
+            }
+        } catch {
+            toast.error('Failed to update speaker deck setting')
+        } finally {
+            setTogglingDeck(false)
+        }
+    }
 
     const handleSave = async () => {
         try {
@@ -126,6 +145,20 @@ export function CFPSettings({ eventSlug }: CFPSettingsProps) {
                         checked={form.cfp_open}
                         disabled={!form.accepts_cfp}
                         onCheckedChange={v => setForm(p => ({ ...p, cfp_open: v }))}
+                    />
+                </div>
+
+                <div className="flex items-center justify-between gap-4 pt-3 border-t">
+                    <div>
+                        <p className="font-medium">Speaker Deck Upload</p>
+                        <p className="text-sm text-muted-foreground">
+                            Let accepted speakers upload their presentation deck. Turning this on sends a notification email to all currently accepted speakers.
+                        </p>
+                    </div>
+                    <Switch
+                        checked={event?.speaker_deck_upload_enabled ?? false}
+                        disabled={togglingDeck}
+                        onCheckedChange={handleToggleDeckUpload}
                     />
                 </div>
             </div>

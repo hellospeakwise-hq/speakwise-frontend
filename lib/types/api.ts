@@ -63,6 +63,8 @@ export interface Event {
   cfp_open_date: string | null;
   cfp_deadline: string | null;
   cfp_speaker_notification_date: string | null;
+  // Speaker deck uploads
+  speaker_deck_upload_enabled: boolean;
 }
 
 export interface EventsListResponse {

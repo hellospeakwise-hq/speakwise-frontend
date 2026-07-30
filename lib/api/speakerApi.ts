@@ -106,7 +106,44 @@ export interface UpdateSpeakerProfileData {
     skill_tags?: string[];
 }
 
+export interface SpeakerDeck {
+    id: string;
+    speaker: string | null;
+    event: string | null;
+    file: string;
+    original_filename: string | null;
+    file_size: number | null;
+    description: string;
+}
+
 export const speakerApi = {
+    // --- Speaker Deck endpoints ---
+
+    async getDecks(eventId: string): Promise<SpeakerDeck[]> {
+        const response = await apiClient.get<SpeakerDeck[]>('/speakers/decks/', {
+            params: { event: eventId },
+        });
+        return response.data;
+    },
+
+    async uploadDeck(eventId: string, file: File, description?: string): Promise<SpeakerDeck> {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('event', eventId);
+        if (description) formData.append('description', description);
+        const response = await apiClient.post<SpeakerDeck>('/speakers/decks/', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+            params: { event: eventId },
+        });
+        return response.data;
+    },
+
+    async deleteDeck(deckId: string): Promise<void> {
+        await apiClient.delete(`/speakers/decks/${deckId}/`);
+    },
+
+    // --- Speaker profile endpoints ---
+
     // Get all speakers (cached for 5 minutes)
     async getSpeakers(): Promise<Speaker[]> {
         return cachedFetch(
