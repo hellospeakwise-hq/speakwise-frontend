@@ -65,7 +65,8 @@ export function EventSessions({ eventId }: EventSessionsProps) {
                     speakerApi.getSpeakers()
                 ]);
 
-                const allTalks = talksResponse.data;
+                const raw = talksResponse.data;
+                const allTalks: EventTalk[] = Array.isArray(raw) ? raw : (raw as any).results ?? [];
                 const speakers = speakersResponse;
 
                 // Filter talks for this specific event and add speaker details

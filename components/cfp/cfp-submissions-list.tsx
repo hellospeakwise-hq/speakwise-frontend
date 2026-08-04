@@ -214,7 +214,7 @@ function SubmissionSheet({
                                     href={sub.slides_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-sm text-orange-500 hover:text-orange-600"
+                                    className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                                 >
                                     <ExternalLink className="h-3.5 w-3.5" />
                                     Slides
@@ -225,7 +225,7 @@ function SubmissionSheet({
                                     href={sub.recording_url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-sm text-orange-500 hover:text-orange-600"
+                                    className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
                                 >
                                     <ExternalLink className="h-3.5 w-3.5" />
                                     Recording
@@ -370,7 +370,7 @@ export function CFPSubmissionsList({ eventSlug }: CFPSubmissionsListProps) {
                         className={cn(
                             'flex items-center gap-1.5 px-3 py-2 text-sm border-b-2 -mb-px transition-colors',
                             activeStatus === tab.key
-                                ? 'border-orange-500 text-foreground font-medium'
+                                ? 'border-foreground text-foreground font-medium'
                                 : 'border-transparent text-muted-foreground hover:text-foreground'
                         )}
                     >

@@ -68,13 +68,13 @@ function ProposalTab({ sub }: { sub: CFPSubmissionWithScore }) {
                         <div className="flex gap-4">
                             {sub.slides_url && (
                                 <a href={sub.slides_url} target="_blank" rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-orange-500 hover:underline">
+                                    className="inline-flex items-center gap-1 hover:underline">
                                     <ExternalLink className="h-3.5 w-3.5" /> Slides
                                 </a>
                             )}
                             {sub.recording_url && (
                                 <a href={sub.recording_url} target="_blank" rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-orange-500 hover:underline">
+                                    className="inline-flex items-center gap-1 hover:underline">
                                     <ExternalLink className="h-3.5 w-3.5" /> Recording
                                 </a>
                             )}
@@ -212,7 +212,7 @@ function ReviewsTab({
                                 className={cn(
                                     'w-9 h-9 rounded border text-sm font-semibold transition-colors duration-150',
                                     score === n
-                                        ? 'border-orange-500 bg-orange-500 text-white'
+                                        ? 'border-foreground bg-foreground text-background'
                                         : 'border-border text-muted-foreground hover:border-foreground hover:text-foreground'
                                 )}
                             >
@@ -260,7 +260,7 @@ function ReviewsTab({
                         <Button
                             onClick={onSubmit}
                             disabled={!score || submitting}
-                            className="gap-2 bg-orange-500 hover:bg-orange-600 text-white h-8 px-4 text-sm"
+                            className="gap-2 bg-foreground text-background hover:bg-foreground/90 h-8 px-4 text-sm"
                         >
                             {submitting ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -284,7 +284,7 @@ function ProgressBar({ reviewed, total }: { reviewed: number; total: number }) {
         <div className="flex items-center gap-3">
             <div className="w-32 h-1 bg-muted rounded-full overflow-hidden">
                 <div
-                    className="h-full bg-orange-500 rounded-full origin-left"
+                    className="h-full bg-foreground rounded-full origin-left"
                     style={{
                         transform: `scaleX(${pct / 100})`,
                         transition: 'transform 400ms cubic-bezier(0.23, 1, 0.32, 1)',
@@ -426,7 +426,7 @@ export function CFPReviewMode({ eventSlug, onClose }: CFPReviewModeProps) {
                                             className={cn(
                                                 'px-4 py-2 text-sm border-b-2 transition-colors duration-150',
                                                 activeTab === tab.key
-                                                    ? 'border-orange-500 text-foreground font-medium'
+                                                    ? 'border-foreground text-foreground font-medium'
                                                     : 'border-transparent text-muted-foreground hover:text-foreground'
                                             )}
                                         >

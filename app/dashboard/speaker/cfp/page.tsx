@@ -76,7 +76,7 @@ export default function SpeakerCFPPage() {
                     <p className="text-sm text-muted-foreground">
                         Browse events and submit a talk proposal to get started.
                     </p>
-                    <Button asChild className="mt-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full">
+                    <Button asChild className="mt-2 bg-foreground text-background hover:bg-foreground/90">
                         <Link href="/events">Browse Events</Link>
                     </Button>
                 </div>
@@ -179,7 +179,7 @@ export default function SpeakerCFPPage() {
             )}
 
             {/* Submit new proposal */}
-            <Button asChild className="bg-orange-500 hover:bg-orange-600 text-white rounded-full">
+            <Button asChild className="bg-foreground text-background hover:bg-foreground/90">
                 <Link href="/events">
                     <Plus className="h-4 w-4 mr-2" />
                     Submit a new proposal

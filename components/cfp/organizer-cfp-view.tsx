@@ -55,7 +55,7 @@ export function OrganizerCFPView({ events }: OrganizerCFPViewProps) {
                             <Button
                                 size="sm"
                                 onClick={() => setReviewMode(true)}
-                                className="bg-orange-500 hover:bg-orange-600 text-white gap-1.5 h-8"
+                                className="bg-foreground text-background hover:bg-foreground/90 gap-1.5 h-8"
                             >
                                 <PlayCircle className="h-3.5 w-3.5" />
                                 Start review

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { Clock, LogOut, MousePointerClick } from "lucide-react"
+import { LogOut, MousePointerClick } from "lucide-react"
+import { refreshTokenNow } from "@/lib/utils/tokenRefresh"
 
 const IDLE_TIMEOUT_MS = 10 * 60 * 1000   // 10 minutes of inactivity
 const COUNTDOWN_SECONDS = 60              // 60-second countdown before logout
@@ -42,8 +43,20 @@ export function IdleTimeoutModal() {
 
     setShowModal(false)
     setCountdown(COUNTDOWN_SECONDS)
-    resetIdleTimer()
-  }, [resetIdleTimer])
+
+    // Refresh the JWT so the token system doesn't expire the session.
+    // Fire-and-forget — if it fails, tokenRefresh.ts will handle expiry.
+    refreshTokenNow()
+
+    // Bypass resetIdleTimer's stale-closure guard (showModal is still true
+    // at this point because React state updates are async). Set the timer
+    // directly on the ref so the user gets a fresh 10-minute window.
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+    idleTimerRef.current = setTimeout(() => {
+      setShowModal(true)
+      setCountdown(COUNTDOWN_SECONDS)
+    }, IDLE_TIMEOUT_MS)
+  }, [])
 
   // Handle logout (manual or countdown expired)
   const handleLogout = useCallback(() => {
@@ -127,7 +140,7 @@ export function IdleTimeoutModal() {
         <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 p-8 shadow-2xl shadow-black/40 animate-in zoom-in-95 fade-in duration-200">
 
           {/* Glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-orange-500/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white/5 rounded-full blur-3xl pointer-events-none" />
 
           {/* Countdown circle */}
           <div className="relative flex justify-center mb-6">
@@ -144,19 +157,14 @@ export function IdleTimeoutModal() {
                 <circle
                   cx="48" cy="48" r="44"
                   fill="none"
-                  stroke="url(#countdown-gradient)"
+                  stroke="white"
+                  strokeOpacity={countdown <= 10 ? 0.9 : 0.6}
                   strokeWidth="4"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
                   strokeDashoffset={circumference - (progress / 100) * circumference}
                   className="transition-all duration-1000 ease-linear"
                 />
-                <defs>
-                  <linearGradient id="countdown-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#f97316" />
-                    <stop offset="100%" stopColor="#ef4444" />
-                  </linearGradient>
-                </defs>
               </svg>
 
               {/* Countdown number */}
@@ -177,7 +185,7 @@ export function IdleTimeoutModal() {
             </h3>
             <p className="text-sm text-slate-400 leading-relaxed">
               You&apos;ve been inactive for a while. For your security, you&apos;ll be logged out in{" "}
-              <span className={`font-semibold ${countdown <= 10 ? 'text-red-400' : 'text-orange-400'}`}>
+              <span className={`font-semibold ${countdown <= 10 ? 'text-red-400' : 'text-white'}`}>
                 {countdown} seconds
               </span>.
             </p>
@@ -187,7 +195,7 @@ export function IdleTimeoutModal() {
           <div className="space-y-3">
             <button
               onClick={handleStayLoggedIn}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 py-3 px-6 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-white text-slate-900 py-3 px-6 text-sm font-semibold hover:bg-white/90 transition-all duration-200 active:scale-[0.98]"
             >
               <MousePointerClick className="h-4 w-4" />
               Yes, I&apos;m still here

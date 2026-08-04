@@ -117,8 +117,8 @@ function UploadDialog({ event, open, onOpenChange, onUploaded }: UploadDialogPro
             className={cn(
               "border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors",
               dragging
-                ? "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
-                : "border-muted-foreground/25 hover:border-orange-400 hover:bg-muted/40"
+                ? "border-foreground bg-muted/50"
+                : "border-muted-foreground/25 hover:border-foreground/40 hover:bg-muted/40"
             )}
           >
             <input
@@ -130,7 +130,7 @@ function UploadDialog({ event, open, onOpenChange, onUploaded }: UploadDialogPro
             />
             {file ? (
               <div className="flex flex-col items-center gap-2">
-                <FileText className="h-8 w-8 text-orange-500" />
+                <FileText className="h-8 w-8 text-muted-foreground" />
                 <p className="font-medium text-sm">{file.name}</p>
                 <p className="text-xs text-muted-foreground">{formatBytes(file.size)}</p>
                 <Button
@@ -175,7 +175,7 @@ function UploadDialog({ event, open, onOpenChange, onUploaded }: UploadDialogPro
             <Button
               onClick={handleUpload}
               disabled={!file || !!fileError || uploading}
-              className="bg-orange-500 hover:bg-orange-600 text-white"
+              className="bg-foreground text-background hover:bg-foreground/90"
             >
               {uploading ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Uploading…</>

@@ -119,7 +119,8 @@ export const cfpApi = {
 
     async listCFPs(eventSlug: string): Promise<CFPSubmission[]> {
         const response = await apiClient.get(`/events/${eventSlug}/cfp/`)
-        return response.data
+        const data = response.data
+        return Array.isArray(data) ? data : (data?.results ?? [])
     },
 
     async getCFP(id: string): Promise<CFPSubmission> {
@@ -134,7 +135,8 @@ export const cfpApi = {
 
     async myCFPs(): Promise<CFPSubmission[]> {
         const response = await apiClient.get('/cfp/mine/')
-        return response.data
+        const data = response.data
+        return Array.isArray(data) ? data : (data?.results ?? [])
     },
 
     async deleteCFP(id: string): Promise<void> {
@@ -153,7 +155,8 @@ export const cfpApi = {
 
     async listReviews(id: string): Promise<CFPReview[]> {
         const response = await apiClient.get(`/cfp/${id}/reviews/`)
-        return response.data
+        const data = response.data
+        return Array.isArray(data) ? data : (data?.results ?? [])
     },
 
     async getReviewQueue(eventSlug: string): Promise<CFPReviewQueueResponse | null> {

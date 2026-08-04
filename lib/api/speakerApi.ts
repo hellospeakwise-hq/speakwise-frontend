@@ -120,10 +120,11 @@ export const speakerApi = {
     // --- Speaker Deck endpoints ---
 
     async getDecks(eventId: string): Promise<SpeakerDeck[]> {
-        const response = await apiClient.get<SpeakerDeck[]>('/speakers/decks/', {
+        const response = await apiClient.get('/speakers/decks/', {
             params: { event: eventId },
         });
-        return response.data;
+        const data = response.data;
+        return Array.isArray(data) ? data : (data?.results ?? []);
     },
 
     async uploadDeck(eventId: string, file: File, description?: string): Promise<SpeakerDeck> {

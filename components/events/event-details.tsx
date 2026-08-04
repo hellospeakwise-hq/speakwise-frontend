@@ -1,13 +1,11 @@
 'use client'
 
-import { Calendar, MapPin, Users, Clock, Loader2, Globe, Send } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Calendar, MapPin, Users, Clock, Globe, Send, Mic, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
+import { motion, useReducedMotion } from "framer-motion"
 import type { DateTimeInfo } from "@/lib/types/api"
-import { formatDateFromMaybe, formatTimeFromMaybe } from '@/lib/utils/event-utils'
-import { getEventImageUrl } from '@/lib/utils/event-utils'
+import { formatDateFromMaybe, formatTimeFromMaybe, getEventImageUrl } from '@/lib/utils/event-utils'
 import { eventsApi } from "@/lib/api/events"
 import { type Event } from "@/lib/types/api"
 import { EventSessions } from "./event-sessions"
@@ -20,6 +18,28 @@ interface EventDetailsProps {
   id: string
 }
 
+function LoadingSkeleton() {
+  return (
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-20 animate-pulse">
+      <div className="h-3.5 w-28 bg-muted rounded mb-8" />
+      <div className="h-60 bg-muted rounded-xl mb-8" />
+      <div className="lg:grid lg:grid-cols-[1fr_240px] lg:gap-12">
+        <div className="space-y-3">
+          <div className="h-4 w-32 bg-muted rounded mb-5" />
+          {[100, 92, 96, 88, 80].map((w, i) => (
+            <div key={i} className="h-3.5 bg-muted rounded" style={{ width: `${w}%` }} />
+          ))}
+        </div>
+        <div className="hidden lg:block space-y-3 pt-1">
+          <div className="h-3 w-12 bg-muted rounded mb-5" />
+          <div className="h-4 w-full bg-muted rounded" />
+          <div className="h-4 w-full bg-muted rounded" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function EventDetails({ id }: EventDetailsProps) {
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
@@ -28,363 +48,291 @@ export function EventDetails({ id }: EventDetailsProps) {
   const [attendeesCount, setAttendeesCount] = useState<number>(0)
   const { user } = useAuth()
   const { events: allEvents, loading: eventsLoading } = useEvents()
+  const prefersReduced = useReducedMotion()
 
-
-  // Helpers to handle both string ISO values and the older object shape
-  // Use shared helpers from utils
   const getDateString = (v?: string | DateTimeInfo | null) => formatDateFromMaybe(v as any)
   const getTimeString = (v?: string | DateTimeInfo | null) => formatTimeFromMaybe(v as any)
-
-  // Helper to ensure absolute image URL
-
-  // Only show management buttons to organizers
   const canManageEvent = user?.userType === 'organizer'
+
+  const fadeUp = (delay = 0) => ({
+    initial: prefersReduced ? {} : { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.35, delay, ease: [0.16, 1, 0.3, 1] },
+  })
 
   useEffect(() => {
     const loadEvent = async () => {
       try {
         setLoading(true)
         setError(null)
-
-        // First, try to find the event in the already loaded events list
         const eventFromList = allEvents.find(e => e.slug === id)
-
         if (eventFromList && !eventsLoading) {
-          // If we found the event in the list, use it directly
-          console.log('Using event from events list:', eventFromList)
           setEvent(eventFromList)
           setLoading(false)
           return
         }
-
-        // If not found in list or list is still loading, try API call
         if (!eventsLoading) {
-          console.log('Event not found in list, trying API call...')
           const data = await eventsApi.getEvent(id)
-          console.log('Event data received from API:', data)
           setEvent(data)
         }
       } catch (err) {
-        console.error('Error fetching event:', err)
         setEvent(null)
-
-        // Handle 401 errors gracefully for event details
         if (err instanceof Error && err.message.includes('401')) {
           setError('Event details are not available. The event may require authentication to view.')
         } else {
           setError('Failed to load event details.')
         }
       } finally {
-        if (!eventsLoading) {
-          setLoading(false)
-        }
+        if (!eventsLoading) setLoading(false)
       }
     }
-
-    if (id) {
-      loadEvent()
-    }
+    if (id) loadEvent()
   }, [id, allEvents, eventsLoading])
 
-  // Load speakers and attendees counts
   useEffect(() => {
     const loadEventStats = async () => {
       try {
-        // Fetch talks to count unique speakers
         const talksResponse = await apiClient.get<any[]>('/talks/')
-        const eventTalks = talksResponse.data.filter((talk: any) => talk.event.toString() === id)
+        const raw = talksResponse.data
+        const talks = Array.isArray(raw) ? raw : (raw as any)?.results ?? []
+        const eventTalks = talks.filter((talk: any) => talk.event?.toString() === id)
         const uniqueSpeakers = new Set(eventTalks.map((talk: any) => talk.speaker))
         setSpeakersCount(uniqueSpeakers.size)
-
-        // Fetch attendees for this event
         try {
           const attendeesResponse = await apiClient.get(`/events/${id}/attendees/`)
           setAttendeesCount(attendeesResponse.data.length || 0)
-        } catch (err) {
-          // If attendees endpoint doesn't exist or returns error, check event.attendees
-          if (event?.attendees) {
-            setAttendeesCount(event.attendees)
-          } else {
-            setAttendeesCount(0)
-          }
+        } catch {
+          setAttendeesCount(event?.attendees ?? 0)
         }
-      } catch (error) {
-        console.error('Error loading event stats:', error)
-        // Set to 0 on error
+      } catch {
         setSpeakersCount(0)
         setAttendeesCount(0)
       }
     }
-
-    if (id && !loading) {
-      loadEventStats()
-    }
+    if (id && !loading) loadEventStats()
   }, [id, loading, event])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-        <span className="ml-2 text-muted-foreground">Loading event...</span>
-      </div>
-    )
-  }
+  if (loading) return <LoadingSkeleton />
 
   if (error || !event) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">{error || "Event not found"}</p>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 text-center">
+        <p className="text-sm text-muted-foreground">{error || "Event not found"}</p>
+        <Button asChild variant="outline" size="sm" className="mt-4">
+          <Link href="/events">
+            <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
+            Back to Events
+          </Link>
+        </Button>
       </div>
     )
   }
 
+  const locationStr = event.location
+    ? typeof event.location === 'string'
+      ? event.location
+      : `${event.location.venue ? event.location.venue + ', ' : ''}${event.location.city || ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'TBA'
+    : 'TBA'
+
+  const locationShort = event.location
+    ? typeof event.location === 'string'
+      ? event.location
+      : `${event.location.city || ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'TBA'
+    : 'TBA'
+
+  const dateDisplay = event.date_range
+    ? event.date_range.same_day
+      ? getDateString(event.date_range.start)
+      : `${getDateString(event.date_range.start)} – ${getDateString(event.date_range.end)}`
+    : event.date || 'TBA'
+
+  const timeDisplay = event.date_range
+    ? `${getTimeString(event.date_range.start)} – ${getTimeString(event.date_range.end)}`
+    : event.start_date_time
+      ? new Date(event.start_date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      : 'TBA'
+
+  const tags = event.tags && event.tags.length > 0 ? event.tags : null
+
   return (
-    <div className="container mx-auto px-4 py-6 space-y-6">
-      {/* Hero Banner Section - Contained with rounded borders */}
-      <div
-        className="relative h-64 md:h-80 w-full rounded-2xl overflow-hidden"
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-20">
+
+      {/* Hero */}
+      <motion.div
+        {...fadeUp(0)}
+        className="relative h-56 md:h-72 w-full rounded-xl overflow-hidden mb-8"
         style={{
           backgroundImage: event.event_image
             ? `url(${getEventImageUrl(event.event_image)})`
-            : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            : undefined,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundRepeat: 'no-repeat',
+          backgroundColor: event.event_image ? undefined : 'hsl(var(--muted))',
         }}
       >
-        {/* Overlay for better text readability */}
-        <div className="absolute inset-0 bg-black/50"></div>
+        <div className="absolute inset-0 bg-black/45" />
 
-        {/* Content */}
-        <div className="relative h-full flex flex-col justify-end p-6 md:p-8">
-          {/* Action buttons - top right */}
-          <div className="absolute top-4 right-4 flex space-x-2">
-            {canManageEvent && (
-              <>
-                <Link href={`/events/${id}/manage-sessions`}>
-                  <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
-                    Manage Sessions
-                  </Button>
-                </Link>
-                <Link href={`/events/${id}/manage-speakers`}>
-                  <Button variant="secondary" size="sm" className="bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
-                    Manage Speakers
-                  </Button>
-                </Link>
-              </>
-            )}
-            {event.accepts_cfp && (
-              <Link href={`/events/${id}/cfp`}>
-                {event.cfp_open ? (
-                  <Button className="rounded-full bg-orange-500 hover:bg-orange-600 text-white px-5">
-                    <Send className="h-4 w-4 mr-2" />
-                    Submit CFP
-                  </Button>
-                ) : (
-                  <Button variant="secondary" className="rounded-full px-5 bg-white/20 backdrop-blur-sm border-white/30 text-white hover:bg-white/30">
-                    <Send className="h-4 w-4 mr-2" />
-                    CFP Closed
-                  </Button>
-                )}
+        {/* Top-right actions */}
+        <div className="absolute top-4 right-4 flex items-center gap-2">
+          {canManageEvent && (
+            <>
+              <Link href={`/events/${id}/manage-sessions`}>
+                <button className="h-7 px-3 text-xs bg-white/15 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-colors rounded-md">
+                  Manage Sessions
+                </button>
               </Link>
-            )}
-          </div>
-
-          {/* Event Title and Info */}
-          <div className="space-y-4">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white leading-tight">
-              {event.name || event.title}
-            </h1>
-
-            {/* Event Tags */}
-            <div className="flex flex-wrap gap-2">
-              {event.tags && event.tags.length > 0 ? (
-                event.tags.map((tag: any) => (
-                  <span
-                    key={tag.id}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white/20 backdrop-blur-sm text-white border border-white/30"
-                  >
-                    {tag.name || `Tag ${tag.id}`}
-                  </span>
-                ))
+              <Link href={`/events/${id}/manage-speakers`}>
+                <button className="h-7 px-3 text-xs bg-white/15 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-colors rounded-md">
+                  Manage Speakers
+                </button>
+              </Link>
+            </>
+          )}
+          {event.accepts_cfp && (
+            <Link href={`/events/${id}/cfp`}>
+              {event.cfp_open ? (
+                <button className="h-8 px-4 text-sm font-semibold bg-white text-slate-900 hover:bg-white/90 transition-colors rounded-md flex items-center gap-1.5">
+                  <Send className="h-3.5 w-3.5" />
+                  Submit CFP
+                </button>
               ) : (
-                <Badge className="bg-white/20 backdrop-blur-sm text-white border-white/30">
-                  Event
-                </Badge>
+                <button className="h-8 px-4 text-sm bg-white/10 backdrop-blur-sm border border-white/20 text-white/70 rounded-md cursor-default" disabled>
+                  CFP Closed
+                </button>
               )}
-            </div>
+            </Link>
+          )}
+        </div>
 
-            {/* Quick Info Row */}
-            <div className="flex flex-wrap gap-4 text-white/90 text-sm">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>
-                  {event.date_range ?
-                    (event.date_range.same_day ?
-                      (getDateString(event.date_range.start))
-                      :
-                      `${getDateString(event.date_range.start)} - ${getDateString(event.date_range.end)}`
-                    ) :
-                    (event.date || 'TBA')
-                  }
+        {/* Bottom content */}
+        <div className="absolute bottom-0 left-0 right-0 p-6">
+          {tags && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {tags.map((tag: any) => (
+                <span key={tag.id} className="text-xs bg-white/15 border border-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
+                  {tag.name || `Tag ${tag.id}`}
                 </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                <span>
-                  {event.location
-                    ? typeof event.location === 'string'
-                      ? event.location
-                      : `${event.location.city || ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'TBA'
-                    : 'TBA'
-                  }
-                </span>
-              </div>
+              ))}
             </div>
+          )}
+          <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2">
+            {event.name || event.title}
+          </h1>
+          <div className="flex flex-wrap gap-4 text-sm text-white/75">
+            <span className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5" />
+              {dateDisplay}
+            </span>
+            <span className="flex items-center gap-1.5">
+              <MapPin className="h-3.5 w-3.5" />
+              {locationShort}
+            </span>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Content Section */}
-      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>About the Event</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">{event.description || event.short_description || 'No description available'}</p>
-            <div className="mt-6 space-y-4">
-              <h3 className="font-semibold">Event Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-start">
-                  <Calendar className="h-5 w-5 mr-2 text-orange-500 shrink-0" />
-                  <div>
-                    <p className="font-medium">Date</p>
-                    {event.date_range ? (
-                      event.date_range.same_day ? (
-                        <p className="text-sm text-muted-foreground">{getDateString(event.date_range.start)}</p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          From: {getDateString(event.date_range.start)}<br />
-                          To: {getDateString(event.date_range.end)}
-                        </p>
-                      )
-                    ) : (
-                      <p className="text-sm text-muted-foreground">{event.date || 'TBA'}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <Clock className="h-5 w-5 mr-2 text-orange-500 shrink-0" />
-                  <div>
-                    <p className="font-medium">Time</p>
-                    {event.date_range ? (
-                      event.date_range.same_day ? (
-                        <p className="text-sm text-muted-foreground">
-                          {getTimeString(event.date_range.start)} - {getTimeString(event.date_range.end)}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          Start: {getTimeString(event.date_range.start)}<br />
-                          End: {getTimeString(event.date_range.end)}
-                        </p>
-                      )
-                    ) : (
-                      <p className="text-sm text-muted-foreground">
-                        {event.start_date_time
-                          ? new Date(event.start_date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                          : 'TBA'}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <MapPin className="h-5 w-5 mr-2 text-orange-500 shrink-0" />
-                  <div>
-                    <p className="font-medium">Location</p>
-                    <p className="text-sm text-muted-foreground">
-                      {event.location
-                        ? typeof event.location === 'string'
-                          ? event.location
-                          : `${event.location.venue || ''}${event.location.city ? `, ${event.location.city}` : ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'TBA'
-                        : 'TBA'
-                      }
-                    </p>
-                  </div>
-                </div>
-                {event.website && (
-                  <div className="flex items-start">
-                    <Globe className="h-5 w-5 mr-2 text-orange-500 shrink-0" />
-                    <div>
-                      <p className="font-medium">Website</p>
-                      <a
-                        href={event.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        {event.website}
-                      </a>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Two-column layout */}
+      <div className="lg:grid lg:grid-cols-[1fr_240px] lg:gap-12 items-start">
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Event Stats</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <Users className="h-5 w-5 mr-2 text-orange-500" />
-                <span className="font-medium">Attendees</span>
-              </div>
-              <span className="text-lg font-bold">{attendeesCount}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="h-5 w-5 mr-2 text-orange-500"
-                >
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="9" cy="7" r="4"></circle>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-                <span className="font-medium">Speakers</span>
-              </div>
-              <span className="text-lg font-bold">{speakersCount}</span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        {/* Left: About + Details + Talks */}
+        <motion.div {...fadeUp(0.08)}>
 
-      {/* Sessions Section */}
-      {/* Sessions Section */}
-      <Card className="col-span-1 md:col-span-2">
-        <CardHeader>
-          <CardTitle>Event Talks</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="mb-4">
-            <p className="text-muted-foreground">View all Speakers and their respective talks and give feedback to talk sessions</p>
+          {/* About */}
+          <div>
+            <p className="text-sm font-semibold mb-3">About</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {event.description || event.short_description || 'No description available.'}
+            </p>
           </div>
-          <EventSessions eventId={id} />
-        </CardContent>
-      </Card>
+
+          <div className="border-t border-border my-6" />
+
+          {/* Event Details */}
+          <div>
+            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-4">Event details</p>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+              <div>
+                <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3" /> Date
+                </dt>
+                <dd className="text-sm font-medium">{dateDisplay}</dd>
+              </div>
+              <div>
+                <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
+                  <Clock className="h-3 w-3" /> Time
+                </dt>
+                <dd className="text-sm font-medium">{timeDisplay}</dd>
+              </div>
+              <div>
+                <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
+                  <MapPin className="h-3 w-3" /> Location
+                </dt>
+                <dd className="text-sm font-medium">{locationStr}</dd>
+              </div>
+              {event.website && (
+                <div>
+                  <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
+                    <Globe className="h-3 w-3" /> Website
+                  </dt>
+                  <dd>
+                    <a
+                      href={event.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium hover:underline underline-offset-2"
+                    >
+                      {event.website.replace(/^https?:\/\//, '')}
+                    </a>
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
+
+          <div className="border-t border-border my-6" />
+
+          {/* Talks */}
+          <div>
+            <p className="text-sm font-semibold mb-1">Talks</p>
+            <p className="text-xs text-muted-foreground mb-5">Speakers and their sessions — leave feedback after each talk</p>
+            <EventSessions eventId={id} />
+          </div>
+        </motion.div>
+
+        {/* Right: Sticky sidebar */}
+        <motion.aside {...fadeUp(0.12)} className="mt-10 lg:mt-0 lg:sticky lg:top-6">
+          <p className="text-xs text-muted-foreground mb-4">Stats</p>
+          <dl className="space-y-4">
+            <div className="flex items-center justify-between">
+              <dt className="text-sm text-muted-foreground flex items-center gap-2">
+                <Users className="h-3.5 w-3.5" />
+                Attendees
+              </dt>
+              <dd className="text-sm font-semibold tabular-nums">{attendeesCount}</dd>
+            </div>
+            <div className="flex items-center justify-between">
+              <dt className="text-sm text-muted-foreground flex items-center gap-2">
+                <Mic className="h-3.5 w-3.5" />
+                Speakers
+              </dt>
+              <dd className="text-sm font-semibold tabular-nums">{speakersCount}</dd>
+            </div>
+          </dl>
+
+          {event.accepts_cfp && event.cfp_open && (
+            <div className="mt-6 pt-6 border-t border-border">
+              <p className="text-xs text-muted-foreground mb-3">CFP is open</p>
+              <Link href={`/events/${id}/cfp`}>
+                <Button className="w-full bg-foreground text-background hover:bg-foreground/90 h-9 text-sm gap-1.5">
+                  <Send className="h-3.5 w-3.5" />
+                  Submit a Proposal
+                </Button>
+              </Link>
+            </div>
+          )}
+        </motion.aside>
+      </div>
     </div>
   )
 }
