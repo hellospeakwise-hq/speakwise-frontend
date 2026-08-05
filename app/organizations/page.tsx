@@ -43,7 +43,7 @@ function OrgCard({ org, index, active }: { org: Organization; index: number; act
     <motion.div
       initial={prefersReduced ? {} : { opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.3, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] as const }}
       className={cn(
         "group rounded-lg border bg-card p-4 flex items-start gap-4 transition-colors duration-150",
         active
@@ -137,7 +137,7 @@ function EmptyState({ onCreateClick }: { onCreateClick: () => void }) {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] as const }}
       className="rounded-lg border border-dashed p-16 flex flex-col items-center text-center"
     >
       <Building2 className="h-8 w-8 text-muted-foreground/40 mb-4" />
@@ -204,7 +204,7 @@ export default function OrganizationsPage() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] as const }}
           className="flex items-center justify-between mb-8"
         >
           <div>

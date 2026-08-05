@@ -219,7 +219,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
             className="w-full md:w-[296px] flex-shrink-0 space-y-5"
             initial={prefersReduced ? {} : { opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] as const }}
           >
 
             {/* Avatar & name */}
@@ -437,7 +437,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
             className="flex-1 min-w-0 space-y-5"
             initial={prefersReduced ? {} : { opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.35, delay: 0.08, ease: [0.16, 1, 0.3, 1] as const }}
           >
 
             {/* Stats strip */}
