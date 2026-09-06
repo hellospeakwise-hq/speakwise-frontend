@@ -63,79 +63,62 @@ export default function OrganizationDetailPage({ params }: { params: Promise<{ i
 
     return (
         <div className="min-h-screen">
-            {/* Cover / Branding area */}
-            <div className="relative w-full h-52 sm:h-64 overflow-hidden bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent">
-                {org.branding ? (
-                    <img
-                        src={org.branding}
-                        alt={`${org.name} branding`}
-                        className="w-full h-full object-cover"
-                    />
-                ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                        <Building2 className="h-20 w-20 text-amber-500/20" />
-                    </div>
-                )}
-
-                {/* Gradient overlay for readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-transparent" />
-
-                {/* Back link */}
-                <div className="absolute top-4 left-4">
-                    <Link
-                        href="/organizations"
-                        className="inline-flex items-center gap-1.5 text-sm font-medium text-white/80 hover:text-white transition-colors backdrop-blur-sm bg-black/20 rounded-full px-3 py-1.5"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                        Organizations
-                    </Link>
-                </div>
-
-                {/* Org badge — top right */}
-                <div className="absolute top-4 right-4 flex items-center gap-1.5 rounded-full bg-amber-500 px-3 py-1.5 text-xs font-semibold text-white shadow-md">
-                    <Building2 className="h-3.5 w-3.5" />
-                    Organization
-                </div>
+            {/* Back link */}
+            <div className="container max-w-4xl mx-auto px-4 pt-6">
+                <Link
+                    href="/organizations"
+                    className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                    Organizations
+                </Link>
             </div>
 
             {/* Content */}
-            <div className="container max-w-4xl mx-auto px-4 -mt-6 relative z-10 pb-16">
-                {/* Name + meta */}
+            <div className="container max-w-4xl mx-auto px-4 pt-8 pb-16">
+                {/* Header — logo + name */}
                 <div className="mb-8">
-                    <div className="flex items-center gap-2.5 mb-3">
-                                        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">{org.name}</h1>
-                                        {org.status === 'active' && (
-                                            <div title="Verified Organization" className="flex-shrink-0 mt-1">
-                                                <svg className="h-6 w-6 sm:h-7 sm:w-7" viewBox="0 0 24 24" fill="none">
-                                                    <circle cx="12" cy="12" r="12" className="fill-amber-500" />
-                                                    <path d="M7 12.5l3.5 3.5 6.5-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                                </svg>
-                                            </div>
-                                        )}
+                    <div className="flex items-center gap-4 mb-4">
+                        {/* Logo avatar */}
+                        <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl overflow-hidden bg-muted border border-border flex-shrink-0 flex items-center justify-center">
+                            {org.branding ? (
+                                <img src={org.branding} alt={org.name} className="h-full w-full object-cover" />
+                            ) : (
+                                <span className="text-2xl font-bold text-muted-foreground">
+                                    {org.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                                </span>
+                            )}
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-2.5 mb-1">
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{org.name}</h1>
+                                {org.status === 'active' && (
+                                    <div title="Verified Organization" className="flex-shrink-0">
+                                        <svg className="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" fill="none">
+                                            <circle cx="12" cy="12" r="12" className="fill-amber-500" />
+                                            <path d="M7 12.5l3.5 3.5 6.5-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
                                     </div>
-
-                    <div className="flex flex-wrap gap-4">
-                        {org.website && (
-                            <a
-                                href={org.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-amber-500 transition-colors"
-                            >
-                                <Globe className="h-3.5 w-3.5" />
-                                {org.website.replace(/^https?:\/\//, "")}
-                                <ExternalLink className="h-3 w-3" />
-                            </a>
-                        )}
-                        {org.contact_email && (
-                            <a
-                                href={`mailto:${org.contact_email}`}
-                                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-amber-500 transition-colors"
-                            >
-                                <Mail className="h-3.5 w-3.5" />
-                                {org.contact_email}
-                            </a>
-                        )}
+                                )}
+                            </div>
+                            <div className="flex flex-wrap gap-4">
+                                {org.website && (
+                                    <a href={org.website} target="_blank" rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                        <Globe className="h-3.5 w-3.5" />
+                                        {org.website.replace(/^https?:\/\//, "")}
+                                        <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                )}
+                                {org.contact_email && (
+                                    <a href={`mailto:${org.contact_email}`}
+                                        className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                                        <Mail className="h-3.5 w-3.5" />
+                                        {org.contact_email}
+                                    </a>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
