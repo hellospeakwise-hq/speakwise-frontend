@@ -23,8 +23,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  const posts = await listBlogs()
-  return posts.map((p) => ({ slug: p.id }))
+  try {
+    const posts = await listBlogs()
+    return posts.map((p) => ({ slug: p.id }))
+  } catch {
+    return []
+  }
 }
 
 function formatDate(dateStr: string | null) {
