@@ -1,153 +1,100 @@
-import apiClient from './base';
+import { apiClient } from './base';
 
-export interface Organization {
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://127.0.0.1:8000';
+
+function resolveImageUrl(path: string | null | undefined): string | null {
+    if (!path) return null;
+    if (path.startsWith('http')) return path;
+    return `${API_BASE_URL}${path}`;
+}
+
+export interface OrganizationCFP {
+    url: string | null;
+    description: string | null;
+    open_at: string | null;
+    close_at: string | null;
+}
+
+export type OrgStatus = 'pending' | 'active' | 'inactive' | 'rejected'
+
+export interface OrganizationProfile {
     id: string;
+    owner: string | null;
     name: string;
-    slug: string;
-    description: string;
-    email: string;
-    website?: string;
-    logo?: string;
-    is_active: boolean;
-    created_by: string;
-    members: string[];
+    description: string | null;
+    website: string | null;
+    branding: string | null;
+    contact_email: string | null;
+    status: OrgStatus | null;
+    cfps: OrganizationCFP | null;
 }
 
 export interface CreateOrganizationData {
     name: string;
-    description: string;
-    email: string;
+    description?: string;
     website?: string;
-    logo?: File;
-    is_active?: boolean;
+    contact_email?: string;
+    branding?: File;
 }
 
-export interface OrganizationMember {
-    id: string;
-    organization: string;
-    user: string;
-    username: string;
-    role: 'ADMIN' | 'MEMBER' | 'MODERATOR';
-    is_active: boolean;
-    added_by: string;
-}
-
-export interface AddMemberData {
-    user: string; // user UUID
-    role?: 'ADMIN' | 'MEMBER' | 'MODERATOR';
-}
-
-export interface UserSearchResult {
-    id: string;
-    username: string;
-    email: string;
-    first_name?: string;
-    last_name?: string;
+function resolveOrg(org: OrganizationProfile): OrganizationProfile {
+    return { ...org, branding: resolveImageUrl(org.branding) };
 }
 
 export const organizationApi = {
-    // Get user's organizations (with client-side filtering as safeguard)
-    async getUserOrganizations(): Promise<Organization[]> {
-        const response = await apiClient.get('/organizations/');
-        const allOrgs = response.data as Organization[];
-        
-        // Client-side filtering to ensure users only see their own organizations
-        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-        if (!userStr) {
-            return [];
-        }
-        
-        try {
-            const user = JSON.parse(userStr);
-            const currentUserId = user.id;
-            
-            // Filter: user is creator OR user is a member
-            return allOrgs.filter(org => 
-                org.created_by === currentUserId || 
-                (org.members && org.members.includes(currentUserId))
-            );
-        } catch {
-            return [];
-        }
+    async listOrganizations(): Promise<OrganizationProfile[]> {
+        const response = await apiClient.get<OrganizationProfile[]>('/organization/');
+        const data = response.data;
+        const list = Array.isArray(data) ? data : (data as any)?.results ?? [];
+        return list.map(resolveOrg);
     },
 
-    // Get single organization by slug
-    async getOrganization(slug: string): Promise<Organization> {
-        const response = await apiClient.get(`/organizations/${slug}/`);
-        const org: Organization = response.data;
-
-        // Get current user ID from localStorage
-        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-        if (!userStr) {
-            throw new Error('User not authenticated');
-        }
-
-        try {
-            const user = JSON.parse(userStr);
-            const currentUserId = user.id;
-
-            // Check if user has access to this organization
-            if (org.created_by !== currentUserId && (!org.members || !org.members.includes(currentUserId))) {
-                throw new Error('You do not have access to this organization');
-            }
-
-            return org;
-        } catch (error: any) {
-            throw error;
-        }
+    async getOrganization(id: string): Promise<OrganizationProfile> {
+        const response = await apiClient.get<OrganizationProfile>(`/organization/${id}/`);
+        return resolveOrg(response.data);
     },
 
-    // Create organization (uses FormData for file upload support)
-    async createOrganization(data: CreateOrganizationData): Promise<Organization> {
+    async createOrganization(data: CreateOrganizationData): Promise<OrganizationProfile> {
         const formData = new FormData();
         formData.append('name', data.name);
-        formData.append('description', data.description);
-        formData.append('email', data.email);
+        if (data.description) formData.append('description', data.description);
         if (data.website) formData.append('website', data.website);
-        if (data.logo) formData.append('logo', data.logo);
-        if (data.is_active !== undefined) formData.append('is_active', String(data.is_active));
-
-        const response = await apiClient.post('/organizations/', formData, {
+        if (data.contact_email) formData.append('contact_email', data.contact_email);
+        if (data.branding) formData.append('branding', data.branding);
+        const response = await apiClient.post<OrganizationProfile>('/organization/', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
-        return response.data;
+        return resolveOrg(response.data);
     },
 
-    // Update organization by slug
-    async updateOrganization(slug: string, data: Partial<CreateOrganizationData>): Promise<Organization> {
-        const response = await apiClient.patch(`/organizations/${slug}/`, data);
-        return response.data;
-    },
-
-    // Delete organization by slug
-    async deleteOrganization(slug: string): Promise<void> {
-        await apiClient.delete(`/organizations/${slug}/`);
-    },
-
-    // Get organization members by slug
-    async getOrganizationMembers(slug: string): Promise<OrganizationMember[]> {
-        const response = await apiClient.get(`/organizations/${slug}/members/`);
-        return response.data;
-    },
-
-    // Search users by username or email
-    async searchUsers(query: string): Promise<UserSearchResult[]> {
-        const response = await apiClient.get('/users/', {
-            params: { username: query }
+    async updateOrganization(id: string, data: Partial<CreateOrganizationData>): Promise<OrganizationProfile> {
+        const formData = new FormData();
+        if (data.name) formData.append('name', data.name);
+        if (data.description !== undefined) formData.append('description', data.description ?? '');
+        if (data.website !== undefined) formData.append('website', data.website ?? '');
+        if (data.contact_email !== undefined) formData.append('contact_email', data.contact_email ?? '');
+        if (data.branding) formData.append('branding', data.branding);
+        const response = await apiClient.put<OrganizationProfile>(`/organization/${id}/`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
         });
-        return response.data;
+        return resolveOrg(response.data);
     },
 
-    // Add member to organization by slug (sends user UUID)
-    async addOrganizationMember(slug: string, data: AddMemberData): Promise<OrganizationMember> {
-        const response = await apiClient.post(`/organizations/${slug}/members/`, {
-            user: data.user,
-        });
-        return response.data;
+    async getMyOrganization(): Promise<OrganizationProfile | null> {
+        try {
+            const response = await apiClient.get<OrganizationProfile[]>('/organization/');
+            const data = response.data;
+            const list = Array.isArray(data) ? data : (data as any)?.results ?? [];
+            const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+            const user = userStr ? JSON.parse(userStr) : null;
+            const found = user?.id
+                ? list.find((o: OrganizationProfile) => o.owner === user.id)
+                : list[0] ?? null;
+            return found ? resolveOrg(found) : null;
+        } catch {
+            return null;
+        }
     },
-
-    // Remove member from organization by org_slug and username
-    async removeOrganizationMember(orgSlug: string, username: string): Promise<void> {
-        await apiClient.delete(`/organizations/${orgSlug}/members/${username}/`);
-    }
 };
+
+export default organizationApi;

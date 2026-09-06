@@ -106,11 +106,15 @@ export function SignUpForm() {
         password
       )
       
-      toast.success("🎉 Account created successfully! Please sign in to continue.", { 
+      toast.success("🎉 Account created successfully! Please sign in to continue.", {
         id: "registration",
-        duration: 3000 
+        duration: 3000
       })
-      
+
+      // Flag that this is a fresh signup — auth-context will show the profile-type
+      // modal after the user logs in for the first time.
+      sessionStorage.setItem('showProfileTypeModal', 'true')
+
       // Redirect to signin - user needs to login to get tokens
       setTimeout(() => {
         router.push("/signin")

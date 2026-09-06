@@ -8,15 +8,15 @@ import { motion } from "framer-motion"
 import { AnimatedText } from "@/components/ui/animated-text"
 
 const floatingProfiles = [
-  { name: "Julius Boakye", role: "Tech & Innovation", img: "/Julius.png", pos: "top-[14%] left-[6%]" },
-  { name: "Ezra Yendau", role: "Product Lead", img: "/ezi.jpeg", pos: "top-[28%] right-[7%]" },
-  { name: "Johana A.", role: "Engineering", img: "/joe.jpeg", pos: "bottom-[22%] left-[4%]" },
-  { name: "Seth K.", role: "Design", img: "/seth.jpeg", pos: "bottom-[30%] right-[5%]" },
+  { name: "Julius Boakye", role: "Software Engineer", img: "/Julius.png", pos: "top-[14%] left-[6%]" },
+  { name: "Ezra Yendau", role: "CTO/Backend Engineer", img: "/ezra.jpg", pos: "top-[28%] right-[7%]" },
+  { name: "Johana A.", role: "Backend Engineer", img: "/joe.jpeg", pos: "bottom-[22%] left-[4%]" },
+  { name: "Seth K.", role: "Backend Engineer", img: "/seth.jpeg", pos: "bottom-[30%] right-[5%]" },
 ]
 
 const communityMembers = [
-  { name: "Julius Boakye", role: "Tech & Innovation", img: "/julinew.jpg" },
-  { name: "Ezra Yendau", role: "Product Strategy", img: "/ezi.jpeg" },
+  { name: "Julius Boakye", role: "Software Engineer", img: "/julinew.jpg" },
+  { name: "Ezra Yendau", role: "CTO/Backend Engineer", img: "/ezra.jpg" },
   { name: "Johana O. Amoateng", role: "Software Engineering", img: "/joe.jpeg" },
   { name: "Seth Mensah", role: "Software Eng.", img: "/seth.jpeg" },
   { name: "Juliana Lawson", role: "Leadership", img: "/Juliana.jpg" },

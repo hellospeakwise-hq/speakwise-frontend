@@ -19,6 +19,10 @@ export default function DashboardPage() {
   }, [user, loading, router])
 
   const getRoleDashboardRoute = (role: string): string => {
+    // Org-type users go to organizer dashboard regardless of backend role
+    if (typeof window !== 'undefined' && localStorage.getItem('profile_type') === 'organization') {
+      return '/dashboard/organizer'
+    }
     switch (role) {
       case 'speaker':
         return '/dashboard/speaker'

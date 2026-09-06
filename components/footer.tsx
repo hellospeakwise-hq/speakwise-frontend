@@ -13,7 +13,7 @@ export function Footer({ className }: React.HTMLAttributes<HTMLElement>) {
             <span className="text-muted-foreground">Wise</span>
           </div>
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            Built for speakers, organizers, and attendees.{" "}
+            Built for speakers.{" "}
             <Link
               href="/about"
               className="font-medium underline underline-offset-4"

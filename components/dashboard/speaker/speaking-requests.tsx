@@ -11,14 +11,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { speakerRequestApi, type SpeakerRequest } from "@/lib/api/speakerRequestApi"
-import { organizationApi, type Organization } from "@/lib/api/organizationApi"
+import { organizationApi, type OrganizationProfile } from "@/lib/api/organizationApi"
 import { eventsApi } from "@/lib/api/events"
 import { type Event } from "@/lib/types/api"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
 
 interface EnrichedSpeakerRequest extends SpeakerRequest {
-  organizationDetails?: Organization;
+  organizationDetails?: OrganizationProfile;
   eventDetails?: Event;
 }
 

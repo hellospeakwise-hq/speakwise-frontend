@@ -1,101 +1,17 @@
-import { useState, useEffect } from 'react'
-import { attendeeAPI, type Attendee, type AttendeeUpload } from '@/lib/api/attendeeApi'
+// Attendee feature is temporarily disabled
+import type { Attendee, AttendeeUpload } from '@/lib/api/attendeeApi'
 
-export function useAttendeeManagement(eventId: string | null) {
-  const [attendees, setAttendees] = useState<Attendee[]>([])
-  const [uploads, setUploads] = useState<AttendeeUpload[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const loadAttendees = async () => {
-    if (!eventId) return
-    
-    setLoading(true)
-    setError(null)
-    
-    try {
-      const data = await attendeeAPI.getAttendeesByEvent(eventId as any)
-      setAttendees(data)
-    } catch (err) {
-      console.error('Error loading attendees:', err)
-      setError('Failed to load attendees')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const loadUploadHistory = async () => {
-    if (!eventId) return
-    
-    try {
-      const data = await attendeeAPI.getUploadHistory(eventId as any)
-      setUploads(data)
-    } catch (err) {
-      console.error('Error loading upload history:', err)
-    }
-  }
-
-  const uploadCSV = async (file: File) => {
-    if (!eventId) throw new Error('No event selected')
-    
-    try {
-      const upload = await attendeeAPI.uploadAttendeesCSV(eventId as any, file)
-      await Promise.all([loadAttendees(), loadUploadHistory()])
-      return upload
-    } catch (err) {
-      console.error('Error uploading CSV:', err)
-      throw err
-    }
-  }
-
-  const refreshData = async () => {
-    await Promise.all([loadAttendees(), loadUploadHistory()])
-  }
-
-  const deleteAttendee = async (attendeeId: string) => {
-    if (!eventId) throw new Error('No event selected')
-    
-    try {
-      await attendeeAPI.deleteAttendee(attendeeId, eventId as any)
-      await loadAttendees()
-    } catch (err) {
-      console.error('Error deleting attendee:', err)
-      throw err
-    }
-  }
-
-  const deleteAllAttendees = async () => {
-    if (!eventId) throw new Error('No event selected')
-    
-    try {
-      await attendeeAPI.deleteAllAttendees(eventId as any)
-      await loadAttendees()
-    } catch (err) {
-      console.error('Error deleting all attendees:', err)
-      throw err
-    }
-  }
-
-  useEffect(() => {
-    if (eventId) {
-      refreshData()
-    } else {
-      setAttendees([])
-      setUploads([])
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId])
-
+export function useAttendeeManagement(_eventId: string | null) {
   return {
-    attendees,
-    uploads,
-    loading,
-    error,
-    uploadCSV,
-    refreshData,
-    loadAttendees,
-    loadUploadHistory,
-    deleteAttendee,
-    deleteAllAttendees
+    attendees: [] as Attendee[],
+    uploads: [] as AttendeeUpload[],
+    loading: false,
+    error: null as string | null,
+    uploadCSV: async (_file: File) => { throw new Error('Attendees disabled') },
+    refreshData: async () => {},
+    loadAttendees: async () => {},
+    loadUploadHistory: async () => {},
+    deleteAttendee: async (_attendeeId: string) => {},
+    deleteAllAttendees: async () => {},
   }
 }

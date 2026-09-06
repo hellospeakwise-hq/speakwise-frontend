@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { speakerRequestApi, type SpeakerRequest } from "@/lib/api/speakerRequestApi"
-import { organizationApi, type Organization } from "@/lib/api/organizationApi"
+import { organizationApi, type OrganizationProfile } from "@/lib/api/organizationApi"
 import { eventsApi } from "@/lib/api/events"
 import { getAvatarUrl } from "@/lib/utils"
 import { speakerApi, type Speaker } from "@/lib/api/speakerApi"
@@ -22,7 +22,7 @@ export function OrganizerSpeakerRequests() {
     const [requests, setRequests] = useState<EnrichedOrganizerRequest[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
-    const [userOrgs, setUserOrgs] = useState<Organization[]>([])
+    const [userOrgs, setUserOrgs] = useState<OrganizationProfile[]>([])
     const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'accepted' | 'rejected'>('all')
 
     useEffect(() => {
@@ -32,8 +32,8 @@ export function OrganizerSpeakerRequests() {
                 setError(null)
 
                 // Get user's organizations
-                const orgs = await organizationApi.getUserOrganizations()
-                const approvedOrgs = orgs.filter(org => org.is_active === true)
+                const orgs = await organizationApi.listOrganizations()
+                const approvedOrgs = orgs
                 setUserOrgs(approvedOrgs)
 
                 if (approvedOrgs.length === 0) {

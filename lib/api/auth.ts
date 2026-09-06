@@ -29,6 +29,9 @@ export interface AuthResponse {
   };
   nationality: string;
   username: string;
+  // Nested profile data included in login/register response
+  speaker?: Array<{ id: string; slug?: string; [key: string]: any }>;
+  org_profile?: { id: string; status?: string; [key: string]: any } | null;
 }
 
 export interface LoginResponse extends AuthResponse {

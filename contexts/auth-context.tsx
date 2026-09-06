@@ -5,6 +5,7 @@ import { authApi, type AuthResponse } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
 import { scheduleTokenRefresh, cancelTokenRefresh, initializeTokenRefresh, setSessionCallbacks } from '@/lib/utils/tokenRefresh'
 import { SessionExpiryDialog } from '@/components/auth/session-expiry-dialog';
+import { ProfileTypeModal } from '@/components/auth/profile-type-modal';
 
 type User = {
     id: string;
@@ -52,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const [loading, setLoading] = useState<boolean>(false);
     const [showExpiryWarning, setShowExpiryWarning] = useState(false);
+    const [showProfileTypeModal, setShowProfileTypeModal] = useState(false);
     const router = useRouter();
 
     // Check if user is already logged in on initial load
@@ -170,6 +172,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             scheduleTokenRefresh();
             console.log('[Auth] scheduled token refresh');
 
+            // Sync profile type from backend response so it's always accurate,
+            // regardless of which device or browser the user logs in from.
+            const speakerList = Array.isArray(response.speaker) ? response.speaker : [];
+            const hasSpeakerProfile = speakerList.length > 0;
+            const hasOrgProfile = !!response.org_profile;
+
+            if (hasSpeakerProfile) {
+                localStorage.setItem('profile_type', 'speaker');
+                if (speakerList[0]?.slug) {
+                    const stored = JSON.parse(localStorage.getItem('user') || '{}');
+                    localStorage.setItem('user', JSON.stringify({ ...stored, speaker_slug: speakerList[0].slug }));
+                }
+            } else if (hasOrgProfile) {
+                localStorage.setItem('profile_type', 'organization');
+                // Cache org data from login response — works on any device, no separate API call needed
+                localStorage.setItem('cached_org_profile', JSON.stringify(response.org_profile));
+            }
+
+            // Show the profile-type modal only when:
+            // 1. This is a fresh signup (sessionStorage flag set by sign-up-form), AND
+            // 2. The backend confirms no profile exists yet
+            const isNewSignup = typeof window !== 'undefined' && sessionStorage.getItem('showProfileTypeModal') === 'true';
+            if (isNewSignup && !hasSpeakerProfile && !hasOrgProfile) {
+                sessionStorage.removeItem('showProfileTypeModal');
+                setShowProfileTypeModal(true);
+                return '/';
+            }
+
+            // Clear stale flag if they somehow already have a profile
+            if (isNewSignup) sessionStorage.removeItem('showProfileTypeModal');
+
             return getRoleBasedRedirectPath(userData);
         } finally {
             setLoading(false);
@@ -185,6 +218,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Clear the stored redirect
             sessionStorage.removeItem('redirectAfterLogin');
             return savedRedirect;
+        }
+
+        // Org-type users go to the org dashboard regardless of backend role
+        const profileType = typeof window !== 'undefined' ? localStorage.getItem('profile_type') : null;
+        if (profileType === 'organization') {
+            return '/dashboard/organizer';
         }
 
         // Default redirects based on role
@@ -259,6 +298,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     setIsAuthenticated(false);
                     setShowExpiryWarning(false);
                     router.push('/signin?session=expired');
+                }}
+            />
+            <ProfileTypeModal
+                open={showProfileTypeModal}
+                onSpeakerChosen={() => {
+                    setShowProfileTypeModal(false);
+                    router.push('/dashboard/speaker');
+                }}
+                onOrgChosen={() => {
+                    setShowProfileTypeModal(false);
+                    router.push('/profile');
                 }}
             />
         </AuthContext.Provider>

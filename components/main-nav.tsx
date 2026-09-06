@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 import { Menu, X, LogOut, User, ChevronDown } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { userApi } from "@/lib/api/userApi"
-import { OrganizationBadge } from "@/components/organization-badge"
+// import { OrganizationBadge } from "@/components/organization-badge"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +21,7 @@ import {
 const NAV_LINKS = [
   { href: "/events", label: "Events" },
   { href: "/speakers", label: "Speakers" },
+  { href: "/organizations", label: "Organizations" },
   { href: "/blog", label: "Blog" },
   { href: "/about", label: "About" },
   { href: "/pricing", label: "Pricing" },
@@ -54,14 +55,17 @@ export function MainNav() {
   }, [mounted, isAuthenticated])
 
   const dashboardHref = useMemo(() => {
+    if (mounted && localStorage.getItem('profile_type') === 'organization') {
+      return '/dashboard/organizer'
+    }
     if (!user?.role?.role) return "/dashboard"
     const map: Record<string, string> = {
       speaker: "/dashboard/speaker",
       organizer: "/dashboard/organizer",
-      attendee: "/dashboard/attendee",
+      // attendee: "/dashboard/attendee",
     }
     return map[user.role.role] ?? "/dashboard"
-  }, [user])
+  }, [user, mounted])
 
   const displayName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || "Account"
@@ -120,7 +124,7 @@ export function MainNav() {
 
         {/* Right — CTAs */}
         <div className="hidden md:flex items-center gap-2">
-          {mounted && isAuthenticated && <OrganizationBadge />}
+          {/* {mounted && isAuthenticated && <OrganizationBadge />} */}
 
           {mounted && isAuthenticated ? (
             <DropdownMenu>

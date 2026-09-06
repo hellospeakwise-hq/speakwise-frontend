@@ -46,7 +46,7 @@ export default function SpeakerProfilePage() {
             setLoading(true)
             const [profileData, skillsData] = await Promise.all([
                 speakerApi.getProfile(),
-                speakerApi.getSkillTags()
+                speakerApi.getSkills()
             ])
 
             setProfile(profileData)
@@ -109,7 +109,7 @@ export default function SpeakerProfilePage() {
         if (!newSkillName.trim()) return
 
         try {
-            const newSkill = await speakerApi.createSkillTag(newSkillName.trim())
+            const newSkill = await speakerApi.createSkill({ name: newSkillName.trim() })
             setAvailableSkills([...availableSkills, newSkill])
             setSelectedSkills([...selectedSkills, newSkill.id])
             setNewSkillName("")

@@ -179,53 +179,51 @@ export const speakerApi = {
         return this.getSpeakerBySlug(idOrUsername);
     },
 
+    // Resolve the current user's speaker slug from localStorage user data
+    async _getMySlug(): Promise<string> {
+        const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+        const user = userStr ? JSON.parse(userStr) : null;
+        if (user?.speaker_slug) return user.speaker_slug;
+
+        // Fetch the full list and find the matching profile by username
+        const response = await apiClient.get<Speaker[]>('/speakers/');
+        const profiles: Speaker[] = Array.isArray(response.data)
+            ? response.data
+            : (response.data as any)?.results ?? [];
+        const mine = profiles.find(
+            (p) => p.username === user?.username || p.user_account === user?.id
+        );
+        if (!mine?.slug) throw new Error('Speaker profile not found for current user');
+
+        // Cache it so we don't re-fetch on every call
+        if (user && typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify({ ...user, speaker_slug: mine.slug }));
+        }
+        return mine.slug;
+    },
+
     // Get speaker profile
     async getProfile(): Promise<SpeakerProfile> {
-        const response = await apiClient.get<SpeakerProfile>('/speakers/profile/');
+        const slug = await this._getMySlug();
+        const response = await apiClient.get<SpeakerProfile>(`/speakers/${slug}/`);
         return response.data;
     },
 
     // Update speaker profile
     async updateProfile(data: UpdateSpeakerProfileData): Promise<SpeakerProfile> {
-        const response = await apiClient.patch<SpeakerProfile>('/speakers/profile/', data);
+        const slug = await this._getMySlug();
+        const response = await apiClient.patch<SpeakerProfile>(`/speakers/${slug}/`, data);
         return response.data;
     },
 
-    // Upload speaker avatar - try multiple endpoints
+    // Upload speaker avatar via PATCH on the slug endpoint (multipart)
     async uploadAvatar(file: File): Promise<SpeakerProfile> {
+        const slug = await this._getMySlug();
         const formData = new FormData();
         formData.append('avatar', file);
-        
-        console.log('📤 Uploading avatar...');
-        
-        // Try the dedicated avatar endpoint first
-        try {
-            const response = await apiClient.post<SpeakerProfile>('/speakers/profile/avatar/', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            console.log('✅ Avatar uploaded via /speakers/profile/avatar/');
-            return response.data;
-        } catch (error: any) {
-            console.log('❌ /speakers/profile/avatar/ failed, trying /speakers/profile/...');
-            
-            // Fallback to PATCH on profile endpoint
-            const response = await apiClient.patch<SpeakerProfile>('/speakers/profile/', formData, {
-                headers: { 'Content-Type': 'multipart/form-data' }
-            });
-            console.log('✅ Avatar uploaded via PATCH /speakers/profile/');
-            return response.data;
-        }
-    },
-
-    // Get all skill tags (legacy endpoint)
-    async getSkillTags(): Promise<SkillTag[]> {
-        const response = await apiClient.get<SkillTag[]>('/speakers/skill-tags/');
-        return response.data;
-    },
-
-    // Create a new skill tag (legacy endpoint)
-    async createSkillTag(name: string): Promise<SkillTag> {
-        const response = await apiClient.post<SkillTag>('/speakers/skill-tags/', { name });
+        const response = await apiClient.patch<SpeakerProfile>(`/speakers/${slug}/`, formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         return response.data;
     },
 

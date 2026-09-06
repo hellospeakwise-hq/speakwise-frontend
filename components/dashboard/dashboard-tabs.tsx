@@ -4,7 +4,6 @@ import { useEffect, useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { SpeakerDashboard } from "@/components/dashboard/speaker-dashboard"
 import { OrganizerDashboard } from "@/components/dashboard/organizer-dashboard"
-import { AttendeeDashboard } from "@/components/dashboard/attendee-dashboard"
 import { useAuth } from "@/contexts/auth-context"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -13,54 +12,34 @@ export function DashboardTabs() {
   const { user } = useAuth()
   const router = useRouter()
 
-  // Default to user's actual role or "attendee" if not set
-  const [userType, setUserType] = useState<"attendee" | "speaker" | "organizer">(
-    (user?.userType as "attendee" | "speaker" | "organizer") || "attendee"
+  const [userType, setUserType] = useState<"speaker" | "organizer">(
+    (user?.userType as "speaker" | "organizer") || "speaker"
   )
 
-  // Set tab based on user's actual role
   useEffect(() => {
-    if (user?.userType) {
-      setUserType(user.userType as "attendee" | "speaker" | "organizer")
+    if (user?.userType && (user.userType === "speaker" || user.userType === "organizer")) {
+      setUserType(user.userType as "speaker" | "organizer")
     }
   }, [user?.userType])
 
-  // Handle tab change - with role-based access control
-  const handleTabChange = (value: "attendee" | "speaker" | "organizer") => {
-    // Check if user has permission to access this tab
+  const handleTabChange = (value: "speaker" | "organizer") => {
     if (user?.userType && user.userType !== value) {
-      toast.error(`You don't have ${value} permissions. This is just a demo.`)
-      // In a real app, you might prevent the tab change or redirect
+      toast.error(`You don't have ${value} permissions.`)
     }
-
     setUserType(value)
-
-    // Redirect to role-specific dashboard if available
     if (value === "speaker") {
       router.push('/dashboard/speaker')
-    } else if (value === "organizer") {
-      router.push('/dashboard/organizer')
     } else {
-      router.push('/dashboard')
+      router.push('/dashboard/organizer')
     }
   }
 
   return (
-    <Tabs value={userType} className="space-y-4" onValueChange={(value: string) => handleTabChange(value as any)}>
-      <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="attendee">
-          Attendee
-        </TabsTrigger>
-        <TabsTrigger value="speaker">
-          Speaker
-        </TabsTrigger>
-        <TabsTrigger value="organizer">
-          Organizer
-        </TabsTrigger>
+    <Tabs value={userType} className="space-y-4" onValueChange={(v) => handleTabChange(v as any)}>
+      <TabsList className="grid w-full grid-cols-2">
+        <TabsTrigger value="speaker">Speaker</TabsTrigger>
+        <TabsTrigger value="organizer">Organizer</TabsTrigger>
       </TabsList>
-      <TabsContent value="attendee">
-        <AttendeeDashboard />
-      </TabsContent>
       <TabsContent value="speaker">
         <SpeakerDashboard />
       </TabsContent>
