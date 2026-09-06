@@ -19,7 +19,12 @@ function formatDate(dateStr: string | null) {
 }
 
 export default async function BlogPage() {
-  const posts = await listBlogs()
+  let posts: Awaited<ReturnType<typeof listBlogs>> = []
+  try {
+    posts = await listBlogs()
+  } catch {
+    // API unreachable at build time — render empty state
+  }
 
   return (
     <div className="container max-w-6xl py-6 lg:py-10">
