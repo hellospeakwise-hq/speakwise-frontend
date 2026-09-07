@@ -4,23 +4,17 @@ import { Event } from '../types/api';
 export interface CreateEventRequest {
   title: string;
   event_nickname?: string;
-  short_description?: string;
   description?: string;
   website?: string;
-  location?: string; // venue/location name
+  location?: string;
   start_date_time: string;
   end_date_time: string;
-  is_active?: boolean;
-  accepts_cfp?: boolean;
   cfp_open?: boolean;
-  cfp_description?: string;
+  cfp_link?: string;
   cfp_open_date?: string | null;
   cfp_deadline?: string | null;
   cfp_speaker_notification_date?: string | null;
-  country?: string; // country name
-  country_code?: string; // ISO country code
-  tags?: string[];
-  event_image?: File; // actual file for upload
+  event_image?: File;
 }
 
 export interface EventsResponse {
@@ -53,6 +47,14 @@ export const eventsApi = {
   },
 
   /**
+   * Get events submitted by the current user (includes inactive/pending).
+   */
+  async getMyEvents(): Promise<Event[]> {
+    const response = await apiClient.get<Event[]>('/events/mine');
+    return Array.isArray(response.data) ? response.data : (response.data as any).results ?? [];
+  },
+
+  /**
    * Get single event
    */
   async getEvent(slug: string): Promise<Event> {
@@ -69,37 +71,16 @@ export const eventsApi = {
 
     if (data.title !== undefined) body.title = data.title;
     if (data.event_nickname !== undefined) body.event_nickname = data.event_nickname;
-    if (data.short_description !== undefined) body.short_description = data.short_description;
     if (data.description !== undefined) body.description = data.description;
     if (data.website !== undefined) body.website = data.website;
+    if (data.location !== undefined) body.location = data.location;
     if (data.start_date_time !== undefined) body.start_date_time = data.start_date_time;
     if (data.end_date_time !== undefined) body.end_date_time = data.end_date_time;
-    if (data.is_active !== undefined) body.is_active = data.is_active;
-    if (data.accepts_cfp !== undefined) body.accepts_cfp = data.accepts_cfp;
     if (data.cfp_open !== undefined) body.cfp_open = data.cfp_open;
-    if (data.cfp_description !== undefined) body.cfp_description = data.cfp_description;
+    if (data.cfp_link !== undefined) body.cfp_link = data.cfp_link;
     if (data.cfp_open_date !== undefined) body.cfp_open_date = data.cfp_open_date || null;
     if (data.cfp_deadline !== undefined) body.cfp_deadline = data.cfp_deadline || null;
     if (data.cfp_speaker_notification_date !== undefined) body.cfp_speaker_notification_date = data.cfp_speaker_notification_date || null;
-
-    // Build nested location object matching the backend schema:
-    // { venue: "...", country: { name: "Ghana", code: "GH" } }
-    if (data.location || data.country) {
-      const locationObj: Record<string, any> = {};
-      if (data.location) locationObj.venue = data.location;
-      if (data.country) {
-        locationObj.country = {
-          name: data.country,
-          ...(data.country_code ? { code: data.country_code } : {}),
-        };
-      }
-      body.location = locationObj;
-    }
-
-    // Tags as array of UUID strings
-    if (data.tags && data.tags.length > 0) {
-      body.tags = data.tags;
-    }
 
     return body;
   },
@@ -171,32 +152,6 @@ export const eventsApi = {
     await apiClient.delete(`/events/${slug}/`);
   },
 
-  /**
-   * Toggle speaker deck upload for an event.
-   * When enabled, sends email notifications to all accepted speakers.
-   */
-  async toggleSpeakerDeckUpload(slug: string): Promise<{ speaker_deck_upload_enabled: boolean }> {
-    const response = await apiClient.post<{ speaker_deck_upload_enabled: boolean }>(
-      `/events/${slug}/toggle-speaker-deck-upload/`
-    );
-    return response.data;
-  },
-
-  /**
-   * Get tags (extracted from events data)
-   */
-  async getTags(): Promise<any[]> {
-    const response = await apiClient.get<any[]>('/events/tags/');
-    return response.data;
-  },
-
-  /**
-   * Create tag
-   */
-  async createTag(name: string, color?: string): Promise<any> {
-    const response = await apiClient.post<any>('/events/tags/', { name, color });
-    return response.data;
-  },
 };
 
 export default eventsApi;

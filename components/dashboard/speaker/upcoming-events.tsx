@@ -49,14 +49,11 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
           // Sort by date (earliest first) - handle date parsing errors gracefully
           speakerEvents.sort((a: Event, b: Event) => {
             try {
-              const dateA = new Date(a.date)
-              const dateB = new Date(b.date)
-              if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
-                return 0 // Keep original order if dates are invalid
-              }
+              const dateA = new Date(a.date ?? a.start_date_time)
+              const dateB = new Date(b.date ?? b.start_date_time)
+              if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) return 0
               return dateA.getTime() - dateB.getTime()
-            } catch (error) {
-              console.error('Error sorting dates:', error)
+            } catch {
               return 0
             }
           })
@@ -120,7 +117,7 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-medium">{event.name || event.title}</h3>
+                      <h3 className="font-medium">{event.title}</h3>
                       <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
                         Confirmed
                       </Badge>
@@ -133,25 +130,24 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
                         <Calendar className="h-4 w-4 mr-1 text-orange-500" />
                         {(() => {
                           try {
-                            const date = new Date(event.date)
-                            if (isNaN(date.getTime())) {
-                              return event.date // Show raw date if parsing fails
-                            }
+                            const raw = event.date ?? event.start_date_time
+                            const date = new Date(raw)
+                            if (isNaN(date.getTime())) return raw ?? 'TBA'
                             return date.toLocaleDateString('en-US', {
                               year: 'numeric',
                               month: 'long',
                               day: 'numeric'
                             })
-                          } catch (error) {
-                            return event.date // Fallback to raw date string
+                          } catch {
+                            return event.date ?? 'TBA'
                           }
                         })()}
                       </div>
                     </div>
-                    {event.location && typeof event.location !== 'string' && (
+                    {event.location && (
                       <div className="flex items-center mt-1 text-sm text-muted-foreground">
                         <MapPin className="h-4 w-4 mr-1 text-orange-500" />
-                        {event.location.city}, {event.location.country.name}
+                        {event.location}
                       </div>
                     )}
                   </div>

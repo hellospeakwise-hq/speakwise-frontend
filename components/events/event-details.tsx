@@ -4,7 +4,6 @@ import { Calendar, MapPin, Users, Clock, Globe, Send, Mic, ArrowLeft } from "luc
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { motion, useReducedMotion } from "framer-motion"
-import type { DateTimeInfo } from "@/lib/types/api"
 import { formatDateFromMaybe, formatTimeFromMaybe, getEventImageUrl } from '@/lib/utils/event-utils'
 import { eventsApi } from "@/lib/api/events"
 import { type Event } from "@/lib/types/api"
@@ -50,8 +49,8 @@ export function EventDetails({ id }: EventDetailsProps) {
   const { events: allEvents, loading: eventsLoading } = useEvents()
   const prefersReduced = useReducedMotion()
 
-  const getDateString = (v?: string | DateTimeInfo | null) => formatDateFromMaybe(v as any)
-  const getTimeString = (v?: string | DateTimeInfo | null) => formatTimeFromMaybe(v as any)
+  const getDateString = (v?: string | null) => formatDateFromMaybe(v as any)
+  const getTimeString = (v?: string | null) => formatTimeFromMaybe(v as any)
   const canManageEvent = user?.userType === 'organizer'
 
   const fadeUp = (delay = 0) => ({
@@ -102,7 +101,7 @@ export function EventDetails({ id }: EventDetailsProps) {
           const attendeesResponse = await apiClient.get(`/events/${id}/attendees/`)
           setAttendeesCount(attendeesResponse.data.length || 0)
         } catch {
-          setAttendeesCount(event?.attendees ?? 0)
+          setAttendeesCount(0)
         }
       } catch {
         setSpeakersCount(0)
@@ -128,22 +127,11 @@ export function EventDetails({ id }: EventDetailsProps) {
     )
   }
 
-  const locationStr = event.location
-    ? typeof event.location === 'string'
-      ? event.location
-      : `${event.location.venue ? event.location.venue + ', ' : ''}${event.location.city || ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'TBA'
-    : 'TBA'
-
-  const locationShort = event.location
-    ? typeof event.location === 'string'
-      ? event.location
-      : `${event.location.city || ''}${event.location.country?.name ? `, ${event.location.country.name}` : ''}`.trim().replace(/^,\s*/, '') || 'TBA'
-    : 'TBA'
+  const locationStr = event.location || 'TBA'
+  const locationShort = event.location || 'TBA'
 
   const dateDisplay = event.date_range
-    ? event.date_range.same_day
-      ? getDateString(event.date_range.start)
-      : `${getDateString(event.date_range.start)} – ${getDateString(event.date_range.end)}`
+    ? `${getDateString(event.date_range.start)} – ${getDateString(event.date_range.end)}`
     : event.date || 'TBA'
 
   const timeDisplay = event.date_range
@@ -152,7 +140,7 @@ export function EventDetails({ id }: EventDetailsProps) {
       ? new Date(event.start_date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       : 'TBA'
 
-  const tags = event.tags && event.tags.length > 0 ? event.tags : null
+  const tags = null
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-20">
@@ -189,7 +177,7 @@ export function EventDetails({ id }: EventDetailsProps) {
               </Link>
             </>
           )}
-          {event.accepts_cfp && (
+          {event.cfp_open && (
             <Link href={`/events/${id}/cfp`}>
               {event.cfp_open ? (
                 <button className="h-8 px-4 text-sm font-semibold bg-white text-slate-900 hover:bg-white/90 transition-colors rounded-md flex items-center gap-1.5">
@@ -207,17 +195,9 @@ export function EventDetails({ id }: EventDetailsProps) {
 
         {/* Bottom content */}
         <div className="absolute bottom-0 left-0 right-0 p-6">
-          {tags && (
-            <div className="flex flex-wrap gap-1.5 mb-3">
-              {tags.map((tag: any) => (
-                <span key={tag.id} className="text-xs bg-white/15 border border-white/20 text-white px-2.5 py-0.5 rounded-full backdrop-blur-sm">
-                  {tag.name || `Tag ${tag.id}`}
-                </span>
-              ))}
-            </div>
-          )}
+
           <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2">
-            {event.name || event.title}
+            {event.title}
           </h1>
           <div className="flex flex-wrap gap-4 text-sm text-white/75">
             <span className="flex items-center gap-1.5">
@@ -242,7 +222,7 @@ export function EventDetails({ id }: EventDetailsProps) {
           <div>
             <p className="text-sm font-semibold mb-3">About</p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              {event.description || event.short_description || 'No description available.'}
+              {event.description || 'No description available.'}
             </p>
           </div>
 
@@ -320,7 +300,7 @@ export function EventDetails({ id }: EventDetailsProps) {
             </div>
           </dl>
 
-          {event.accepts_cfp && event.cfp_open && (
+          {event.cfp_open && (
             <div className="mt-6 pt-6 border-t border-border">
               <p className="text-xs text-muted-foreground mb-3">CFP is open</p>
               <Link href={`/events/${id}/cfp`}>

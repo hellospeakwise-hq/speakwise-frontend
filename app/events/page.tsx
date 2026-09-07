@@ -28,7 +28,6 @@ export default function EventsPage() {
           </div>
           <EventsList
             countryFilter={selectedCountries}
-            tagFilter={selectedTag}
           />
         </div>
       </div>

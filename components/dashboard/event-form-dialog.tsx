@@ -21,38 +21,27 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { CalendarIcon, Upload, X, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { eventsApi, type CreateEventRequest } from "@/lib/api/events"
-import { type Event, type Country, type Tag } from "@/lib/types/api"
-import { countries as staticCountries } from "@/lib/data/countries"
+import { type Event } from "@/lib/types/api"
 
 const eventFormSchema = z.object({
   title: z.string().min(1, "Event title is required"),
   event_nickname: z.string().optional(),
-  short_description: z.string().max(255, "Short description must be 255 characters or less").optional(),
   description: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   location: z.string().optional(),
   start_date_time: z.string().min(1, "Start date and time are required"),
   end_date_time: z.string().min(1, "End date and time are required"),
-  is_active: z.boolean().default(false),
-  accepts_cfp: z.boolean().default(false),
   cfp_open: z.boolean().default(false),
-  country: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+  cfp_link: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
+  cfp_open_date: z.string().optional(),
+  cfp_deadline: z.string().optional(),
+  cfp_speaker_notification_date: z.string().optional(),
 })
 
 interface EventFormDialogProps {
@@ -62,263 +51,98 @@ interface EventFormDialogProps {
   onEventSaved: (event: Event) => void
 }
 
-export function EventFormDialog({ 
-  open, 
-  onOpenChange, 
-  event = null, 
-  onEventSaved 
+export function EventFormDialog({
+  open,
+  onOpenChange,
+  event = null,
+  onEventSaved,
 }: EventFormDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(
-    event?.event_image || null
-  )
-  const [countries, setCountries] = useState(staticCountries)
-  const [tags, setTags] = useState<Tag[]>([])
-  const [selectedTags, setSelectedTags] = useState<string[]>(
-    event?.tags?.map(tag => String(tag.id)) || []
-  )
-  const [newTagName, setNewTagName] = useState("")
-  const [isCreatingTag, setIsCreatingTag] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(event?.event_image || null)
 
-  // Load countries and tags on component mount or when dialog opens
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        console.log('Loading tags data...');
-        const tagsData = await eventsApi.getTags();
-        console.log('Tags loaded:', tagsData);
-        setTags(tagsData);
-      } catch (error) {
-        console.error('Error loading tags:', error);
-      }
-    };
-    
-    if (open) {
-      loadData();
-    }
-  }, [open]);
-
-  // Update selected tags when event changes
-  useEffect(() => {
-    if (event?.tags) {
-      console.log('Event tags detected:', event.tags);
-      setSelectedTags(event.tags.map(tag => String(tag.id)));
-      setImagePreview(event.event_image || null);
-    } else {
-      console.log('No event tags detected');
-      setSelectedTags([]);
-    }
-  }, [event])
+  const toLocalDatetime = (iso: string | null | undefined) => {
+    if (!iso) return ""
+    try { return new Date(iso).toISOString().slice(0, 16) } catch { return "" }
+  }
 
   const form = useForm<z.infer<typeof eventFormSchema>>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
       title: event?.title || "",
       event_nickname: event?.event_nickname || "",
-      short_description: event?.short_description || "",
       description: event?.description || "",
       website: event?.website || "",
-      location: typeof event?.location === 'string' ? event.location : (event?.location?.venue || ""),
-      start_date_time: event?.start_date_time 
-        ? new Date(event.start_date_time).toISOString().slice(0, 16) 
-        : "",
-      end_date_time: event?.end_date_time 
-        ? new Date(event.end_date_time).toISOString().slice(0, 16) 
-        : "",
-      is_active: event?.is_active || false,
-      accepts_cfp: event?.accepts_cfp || false,
+      location: typeof event?.location === "string" ? event.location : "",
+      start_date_time: toLocalDatetime(event?.start_date_time),
+      end_date_time: toLocalDatetime(event?.end_date_time),
       cfp_open: event?.cfp_open || false,
-      country: typeof event?.location === 'object' && event?.location?.country ? event.location.country.name : "",
-      tags: event?.tags?.map(tag => String(tag.id)) || [],
+      cfp_link: event?.cfp_link || "",
+      cfp_open_date: toLocalDatetime(event?.cfp_open_date),
+      cfp_deadline: toLocalDatetime(event?.cfp_deadline),
+      cfp_speaker_notification_date: event?.cfp_speaker_notification_date || "",
     },
   })
 
-  // Reset form when event data changes
   useEffect(() => {
-    if (open && event) {
-      console.log('Event data changed, resetting form:', event);
+    if (open) {
       form.reset({
-        title: event.title || "",
-        event_nickname: event.event_nickname || "",
-        short_description: event.short_description || "",
-        description: event.description || "",
-        website: event.website || "",
-        location: typeof event.location === 'string' ? event.location : (event.location?.venue || ""),
-        start_date_time: event.start_date_time 
-          ? new Date(event.start_date_time).toISOString().slice(0, 16) 
-          : "",
-        end_date_time: event.end_date_time 
-          ? new Date(event.end_date_time).toISOString().slice(0, 16) 
-          : "",
-        is_active: event.is_active || false,
-        accepts_cfp: event.accepts_cfp || false,
-        cfp_open: event.cfp_open || false,
-        country: typeof event.location === 'object' && event.location?.country ? event.location.country.name : "",
-        tags: event.tags?.map(tag => String(tag.id)) || [],
-      });
-      
-      // Also update image preview if there's an event image
-      setImagePreview(event.event_image || null);
+        title: event?.title || "",
+        event_nickname: event?.event_nickname || "",
+        description: event?.description || "",
+        website: event?.website || "",
+        location: typeof event?.location === "string" ? event.location : "",
+        start_date_time: toLocalDatetime(event?.start_date_time),
+        end_date_time: toLocalDatetime(event?.end_date_time),
+        cfp_open: event?.cfp_open || false,
+        cfp_link: event?.cfp_link || "",
+        cfp_open_date: toLocalDatetime(event?.cfp_open_date),
+        cfp_deadline: toLocalDatetime(event?.cfp_deadline),
+        cfp_speaker_notification_date: event?.cfp_speaker_notification_date || "",
+      })
+      setImagePreview(event?.event_image || null)
+      setSelectedImage(null)
     }
-  }, [event, open, form]);
+  }, [event, open])
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) {
-      console.log('Selected file:', {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        lastModified: file.lastModified
-      })
-
-      // Validate file type more strictly
-      const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp']
-      if (!validImageTypes.includes(file.type.toLowerCase())) {
-        alert(`Please select a valid image file. Selected type: ${file.type}`)
-        e.target.value = '' // Clear the input
-        return
-      }
-      
-      // Validate file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024 // 10MB in bytes
-      if (file.size > maxSize) {
-        alert(`Image file size must be less than 10MB. Current size: ${(file.size / 1024 / 1024).toFixed(2)}MB`)
-        e.target.value = '' // Clear the input
-        return
-      }
-
-      // Additional validation: try to load the image to ensure it's valid
-      const isValid = await validateImageFile(file)
-      if (!isValid) {
-        alert('The selected file appears to be corrupted or is not a valid image.')
-        e.target.value = '' // Clear the input
-        return
-      }
-
-      setSelectedImage(file)
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setImagePreview(e.target?.result as string)
-      }
-      reader.readAsDataURL(file)
+    if (!file) return
+    const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"]
+    if (!validTypes.includes(file.type)) {
+      alert("Please select a valid image file (JPEG, PNG, GIF, WebP).")
+      e.target.value = ""
+      return
     }
-  }
-
-  // Helper function to validate image file
-  const validateImageFile = (file: File): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const img = new Image()
-      const objectUrl = URL.createObjectURL(file)
-      
-      img.onload = () => {
-        URL.revokeObjectURL(objectUrl)
-        console.log('Image validation successful:', file.name, `${img.width}x${img.height}`)
-        resolve(true)
-      }
-      
-      img.onerror = () => {
-        URL.revokeObjectURL(objectUrl)
-        console.error('Image validation failed:', file.name)
-        resolve(false)
-      }
-      
-      img.src = objectUrl
-      
-      // Timeout after 5 seconds
-      setTimeout(() => {
-        URL.revokeObjectURL(objectUrl)
-        console.error('Image validation timeout:', file.name)
-        resolve(false)
-      }, 5000)
-    })
-  }
-
-  // Add tag to selected tags
-  const addTag = (tagId: string) => {
-    if (!selectedTags.includes(tagId)) {
-      console.log('Adding tag:', tagId);
-      const newTags = [...selectedTags, tagId];
-      setSelectedTags(newTags);
-      
-      // Explicitly update the form value
-      form.setValue('tags', newTags, { 
-        shouldValidate: true, 
-        shouldDirty: true,
-        shouldTouch: true 
-      });
-      console.log('Updated form tags:', form.getValues('tags'));
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Image must be under 10MB.")
+      e.target.value = ""
+      return
     }
-  }
-
-  // Remove tag from selected tags
-  const removeTag = (tagId: string) => {
-    console.log('Removing tag:', tagId);
-    const newTags = selectedTags.filter(id => id !== tagId);
-    setSelectedTags(newTags);
-    
-    // Explicitly update the form value with options
-    form.setValue('tags', newTags, { 
-      shouldValidate: true, 
-      shouldDirty: true,
-      shouldTouch: true 
-    });
-    console.log('Updated form tags after removal:', form.getValues('tags'));
-  }
-
-  // Create new tag
-  const createNewTag = async () => {
-    if (!newTagName.trim()) return
-
-    setIsCreatingTag(true)
-    try {
-      // Generate a random color for the tag
-      const randomColor = `#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}`;
-      const newTag = await eventsApi.createTag(newTagName.trim(), randomColor)
-      console.log('New tag created:', newTag)
-      setTags(prev => [...prev, newTag])
-      addTag(newTag.id)
-      setNewTagName("")
-    } catch (error) {
-      console.error('Error creating tag:', error)
-      alert('Failed to create tag. Please try again.')
-    } finally {
-      setIsCreatingTag(false)
-    }
+    setSelectedImage(file)
+    const reader = new FileReader()
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string)
+    reader.readAsDataURL(file)
   }
 
   const onSubmit = async (values: z.infer<typeof eventFormSchema>) => {
     setIsLoading(true)
     try {
-      // Make sure tags is properly formatted as an array of numbers
-      const tagsArray = selectedTags.length > 0 ? selectedTags : [];
-      console.log('Tags array for submission:', tagsArray);
-      
-      // Get the latest form values
-      const formValues = form.getValues();
-      console.log('Form values before submission:', formValues);
-      
       const eventData: CreateEventRequest = {
-        ...values,
+        title: values.title,
+        event_nickname: values.event_nickname,
+        description: values.description,
+        website: values.website,
+        location: values.location,
+        start_date_time: values.start_date_time,
+        end_date_time: values.end_date_time,
+        cfp_open: values.cfp_open,
+        cfp_link: values.cfp_link,
+        cfp_open_date: values.cfp_open_date || null,
+        cfp_deadline: values.cfp_deadline || null,
+        cfp_speaker_notification_date: values.cfp_speaker_notification_date || null,
         event_image: selectedImage || undefined,
-        tags: tagsArray as string[],
-        accepts_cfp: values.accepts_cfp,
-        cfp_open: values.accepts_cfp ? values.cfp_open : false,
       }
-
-      // Look up country code from the static list
-      if (values.country) {
-        const selectedCountry = countries.find(c => c.name === values.country);
-        if (selectedCountry) {
-          eventData.country_code = selectedCountry.code;
-        }
-      }
-
-      console.log('Submitting event data:', {
-        ...eventData,
-        event_image: selectedImage ? selectedImage.name : 'none',
-      })
 
       let savedEvent: Event
       if (event) {
@@ -329,58 +153,33 @@ export function EventFormDialog({
 
       onEventSaved(savedEvent)
       onOpenChange(false)
-
-      toast.success(
-        `"${savedEvent.title}" ${event ? 'updated' : 'created'} successfully! 🎉`,
-        {
-          description: event 
-            ? "Your event has been updated." 
-            : "Your event has been created and is ready to go.",
-          duration: 4000,
-        }
-      )
-
+      toast.success(`"${savedEvent.title}" ${event ? "updated" : "created"} successfully!`)
       form.reset()
       setSelectedImage(null)
       setImagePreview(null)
-      setSelectedTags([])
-      setNewTagName("")
     } catch (error) {
-      console.error('Error saving event:', error)
-      
-      // Enhanced error handling
-      if (error instanceof Error) {
-        if (error.message.includes('400') && error.message.includes('event_image')) {
-          // Specific image error handling
-          alert(`Image upload failed: The image format may not be supported by the server. Please try a different image file or contact support.`)
-        } else {
-          alert(`Error saving event: ${error.message}`)
-        }
-      } else {
-        alert('An unknown error occurred while saving the event.')
-      }
+      console.error("Error saving event:", error)
+      toast.error(error instanceof Error ? error.message : "Failed to save event.")
     } finally {
       setIsLoading(false)
     }
   }
 
+  const cfpOpen = form.watch("cfp_open")
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {event ? "Edit Event" : "Create New Event"}
-          </DialogTitle>
+          <DialogTitle>{event ? "Edit Event" : "Create New Event"}</DialogTitle>
           <DialogDescription>
-            {event 
-              ? "Update the event details below." 
-              : "Fill in the details to create a new event."
-            }
+            {event ? "Update the event details below." : "Fill in the details to create a new event."}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+
             {/* Event Image */}
             <div className="space-y-2">
               <label className="text-sm font-medium">Event Image</label>
@@ -392,396 +191,140 @@ export function EventFormDialog({
                     onChange={handleImageChange}
                     className="cursor-pointer"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Accepted formats: JPEG, PNG, GIF, WebP. Max size: 10MB
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">JPEG, PNG, GIF, WebP — max 10MB</p>
                 </div>
                 {imagePreview && (
-                  <div className="w-16 h-16 rounded-lg overflow-hidden border">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-16 h-16 rounded-lg overflow-hidden border flex-shrink-0">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>
             </div>
 
             {/* Title */}
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Title *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter event title" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormField control={form.control} name="title" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Event Title *</FormLabel>
+                <FormControl><Input placeholder="Enter event title" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
             {/* Nickname */}
-            <FormField
-              control={form.control}
-              name="event_nickname"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Event Nickname</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Short name or acronym" {...field} />
-                  </FormControl>
-                  <FormDescription>
-                    A shorter name for the event (e.g., "TechConf 2025")
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormField control={form.control} name="event_nickname" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Event Nickname</FormLabel>
+                <FormControl><Input placeholder="Short name or acronym (e.g. TechConf 25)" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-            {/* Short Description */}
-            <FormField
-              control={form.control}
-              name="short_description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Short Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Brief description for event cards"
-                      className="min-h-[80px]"
-                      maxLength={255}
-                      {...field} 
-                    />
-                  </FormControl>
-                  <div className="flex items-center justify-between">
-                    <FormDescription>
-                      A brief summary shown on event cards
-                    </FormDescription>
-                    <span className={`text-xs tabular-nums ${
-                      (field.value?.length || 0) > 240 
-                        ? 'text-red-500 font-semibold' 
-                        : (field.value?.length || 0) > 200 
-                          ? 'text-orange-500' 
-                          : 'text-muted-foreground'
-                    }`}>
-                      {field.value?.length || 0}/255
-                    </span>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Full Description */}
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Full Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Detailed event description"
-                      className="min-h-[120px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Detailed description shown on the event page
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Description */}
+            <FormField control={form.control} name="description" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Description</FormLabel>
+                <FormControl>
+                  <Textarea placeholder="Detailed event description" className="min-h-[100px]" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
             {/* Website */}
-            <FormField
-              control={form.control}
-              name="website"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Website</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://example.com" 
-                      type="url" 
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormField control={form.control} name="website" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Website</FormLabel>
+                <FormControl><Input placeholder="https://example.com" type="url" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
             {/* Location */}
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Event location or venue" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <FormField control={form.control} name="location" render={({ field }) => (
+              <FormItem>
+                <FormLabel>Location</FormLabel>
+                <FormControl><Input placeholder="City, venue, or Online" {...field} /></FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
-            {/* Country */}
-            <FormField
-              control={form.control}
-              name="country"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Country</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a country" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {countries.map((country) => (
-                        <SelectItem key={country.code} value={country.name}>
-                          {country.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormDescription>
-                    The country where the event will be hosted
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Tags */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Event Tags</label>
-              
-              {/* Selected Tags */}
-              {selectedTags.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {selectedTags.map((tagId) => {
-                    const tag = tags.find(t => String(t.id) === String(tagId))
-                    if (!tag) {
-                      console.log('Tag not found:', tagId, 'Available tags:', tags);
-                      // Create a placeholder tag instead of returning null
-                      return (
-                        <Badge
-                          key={tagId}
-                          variant="secondary"
-                          className="flex items-center gap-1"
-                          style={{ backgroundColor: '#f0f0f0', color: '#666', borderColor: '#ccc' }}
-                        >
-                          {`Tag ${tagId}`}
-                          <X
-                            className="h-3 w-3 cursor-pointer"
-                            onClick={() => removeTag(tagId)}
-                          />
-                        </Badge>
-                      );
-                    }
-                    return (
-                      <Badge
-                        key={tagId}
-                        variant="secondary"
-                        className="flex items-center gap-1"
-                        style={{ 
-                          backgroundColor: `${tag.color || '#007bff'}20`, 
-                          color: tag.color || '#007bff', 
-                          borderColor: tag.color || '#007bff' 
-                        }}
-                      >
-                        {tag.name}
-                        <X
-                          className="h-3 w-3 cursor-pointer"
-                          onClick={() => removeTag(tagId)}
-                        />
-                      </Badge>
-                    )
-                  })}
-                </div>
-              )}
-
-              {/* Tag Selection */}
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Select onValueChange={(value) => addTag(value)}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Select tags" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tags.filter(tag => !selectedTags.includes(String(tag.id))).map((tag) => (
-                        <SelectItem key={tag.id} value={tag.id.toString()}>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: tag.color }}
-                            />
-                            {tag.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Create New Tag */}
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Create new tag"
-                    value={newTagName}
-                    onChange={(e) => setNewTagName(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={createNewTag}
-                    disabled={!newTagName.trim() || isCreatingTag}
-                  >
-                    {isCreatingTag ? (
-                      "Creating..."
-                    ) : (
-                      <>
-                        <Plus className="h-4 w-4 mr-1" />
-                        Add
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <p className="text-xs text-muted-foreground">
-                Tags help categorize and filter events
-              </p>
-            </div>
-
-            {/* Date and Time */}
+            {/* Dates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="start_date_time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Start Date & Time *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="datetime-local" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="end_date_time"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>End Date & Time *</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="datetime-local" 
-                        {...field} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <FormField control={form.control} name="start_date_time" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Start Date & Time *</FormLabel>
+                  <FormControl><Input type="datetime-local" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="end_date_time" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>End Date & Time *</FormLabel>
+                  <FormControl><Input type="datetime-local" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
             </div>
 
-            {/* Active Status */}
-            <FormField
-              control={form.control}
-              name="is_active"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Published</FormLabel>
-                    <FormDescription>
-                      Make this event visible to attendees
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            {/* CFP toggle */}
+            <FormField control={form.control} name="cfp_open" render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">CFP is Open</FormLabel>
+                  <FormDescription>Allow speakers to submit proposals for this event</FormDescription>
+                </div>
+                <FormControl>
+                  <Switch checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+              </FormItem>
+            )} />
 
-            {/* CFP toggles */}
-            <FormField
-              control={form.control}
-              name="accepts_cfp"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Accept CFP Submissions</FormLabel>
-                    <FormDescription>
-                      Enable a Call for Papers page where speakers can submit proposals
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={v => {
-                        field.onChange(v)
-                        if (!v) form.setValue('cfp_open', false)
-                      }}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {form.watch('accepts_cfp') && (
-              <FormField
-                control={form.control}
-                name="cfp_open"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4 ml-4 border-orange-500/20 bg-orange-500/5">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-base">CFP is Open</FormLabel>
-                      <FormDescription>
-                        Allow speakers to submit proposals right now
-                      </FormDescription>
-                    </div>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
+            {/* CFP details — only shown when CFP is open */}
+            {cfpOpen && (
+              <div className="space-y-4 pl-4 border-l-2 border-border">
+                <FormField control={form.control} name="cfp_link" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>CFP Link</FormLabel>
+                    <FormControl><Input placeholder="https://cfp.example.com" type="url" {...field} /></FormControl>
+                    <FormDescription>External URL where speakers submit proposals</FormDescription>
+                    <FormMessage />
                   </FormItem>
-                )}
-              />
+                )} />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField control={form.control} name="cfp_open_date" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CFP Opens</FormLabel>
+                      <FormControl><Input type="datetime-local" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="cfp_deadline" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>CFP Deadline</FormLabel>
+                      <FormControl><Input type="datetime-local" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+
+                <FormField control={form.control} name="cfp_speaker_notification_date" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Speaker Notification Date</FormLabel>
+                    <FormControl><Input type="date" {...field} /></FormControl>
+                    <FormDescription>When speakers will be notified of the outcome</FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </div>
             )}
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                disabled={isLoading}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Saving..." : event ? "Update Event" : "Create Event"}
+                {isLoading ? "Saving…" : event ? "Update Event" : "Create Event"}
               </Button>
             </DialogFooter>
           </form>

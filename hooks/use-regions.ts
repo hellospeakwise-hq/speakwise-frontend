@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react'
 import { useEvents } from './use-events'
 import { eventsApi } from '@/lib/api/events'
-import { type Country } from '@/lib/types/api'
+
+interface Country {
+  id: string
+  name: string
+  code: string
+}
 
 // Simple region interface since it doesn't exist in api types
 interface Region {
@@ -90,10 +95,4 @@ export function useCountriesByRegion(regionId: number | null): UseCountriesByReg
   }, [events, eventsLoading, regionId])
 
   return { countries, loading, error: eventsError }
-
-  return {
-    countries,
-    loading: eventsLoading,
-    error: eventsError
-  }
 }

@@ -83,7 +83,7 @@ export default function CFPLandingPage() {
   if (loading) return <LoadingSkeleton />
   if (!event) return null
 
-  if (!event.accepts_cfp) {
+  if (!event.cfp_open) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-20 space-y-4">
         <FileText className="h-9 w-9 text-muted-foreground/30" />
@@ -138,8 +138,8 @@ export default function CFPLandingPage() {
 
           {/* Left: description prose */}
           <motion.div {...fadeUp(0.1)}>
-            {event.cfp_description ? (
-              <MarkdownContent content={event.cfp_description} />
+            {event.description ? (
+              <MarkdownContent content={event.description} />
             ) : (
               <p className="text-sm text-muted-foreground">No description has been provided for this CFP.</p>
             )}

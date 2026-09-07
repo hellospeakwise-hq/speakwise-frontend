@@ -287,17 +287,17 @@ export function OrganizerSpeakerRequests() {
                                         {request.eventDetails && (
                                             <div className="pl-15 space-y-2">
                                                 <p className="text-sm font-medium text-orange-600 dark:text-orange-400">
-                                                    For: {request.eventDetails.name || request.eventDetails.title}
+                                                    For: {request.eventDetails.title}
                                                 </p>
                                                 <div className="flex flex-wrap gap-4 text-sm text-muted-foreground">
                                                     <div className="flex items-center">
                                                         <Calendar className="h-4 w-4 mr-1 text-orange-500" />
                                                         {request.eventDetails.date}
                                                     </div>
-                                                    {request.eventDetails.location && typeof request.eventDetails.location !== 'string' && (
+                                                    {request.eventDetails.location && (
                                                         <div className="flex items-center">
                                                             <MapPin className="h-4 w-4 mr-1 text-orange-500" />
-                                                            {request.eventDetails.location.city}, {request.eventDetails.location.country.name}
+                                                            {request.eventDetails.location}
                                                         </div>
                                                     )}
                                                 </div>

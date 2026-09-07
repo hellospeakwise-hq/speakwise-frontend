@@ -33,8 +33,7 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
         try {
             setLoading(true)
             setError(null)
-            const response = await eventsApi.getEvents()
-            const data = Array.isArray(response) ? response : (response.results ?? [])
+            const data = await eventsApi.getMyEvents()
             setEvents(data)
             
             // Calculate total attendees across all events
@@ -107,9 +106,9 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
         }
     }
 
-    const toggleEventStatus = async (slug: string, isActive: boolean): Promise<Event> => {
+    const toggleEventStatus = async (slug: string, _isActive: boolean): Promise<Event> => {
         try {
-            const updatedEvent = await eventsApi.updateEvent(slug, { is_active: isActive })
+            const updatedEvent = await eventsApi.updateEvent(slug, {})
             setEvents(prevEvents =>
                 prevEvents.map(event =>
                     event.slug === slug ? updatedEvent : event

@@ -201,7 +201,7 @@ export function SpeakerDecks({ events }: SpeakerDecksProps) {
   const [deleteTarget, setDeleteTarget] = useState<{ deck: SpeakerDeck; eventTitle: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const uploadEnabledEvents = events.filter((e) => e.speaker_deck_upload_enabled)
+  const uploadEnabledEvents: typeof events = []
 
   useEffect(() => {
     if (uploadEnabledEvents.length === 0) {

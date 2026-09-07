@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { MarkdownEditor } from '@/components/ui/markdown-editor'
 import { eventsApi } from '@/lib/api/events'
 import type { Event } from '@/lib/types/api'
 import { toast } from 'sonner'
@@ -16,20 +15,19 @@ interface CFPSettingsProps {
 }
 
 interface CFPForm {
-    accepts_cfp: boolean
     cfp_open: boolean
-    cfp_description: string
+    cfp_link: string
     cfp_open_date: string
     cfp_deadline: string
     cfp_speaker_notification_date: string
 }
 
-function toDatetimeLocal(iso: string | null): string {
+function toDatetimeLocal(iso: string | null | undefined): string {
     if (!iso) return ''
     return iso.slice(0, 16)
 }
 
-function toDateInput(iso: string | null): string {
+function toDateInput(iso: string | null | undefined): string {
     if (!iso) return ''
     return iso.slice(0, 10)
 }
@@ -38,11 +36,9 @@ export function CFPSettings({ eventSlug }: CFPSettingsProps) {
     const [event, setEvent] = useState<Event | null>(null)
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
-    const [togglingDeck, setTogglingDeck] = useState(false)
     const [form, setForm] = useState<CFPForm>({
-        accepts_cfp: false,
         cfp_open: false,
-        cfp_description: '',
+        cfp_link: '',
         cfp_open_date: '',
         cfp_deadline: '',
         cfp_speaker_notification_date: '',
@@ -53,9 +49,8 @@ export function CFPSettings({ eventSlug }: CFPSettingsProps) {
             .then(ev => {
                 setEvent(ev)
                 setForm({
-                    accepts_cfp: ev.accepts_cfp ?? false,
                     cfp_open: ev.cfp_open ?? false,
-                    cfp_description: ev.cfp_description ?? '',
+                    cfp_link: ev.cfp_link ?? '',
                     cfp_open_date: toDatetimeLocal(ev.cfp_open_date),
                     cfp_deadline: toDatetimeLocal(ev.cfp_deadline),
                     cfp_speaker_notification_date: toDateInput(ev.cfp_speaker_notification_date),
@@ -65,31 +60,12 @@ export function CFPSettings({ eventSlug }: CFPSettingsProps) {
             .finally(() => setLoading(false))
     }, [eventSlug])
 
-    const handleToggleDeckUpload = async () => {
-        if (!event) return
-        setTogglingDeck(true)
-        try {
-            const result = await eventsApi.toggleSpeakerDeckUpload(event.slug)
-            setEvent(ev => ev ? { ...ev, speaker_deck_upload_enabled: result.speaker_deck_upload_enabled } : ev)
-            if (result.speaker_deck_upload_enabled) {
-                toast.success('Speaker deck upload enabled — accepted speakers have been notified')
-            } else {
-                toast.success('Speaker deck upload disabled')
-            }
-        } catch {
-            toast.error('Failed to update speaker deck setting')
-        } finally {
-            setTogglingDeck(false)
-        }
-    }
-
     const handleSave = async () => {
         try {
             setSaving(true)
             await eventsApi.updateEvent(eventSlug, {
-                accepts_cfp: form.accepts_cfp,
                 cfp_open: form.cfp_open,
-                cfp_description: form.cfp_description,
+                cfp_link: form.cfp_link,
                 cfp_open_date: form.cfp_open_date || null,
                 cfp_deadline: form.cfp_deadline || null,
                 cfp_speaker_notification_date: form.cfp_speaker_notification_date || null,
@@ -115,70 +91,41 @@ export function CFPSettings({ eventSlug }: CFPSettingsProps) {
             <div>
                 <h2 className="text-xl font-semibold">CFP Settings</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                    Configure what speakers see when they visit your Call for Proposals page.
+                    Configure your Call for Proposals for <span className="font-medium text-foreground">{event?.title}</span>.
                 </p>
             </div>
 
-            {/* Toggles */}
+            {/* CFP open toggle */}
             <div className="space-y-5 border rounded-xl p-5">
                 <div className="flex items-center justify-between gap-4">
                     <div>
-                        <p className="font-medium">Accept CFP Submissions</p>
-                        <p className="text-sm text-muted-foreground">
-                            Enable to show the Submit CFP button on your event page.
-                        </p>
-                    </div>
-                    <Switch
-                        checked={form.accepts_cfp}
-                        onCheckedChange={v => setForm(p => ({ ...p, accepts_cfp: v, cfp_open: v ? p.cfp_open : false }))}
-                    />
-                </div>
-
-                <div className="flex items-center justify-between gap-4 pt-3 border-t">
-                    <div>
                         <p className="font-medium">CFP is Open</p>
                         <p className="text-sm text-muted-foreground">
-                            Allow speakers to submit proposals right now. Turn off to pause submissions without removing the CFP page.
+                            Allow speakers to submit proposals for this event right now.
                         </p>
                     </div>
                     <Switch
                         checked={form.cfp_open}
-                        disabled={!form.accepts_cfp}
                         onCheckedChange={v => setForm(p => ({ ...p, cfp_open: v }))}
                     />
                 </div>
-
-                <div className="flex items-center justify-between gap-4 pt-3 border-t">
-                    <div>
-                        <p className="font-medium">Speaker Deck Upload</p>
-                        <p className="text-sm text-muted-foreground">
-                            Let accepted speakers upload their presentation deck. Turning this on sends a notification email to all currently accepted speakers.
-                        </p>
-                    </div>
-                    <Switch
-                        checked={event?.speaker_deck_upload_enabled ?? false}
-                        disabled={togglingDeck}
-                        onCheckedChange={handleToggleDeckUpload}
-                    />
-                </div>
             </div>
 
-            {/* CFP Description — always visible */}
+            {/* CFP Link */}
             <div className="space-y-2">
-                <Label className="text-base font-medium">CFP Description</Label>
+                <Label className="text-base font-medium">CFP Submission Link</Label>
                 <p className="text-xs text-muted-foreground">
-                    Tell speakers what you're looking for — topics, formats, level of expertise, etc.
-                    This is the first thing they read before submitting a proposal.
+                    External URL where speakers submit proposals (e.g. Sessionize, Papercall).
                 </p>
-                <MarkdownEditor
-                    rows={12}
-                    placeholder={`Welcome to the official Call for Proposals for ${event?.title ?? 'our event'}!\n\n## What we are looking for\n\n- **Web Development** (Django, FastAPI, Flask)\n- **Data Science & AI** (Pandas, PyTorch)\n- **Cloud & DevOps** (Docker, Kubernetes)\n\n## Session Formats\n\n- **Talk (30 mins):** Deep dive into a topic\n- **Lightning Talk (5 mins):** Quick demos or ideas\n- **Workshop (90 mins):** Hands-on sessions\n\nNew to speaking? We offer mentorship — submit early for feedback!`}
-                    value={form.cfp_description}
-                    onChange={v => setForm(p => ({ ...p, cfp_description: v }))}
+                <Input
+                    type="url"
+                    placeholder="https://sessionize.com/your-event"
+                    value={form.cfp_link}
+                    onChange={e => setForm(p => ({ ...p, cfp_link: e.target.value }))}
                 />
             </div>
 
-            {/* Key Dates — always visible */}
+            {/* Key Dates */}
             <div className="space-y-4">
                 <h3 className="font-medium text-base">Key Dates</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -225,7 +172,7 @@ export function CFPSettings({ eventSlug }: CFPSettingsProps) {
             <Button
                 onClick={handleSave}
                 disabled={saving}
-                className="bg-orange-600 hover:bg-orange-700 text-white"
+                className="bg-foreground text-background hover:bg-foreground/90"
             >
                 {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</> : <><Save className="h-4 w-4 mr-2" />Save CFP Settings</>}
             </Button>

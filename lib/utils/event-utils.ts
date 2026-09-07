@@ -9,7 +9,7 @@ export function getEventImageUrl(img?: string) {
   return `${API_BASE_URL}${img}`;
 }
 export enum EventStatus {
-  DRAFT = 'draft',
+  PENDING = 'pending',
   PUBLISHED = 'published',
   CANCELLED = 'cancelled'
 }
@@ -19,19 +19,14 @@ export const getEventStatus = (event: {
   start_date_time?: string
   end_date_time?: string
 }): EventStatus => {
-  if (!event.is_active) {
-    return EventStatus.DRAFT
-  }
-
-  // For now, we'll use is_active to determine if published
-  // In a real implementation, you might have a cancelled field
+  if (!event.is_active) return EventStatus.PENDING
   return EventStatus.PUBLISHED
 }
 
 export const getEventStatusText = (status: EventStatus): string => {
   switch (status) {
-    case EventStatus.DRAFT:
-      return 'Draft'
+    case EventStatus.PENDING:
+      return 'Pending Approval'
     case EventStatus.PUBLISHED:
       return 'Published'
     case EventStatus.CANCELLED:
@@ -43,14 +38,14 @@ export const getEventStatusText = (status: EventStatus): string => {
 
 export const getEventStatusColor = (status: EventStatus): string => {
   switch (status) {
-    case EventStatus.DRAFT:
-      return 'bg-gray-100 text-gray-800'
+    case EventStatus.PENDING:
+      return 'bg-muted text-muted-foreground border border-border'
     case EventStatus.PUBLISHED:
-      return 'bg-green-100 text-green-800'
+      return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
     case EventStatus.CANCELLED:
-      return 'bg-red-100 text-red-800'
+      return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
     default:
-      return 'bg-gray-100 text-gray-800'
+      return 'bg-muted text-muted-foreground'
   }
 }
 

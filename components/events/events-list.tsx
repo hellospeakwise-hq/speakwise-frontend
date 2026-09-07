@@ -3,7 +3,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Calendar, MapPin, ImageIcon, Loader2, LayoutGrid, List } from "lucide-react"
 import { useMemo, useState } from "react"
-import type { DateTimeInfo } from "@/lib/types/api"
 import { formatDateFromMaybe } from '@/lib/utils/event-utils'
 import { getEventImageUrl } from '@/lib/utils/event-utils'
 import { useEvents } from "@/hooks/use-events"
@@ -14,57 +13,29 @@ import { Badge } from "@/components/ui/badge"
 
 interface EventsListProps {
     countryFilter?: string[]
-    tagFilter?: number | null
 }
 
 type ViewMode = "grid" | "list"
 
-export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
+export function EventsList({ countryFilter }: EventsListProps) {
     const { events, loading, error } = useEvents()
     const [viewMode, setViewMode] = useState<ViewMode>("grid")
 
-    // Filter events based on country and tags
     const filteredEvents = useMemo(() => {
-        if ((!countryFilter || countryFilter.length === 0) && !tagFilter) {
-            return events
-        }
+        if (!countryFilter || countryFilter.length === 0) return events
+        return events.filter(event =>
+            typeof event.location === 'string'
+                ? countryFilter.some(c => event.location?.toLowerCase().includes(c.toLowerCase()))
+                : true
+        )
+    }, [events, countryFilter])
 
-        return events.filter(event => {
-            let matchesCountry = true;
-            let matchesTag = true;
+    const getDateString = (val?: string | null) => formatDateFromMaybe(val as any)
 
-            // Apply country filter
-            if (countryFilter && countryFilter.length > 0 && typeof event.location === 'object' && event.location?.country) {
-                matchesCountry = countryFilter.includes(event.location.country.id);
-            }
-
-            // Apply tag filter
-            if (tagFilter) {
-                matchesTag = event.tags?.some(tag => tag.id === tagFilter) || false;
-            }
-
-            return matchesCountry && matchesTag;
-        })
-    }, [events, countryFilter, tagFilter])
-
-    const getDateString = (val?: string | DateTimeInfo | null) => formatDateFromMaybe(val as any)
-
-    const getLocationString = (event: Event) => {
-        if (!event.location) return 'Location TBD'
-        if (typeof event.location === 'string') return event.location
-        const parts = [
-            event.location.venue,
-            event.location.city,
-            event.location.country?.name,
-        ].filter(Boolean)
-        return parts.length > 0 ? parts.join(', ') : 'Location TBD'
-    }
+    const getLocationString = (event: Event) => event.location || 'Location TBD'
 
     const getDateRangeString = (event: Event) => {
         if (event.date_range) {
-            if (event.date_range.same_day) {
-                return getDateString(event.date_range.start)
-            }
             return `${getDateString(event.date_range.start)} - ${getDateString(event.date_range.end)}`
         }
         return event.date || 'Date TBD'
@@ -91,7 +62,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                 <p className="text-sm text-muted-foreground">
                     Showing {filteredEvents.length} events
                     {filteredEvents.length === 0 && !loading && " (No events found)"}
-                    {((countryFilter && countryFilter.length > 0) || tagFilter) && ` (filtered)`}
+                    {(countryFilter && countryFilter.length > 0) && ` (filtered)`}
                 </p>
                 <div className="flex items-center gap-1 rounded-xl border bg-muted/40 p-1">
                     <Button
@@ -118,7 +89,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
             {filteredEvents.length === 0 && !loading ? (
                 <div className="text-center py-12">
                     <p className="text-muted-foreground">
-                        {((countryFilter && countryFilter.length > 0) || tagFilter)
+                        {(countryFilter && countryFilter.length > 0)
                             ? "No events found matching the selected filters."
                             : "No events available at the moment."
                         }
@@ -128,7 +99,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                 /* ========== GRID VIEW ========== */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                     {filteredEvents.map((event) => {
-                        const title = event.name || event.title
+                        const title = event.title
                         const dateStr = getDateRangeString(event)
                         const location = getLocationString(event)
 
@@ -179,24 +150,6 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
 
                                 {/* Card body */}
                                 <div className="p-4 pt-3">
-                                    {/* Tags */}
-                                    {event.tags && event.tags.length > 0 && (
-                                        <div className="mb-2 flex flex-wrap gap-1">
-                                            {event.tags.slice(0, 3).map((tag) => (
-                                                <span
-                                                    key={tag.id}
-                                                    className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium"
-                                                    style={{
-                                                        backgroundColor: `${tag.color}18`,
-                                                        color: tag.color,
-                                                        border: `1px solid ${tag.color}40`,
-                                                    }}
-                                                >
-                                                    {tag.name}
-                                                </span>
-                                            ))}
-                                        </div>
-                                    )}
 
                                     <h3 className="font-semibold text-base leading-snug line-clamp-2 group-hover:opacity-70 transition-opacity">
                                         {title}
@@ -226,7 +179,7 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                                     {event.event_image ? (
                                         <Image
                                             src={getEventImageUrl(event.event_image) || '/fallback.jpg'}
-                                            alt={`${event.name || event.title} flyer`}
+                                            alt={`${event.title} flyer`}
                                             fill
                                             className="object-cover"
                                             sizes="176px"
@@ -243,10 +196,10 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0 flex-1">
                                             <h3 className="font-semibold text-base sm:text-lg leading-tight line-clamp-1 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition-colors">
-                                                {event.name || event.title}
+                                                {event.title}
                                             </h3>
                                             <p className="text-sm text-muted-foreground mt-1 line-clamp-1 hidden sm:block">
-                                                {event.short_description || event.description || 'No description available.'}
+                                                {event.description || 'No description available.'}
                                             </p>
                                         </div>
                                         <Badge
@@ -268,29 +221,6 @@ export function EventsList({ countryFilter, tagFilter }: EventsListProps) {
                                         </div>
                                     </div>
 
-                                    {/* Tags */}
-                                    {event.tags && event.tags.length > 0 && (
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                            {event.tags.slice(0, 3).map((tag) => (
-                                                <span
-                                                    key={tag.id}
-                                                    className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium"
-                                                    style={{
-                                                        backgroundColor: `${tag.color}20`,
-                                                        color: tag.color,
-                                                        border: `1px solid ${tag.color}40`
-                                                    }}
-                                                >
-                                                    {tag.name}
-                                                </span>
-                                            ))}
-                                            {event.tags.length > 3 && (
-                                                <span className="text-[10px] text-muted-foreground">
-                                                    +{event.tags.length - 3} more
-                                                </span>
-                                            )}
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </Link>

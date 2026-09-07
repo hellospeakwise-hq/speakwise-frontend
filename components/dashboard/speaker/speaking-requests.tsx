@@ -85,7 +85,7 @@ export function SpeakingRequests() {
           id: r.id,
           status: r.status,
           statusType: typeof r.status,
-          event: r.eventDetails?.name || r.eventDetails?.title
+          event: r.eventDetails?.title
         })))
 
         // Debug: Log unique status values
@@ -125,7 +125,7 @@ export function SpeakingRequests() {
       ))
 
       // Show success message with event name
-      const eventName = request.eventDetails?.name || request.eventDetails?.title || 'the event'
+      const eventName = request.eventDetails?.title || 'the event'
       toast.success(`Request accepted! ${eventName} has been added to your upcoming events.`)
 
       // Note: The backend should automatically add the event to the speaker's events_spoken array
@@ -359,7 +359,7 @@ export function SpeakingRequests() {
                     {/* Event Title and Status */}
                     <div className="flex items-center gap-3 flex-wrap">
                       <h3 className="text-lg font-semibold text-foreground">
-                        {request.eventDetails?.name || request.eventDetails?.title || 'Event'}
+                        {request.eventDetails?.title || 'Event'}
                       </h3>
                       {request.status === "pending" && (
                         <Badge variant="outline" className="bg-orange-500/10 border-orange-500/20 text-orange-600 dark:text-orange-400">
@@ -398,12 +398,10 @@ export function SpeakingRequests() {
                           <Calendar className="h-4 w-4 text-orange-500" />
                           <span>{request.eventDetails.date}</span>
                         </div>
-                        {request.eventDetails.location && typeof request.eventDetails.location !== 'string' && (
+                        {request.eventDetails.location && (
                           <div className="flex items-center gap-1.5">
                             <MapPin className="h-4 w-4 text-orange-500" />
-                            <span>
-                              {request.eventDetails.location.city}, {request.eventDetails.location.country.name}
-                            </span>
+                            <span>{request.eventDetails.location}</span>
                           </div>
                         )}
                       </div>
@@ -563,7 +561,7 @@ export function SpeakingRequests() {
                   <div>
                     <span className="text-sm font-medium">Event Name:</span>
                     <p className="text-sm text-muted-foreground">
-                      {selectedRequest.eventDetails?.name || selectedRequest.eventDetails?.title || 'Not available'}
+                      {selectedRequest.eventDetails?.title || 'Not available'}
                     </p>
                   </div>
                   {selectedRequest.eventDetails?.date && (
@@ -572,12 +570,10 @@ export function SpeakingRequests() {
                       <span>{selectedRequest.eventDetails.date}</span>
                     </div>
                   )}
-                  {selectedRequest.eventDetails?.location && typeof selectedRequest.eventDetails.location !== 'string' && (
+                  {selectedRequest.eventDetails?.location && (
                     <div className="flex items-center gap-2 text-sm">
                       <MapPin className="h-4 w-4 text-orange-500" />
-                      <span>
-                        {selectedRequest.eventDetails.location.city}, {selectedRequest.eventDetails.location.country.name}
-                      </span>
+                      <span>{selectedRequest.eventDetails.location}</span>
                     </div>
                   )}
                   {selectedRequest.eventDetails?.description && (
@@ -672,7 +668,7 @@ export function SpeakingRequests() {
             <DialogDescription>
               {user?.first_name}, you are accepting a request from{' '}
               <span className="font-semibold text-foreground">
-                {confirmAcceptRequest?.eventDetails?.name || confirmAcceptRequest?.eventDetails?.title || 'this event'}
+                {confirmAcceptRequest?.eventDetails?.title || 'this event'}
               </span>
               . Are you sure you want to accept?
             </DialogDescription>
@@ -692,12 +688,10 @@ export function SpeakingRequests() {
                         <span>{confirmAcceptRequest.eventDetails.date}</span>
                       </div>
                     )}
-                    {confirmAcceptRequest.eventDetails.location && typeof confirmAcceptRequest.eventDetails.location !== 'string' && (
+                    {confirmAcceptRequest.eventDetails.location && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-4 w-4" />
-                        <span>
-                          {confirmAcceptRequest.eventDetails.location.city}, {confirmAcceptRequest.eventDetails.location.country.name}
-                        </span>
+                        <span>{confirmAcceptRequest.eventDetails.location}</span>
                       </div>
                     )}
                   </>
@@ -743,7 +737,7 @@ export function SpeakingRequests() {
             <DialogDescription>
               {user?.first_name}, you are declining a request from{' '}
               <span className="font-semibold text-foreground">
-                {confirmDeclineRequest?.eventDetails?.name || confirmDeclineRequest?.eventDetails?.title || 'this event'}
+                {confirmDeclineRequest?.eventDetails?.title || 'this event'}
               </span>
               . Are you sure you want to decline?
             </DialogDescription>
@@ -763,12 +757,10 @@ export function SpeakingRequests() {
                         <span>{confirmDeclineRequest.eventDetails.date}</span>
                       </div>
                     )}
-                    {confirmDeclineRequest.eventDetails.location && typeof confirmDeclineRequest.eventDetails.location !== 'string' && (
+                    {confirmDeclineRequest.eventDetails.location && (
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <MapPin className="h-4 w-4" />
-                        <span>
-                          {confirmDeclineRequest.eventDetails.location.city}, {confirmDeclineRequest.eventDetails.location.country.name}
-                        </span>
+                        <span>{confirmDeclineRequest.eventDetails.location}</span>
                       </div>
                     )}
                   </>

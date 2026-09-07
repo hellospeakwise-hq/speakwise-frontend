@@ -46,7 +46,6 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
     start_date_time: string;
     end_date_time: string;
     event_image?: string;
-    short_description?: string;
   } | null>(null)
   const [ratings, setRatings] = useState({
     engagement: 0,
@@ -167,11 +166,10 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
         id: event.id,
         title: event.title,
         event_nickname: event.event_nickname,
-        location: typeof event.location === 'string' ? event.location : event.location?.venue || 'Unknown Location',
+        location: typeof event.location === 'string' ? event.location : 'Unknown Location',
         start_date_time: event.start_date_time,
         end_date_time: event.end_date_time,
         event_image: event.event_image || undefined,
-        short_description: event.short_description
       })
 
     } catch (error) {
@@ -410,11 +408,6 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
                             day: 'numeric' 
                           })}
                         </p>
-                        {eventData.short_description && (
-                          <p className="text-sm text-orange-700 dark:text-orange-300 mt-2 line-clamp-2">
-                            {eventData.short_description}
-                          </p>
-                        )}
                       </div>
                     </div>
                   </div>

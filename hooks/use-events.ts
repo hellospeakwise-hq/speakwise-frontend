@@ -2,12 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { eventsApi } from '@/lib/api/events'
-import { type Event, type Country, type Tag } from '@/lib/types/api'
+import { type Event } from '@/lib/types/api'
 
 interface UseEventsReturn {
     events: Event[]
-    countries: Country[]
-    tags: Tag[]
+    countries: { id: string; name: string; code: string }[]
+    tags: { id: number; name: string; color?: string }[]
     loading: boolean
     error: string | null
     refetch: () => void
@@ -15,8 +15,6 @@ interface UseEventsReturn {
 
 export function useEvents(): UseEventsReturn {
     const [events, setEvents] = useState<Event[]>([])
-    const [countries, setCountries] = useState<Array<{id: string; name: string; code: string}>>([])
-    const [tags, setTags] = useState<Array<{id: number; name: string; color?: string}>>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
 
@@ -24,47 +22,10 @@ export function useEvents(): UseEventsReturn {
         const fetchAllData = async () => {
             setLoading(true)
             setError(null)
-
             try {
-                // Fetch events data once
                 const eventsResponse = await eventsApi.getEvents()
-                // Handle both paginated response (results) and direct array response
-                const events = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || [])
-                
-                // Set events data
-                setEvents(events)
-                
-                // Extract unique countries from events
-                const countryMap = new Map<string, {id: string; name: string; code: string}>()
-                events.forEach(event => {
-                    if (event.location && typeof event.location === 'object' && event.location.country) {
-                        const country = event.location.country
-                        countryMap.set(country.id, {
-                            id: country.id,
-                            name: country.name,
-                            code: country.code
-                        })
-                    }
-                })
-                
-                // Extract unique tags from events
-                const tagMap = new Map<number, {id: number; name: string; color?: string}>()
-                events.forEach(event => {
-                    if (event.tags && Array.isArray(event.tags)) {
-                        event.tags.forEach(tag => {
-                            tagMap.set(tag.id, {
-                                id: tag.id,
-                                name: tag.name,
-                                color: tag.color
-                            })
-                        })
-                    }
-                })
-                
-                // Set extracted data
-                setCountries(Array.from(countryMap.values()).sort((a, b) => a.name.localeCompare(b.name)))
-                setTags(Array.from(tagMap.values()).sort((a, b) => a.name.localeCompare(b.name)))
-
+                const evs = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || [])
+                setEvents(evs)
             } catch (err) {
                 console.error('Error fetching data:', err)
                 setError(err instanceof Error ? err.message : 'Failed to load events. Please check if the backend is running.')
@@ -77,13 +38,12 @@ export function useEvents(): UseEventsReturn {
     }, [])
 
     const refetch = useCallback(async () => {
-        // For refetch, we can create a simple version
         setLoading(true)
         setError(null)
         try {
             const eventsResponse = await eventsApi.getEvents()
-            const events = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || [])
-            setEvents(events)
+            const evs = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || [])
+            setEvents(evs)
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load events.')
         } finally {
@@ -93,8 +53,8 @@ export function useEvents(): UseEventsReturn {
 
     return {
         events,
-        countries,
-        tags,
+        countries: [],
+        tags: [],
         loading,
         error,
         refetch

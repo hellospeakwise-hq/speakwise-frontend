@@ -270,16 +270,12 @@ export function EventManagementTable({
                         {event.location && (
                           <div className="flex items-center gap-1">
                             <MapPin className="h-3 w-3 shrink-0" />
-                            <span className="truncate">
-                              {typeof event.location === 'string'
-                                ? event.location
-                                : event.location?.venue || 'Location TBD'}
-                            </span>
+                            <span className="truncate">{event.location}</span>
                           </div>
                         )}
                         <div className="flex items-center gap-1">
                           <Users className="h-3 w-3 shrink-0" />
-                          <span>{event.attendees || 0} attendees</span>
+                          <span>{0} attendees</span>
                         </div>
                       </div>
                     </div>
@@ -348,9 +344,7 @@ export function EventManagementTable({
                             {event.location ? (
                               <div className="flex items-center gap-1 text-sm">
                                 <MapPin className="h-3 w-3 text-muted-foreground" />
-                                {typeof event.location === 'string'
-                                  ? event.location
-                                  : event.location?.venue || 'Location TBD'}
+                                {event.location || 'Location TBD'}
                               </div>
                             ) : (
                               <span className="text-muted-foreground text-sm">No location</span>
@@ -359,7 +353,7 @@ export function EventManagementTable({
                           <TableCell>
                             <div className="flex items-center gap-1 text-sm">
                               <Users className="h-3 w-3 text-muted-foreground" />
-                              {event.attendees || 0}
+                              {0}
                             </div>
                           </TableCell>
                           <TableCell className="text-right">

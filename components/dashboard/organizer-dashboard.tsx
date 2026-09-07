@@ -52,15 +52,37 @@ export function OrganizerDashboard() {
   }
 
   const eventsWithOpenCFP = events.filter((e) => {
-    const cfp = (e as any).cfp
-    if (!cfp?.close_at) return false
-    return new Date(cfp.close_at) > new Date()
+    if (!e.cfp_open) return false
+    if (!e.cfp_deadline) return true
+    return new Date(e.cfp_deadline) > new Date()
   })
 
   return (
-    <div className="flex min-h-[calc(100vh-80px)] border rounded-xl overflow-hidden bg-background">
-      {/* Sidebar */}
-      <aside className="w-52 shrink-0 border-r bg-muted/20 flex flex-col py-4">
+    <div className="flex flex-col md:flex-row min-h-[calc(100vh-80px)] border rounded-xl overflow-hidden bg-background">
+
+      {/* Mobile tab bar */}
+      <nav className="md:hidden flex border-b bg-muted/20">
+        {NAV.map((item) => {
+          const Icon = item.icon
+          const isActive = section === item.id
+          return (
+            <button
+              key={item.id}
+              onClick={() => setSection(item.id)}
+              className={cn(
+                "flex-1 flex flex-col items-center gap-1 py-3 text-xs font-medium transition-colors",
+                isActive ? "text-foreground border-b-2 border-foreground" : "text-muted-foreground"
+              )}
+            >
+              <Icon className="h-4 w-4" />
+              {item.label}
+            </button>
+          )
+        })}
+      </nav>
+
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-52 shrink-0 border-r bg-muted/20 flex-col py-4">
         {NAV.map((item) => {
           const Icon = item.icon
           const isActive = section === item.id
@@ -86,7 +108,7 @@ export function OrganizerDashboard() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 min-w-0 p-6 overflow-auto">
+      <main className="flex-1 min-w-0 p-4 md:p-6 overflow-auto">
 
         {/* Overview */}
         {section === "overview" && (
@@ -181,8 +203,7 @@ export function OrganizerDashboard() {
             ) : (
               <div className="grid gap-3">
                 {eventsWithOpenCFP.map((event) => {
-                  const cfp = (event as any).cfp
-                  const deadline = cfp?.close_at ? new Date(cfp.close_at) : null
+                  const deadline = event.cfp_deadline ? new Date(event.cfp_deadline) : null
                   const daysLeft = deadline
                     ? Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / 86_400_000))
                     : null
@@ -193,10 +214,7 @@ export function OrganizerDashboard() {
                       className="flex items-start justify-between gap-4 p-4 rounded-xl border bg-card"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{event.title || event.name}</p>
-                        {cfp?.description && (
-                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{cfp.description}</p>
-                        )}
+                        <p className="font-medium text-sm truncate">{event.title}</p>
                         {deadline && (
                           <div className="mt-2 flex items-center gap-1.5">
                             <span className="inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />

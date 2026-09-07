@@ -1,70 +1,32 @@
 // TypeScript interfaces for the API responses
 
-export interface Country {
-  id: string; // UUID
-  name: string;
-  code: string;
-}
-
-export interface Location {
-  id: string; // UUID
-  country: Country;
-  venue: string;
-  address: string;
-  city: string;
-  state: string;
-  postal_code: string;
-  latitude: string;
-  longitude: string;
-  description: string;
-}
-
-export interface DateTimeInfo {
-  date: string;
-  time: string;
-  datetime: string;
-}
-
 export interface DateRange {
-  start: string | DateTimeInfo;
-  end: string | DateTimeInfo;
-  same_day?: boolean;
-}
-
-export interface Tag {
-  id: number;
-  name: string;
-  color?: string;
+  start: string | null;
+  end: string | null;
 }
 
 export interface Event {
-  id: string;   // UUID — backend now uses uuid4 as primary key
-  slug: string; // used in all URLs (e.g. /events/<slug>/)
-  event_image: string | null;
-  tags: Tag[];
-  website: string;
-  short_description: string;
-  location: Location | string;
-  name: string;
-  date: string; // Formatted display date
-  date_range: DateRange;
+  id: string;
+  slug: string;
   title: string;
   event_nickname: string;
+  event_image: string | null;
   description: string;
-  start_date_time: string; // ISO string
-  end_date_time: string;   // ISO string
+  website: string;
+  location: string | null;
+  date: string | null;
+  date_range: DateRange;
+  start_date_time: string;
+  end_date_time: string;
   is_active: boolean;
-  attendees?: number;
-  organizer: any | null;
+  submitted_by: string | null;
+  is_cfp_currently_open: boolean;
   // CFP configuration
-  accepts_cfp: boolean;
   cfp_open: boolean;
-  cfp_description: string;
+  cfp_link: string;
   cfp_open_date: string | null;
   cfp_deadline: string | null;
   cfp_speaker_notification_date: string | null;
-  // Speaker deck uploads
-  speaker_deck_upload_enabled: boolean;
 }
 
 export interface EventsListResponse {

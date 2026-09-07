@@ -22,7 +22,7 @@ const TAB_CLASS = "rounded-none border-b-2 border-transparent data-[state=active
 export function SpeakerDashboardView() {
   const [activeTab, setActiveTab] = useState("overview")
   const { events: acceptedEvents } = useSpeakerAcceptedEvents()
-  const hasDeckUploads = acceptedEvents.some((e) => e.speaker_deck_upload_enabled)
+  const hasDeckUploads = false
   const prefersReduced = useReducedMotion()
 
   const fadeUp = (delay = 0) => ({
