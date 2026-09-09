@@ -7,6 +7,7 @@ export interface CreateEventRequest {
   description?: string;
   website?: string;
   location?: string;
+  country?: string;
   start_date_time: string;
   end_date_time: string;
   cfp_open?: boolean;
@@ -74,6 +75,7 @@ export const eventsApi = {
     if (data.description !== undefined) body.description = data.description;
     if (data.website !== undefined) body.website = data.website;
     if (data.location !== undefined) body.location = data.location;
+    if (data.country !== undefined) body.country = data.country;
     if (data.start_date_time !== undefined) body.start_date_time = data.start_date_time;
     if (data.end_date_time !== undefined) body.end_date_time = data.end_date_time;
     if (data.cfp_open !== undefined) body.cfp_open = data.cfp_open;

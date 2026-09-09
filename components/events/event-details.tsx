@@ -1,16 +1,14 @@
 'use client'
 
-import { Calendar, MapPin, Users, Clock, Globe, Send, Mic, ArrowLeft } from "lucide-react"
+import { Calendar, MapPin, Clock, Globe, Send, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import { formatDateFromMaybe, formatTimeFromMaybe, getEventImageUrl } from '@/lib/utils/event-utils'
 import { eventsApi } from "@/lib/api/events"
 import { type Event } from "@/lib/types/api"
-import { EventSessions } from "./event-sessions"
 import { useAuth } from "@/contexts/auth-context"
 import { useEvents } from "@/hooks/use-events"
-import { apiClient } from "@/lib/api/base"
 import Link from "next/link"
 
 interface EventDetailsProps {
@@ -43,8 +41,6 @@ export function EventDetails({ id }: EventDetailsProps) {
   const [event, setEvent] = useState<Event | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [speakersCount, setSpeakersCount] = useState<number>(0)
-  const [attendeesCount, setAttendeesCount] = useState<number>(0)
   const { user } = useAuth()
   const { events: allEvents, loading: eventsLoading } = useEvents()
   const prefersReduced = useReducedMotion()
@@ -88,30 +84,7 @@ export function EventDetails({ id }: EventDetailsProps) {
     if (id) loadEvent()
   }, [id, allEvents, eventsLoading])
 
-  useEffect(() => {
-    const loadEventStats = async () => {
-      try {
-        const talksResponse = await apiClient.get<any[]>('/talks/')
-        const raw = talksResponse.data
-        const talks = Array.isArray(raw) ? raw : (raw as any)?.results ?? []
-        const eventTalks = talks.filter((talk: any) => talk.event?.toString() === id)
-        const uniqueSpeakers = new Set(eventTalks.map((talk: any) => talk.speaker))
-        setSpeakersCount(uniqueSpeakers.size)
-        try {
-          const attendeesResponse = await apiClient.get(`/events/${id}/attendees/`)
-          setAttendeesCount(attendeesResponse.data.length || 0)
-        } catch {
-          setAttendeesCount(0)
-        }
-      } catch {
-        setSpeakersCount(0)
-        setAttendeesCount(0)
-      }
-    }
-    if (id && !loading) loadEventStats()
-  }, [id, loading, event])
-
-  if (loading) return <LoadingSkeleton />
+if (loading) return <LoadingSkeleton />
 
   if (error || !event) {
     return (
@@ -161,37 +134,17 @@ export function EventDetails({ id }: EventDetailsProps) {
       >
         <div className="absolute inset-0 bg-black/45" />
 
-        {/* Top-right actions */}
-        <div className="absolute top-4 right-4 flex items-center gap-2">
-          {canManageEvent && (
-            <>
-              <Link href={`/events/${id}/manage-sessions`}>
-                <button className="h-7 px-3 text-xs bg-white/15 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-colors rounded-md">
-                  Manage Sessions
-                </button>
-              </Link>
-              <Link href={`/events/${id}/manage-speakers`}>
-                <button className="h-7 px-3 text-xs bg-white/15 backdrop-blur-sm border border-white/20 text-white hover:bg-white/25 transition-colors rounded-md">
-                  Manage Speakers
-                </button>
-              </Link>
-            </>
-          )}
-          {event.cfp_open && (
+        {/* CFP button in hero */}
+        {event.cfp_open && (
+          <div className="absolute top-4 right-4">
             <Link href={`/events/${id}/cfp`}>
-              {event.cfp_open ? (
-                <button className="h-8 px-4 text-sm font-semibold bg-white text-slate-900 hover:bg-white/90 transition-colors rounded-md flex items-center gap-1.5">
-                  <Send className="h-3.5 w-3.5" />
-                  Submit CFP
-                </button>
-              ) : (
-                <button className="h-8 px-4 text-sm bg-white/10 backdrop-blur-sm border border-white/20 text-white/70 rounded-md cursor-default" disabled>
-                  CFP Closed
-                </button>
-              )}
+              <button className="h-8 px-4 text-sm font-semibold bg-white text-slate-900 hover:bg-white/90 transition-colors rounded-md flex items-center gap-1.5">
+                <Send className="h-3.5 w-3.5" />
+                Submit CFP
+              </button>
             </Link>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Bottom content */}
         <div className="absolute bottom-0 left-0 right-0 p-6">
@@ -212,107 +165,92 @@ export function EventDetails({ id }: EventDetailsProps) {
         </div>
       </motion.div>
 
-      {/* Two-column layout */}
-      <div className="lg:grid lg:grid-cols-[1fr_240px] lg:gap-12 items-start">
+      {/* Content */}
+      <motion.div {...fadeUp(0.08)} className="max-w-2xl space-y-8">
 
-        {/* Left: About + Details + Talks */}
-        <motion.div {...fadeUp(0.08)}>
-
-          {/* About */}
+        {/* About */}
+        {event.description && (
           <div>
             <p className="text-sm font-semibold mb-3">About</p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              {event.description || 'No description available.'}
-            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">{event.description}</p>
           </div>
+        )}
 
-          <div className="border-t border-border my-6" />
-
-          {/* Event Details */}
-          <div>
-            <p className="text-xs text-muted-foreground uppercase tracking-wide mb-4">Event details</p>
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-              <div>
-                <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
-                  <Calendar className="h-3 w-3" /> Date
-                </dt>
-                <dd className="text-sm font-medium">{dateDisplay}</dd>
-              </div>
-              <div>
-                <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
-                  <Clock className="h-3 w-3" /> Time
-                </dt>
-                <dd className="text-sm font-medium">{timeDisplay}</dd>
-              </div>
+        {/* Event Details */}
+        <div>
+          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-4">Event details</p>
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+            <div>
+              <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
+                <Calendar className="h-3 w-3" /> Date
+              </dt>
+              <dd className="text-sm font-medium">{dateDisplay}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
+                <Clock className="h-3 w-3" /> Time
+              </dt>
+              <dd className="text-sm font-medium">{timeDisplay}</dd>
+            </div>
+            {locationStr !== 'TBA' && (
               <div>
                 <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
                   <MapPin className="h-3 w-3" /> Location
                 </dt>
-                <dd className="text-sm font-medium">{locationStr}</dd>
+                <dd className="text-sm font-medium">
+                  {locationStr}{event.country ? `, ${event.country}` : ''}
+                </dd>
               </div>
-              {event.website && (
+            )}
+            {!locationStr || locationStr === 'TBA' ? (
+              event.country ? (
                 <div>
                   <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
-                    <Globe className="h-3 w-3" /> Website
+                    <MapPin className="h-3 w-3" /> Country
                   </dt>
-                  <dd>
-                    <a
-                      href={event.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm font-medium hover:underline underline-offset-2"
-                    >
-                      {event.website.replace(/^https?:\/\//, '')}
-                    </a>
-                  </dd>
+                  <dd className="text-sm font-medium">{event.country}</dd>
                 </div>
-              )}
-            </dl>
-          </div>
-
-          <div className="border-t border-border my-6" />
-
-          {/* Talks */}
-          <div>
-            <p className="text-sm font-semibold mb-1">Talks</p>
-            <p className="text-xs text-muted-foreground mb-5">Speakers and their sessions — leave feedback after each talk</p>
-            <EventSessions eventId={id} />
-          </div>
-        </motion.div>
-
-        {/* Right: Sticky sidebar */}
-        <motion.aside {...fadeUp(0.12)} className="mt-10 lg:mt-0 lg:sticky lg:top-6">
-          <p className="text-xs text-muted-foreground mb-4">Stats</p>
-          <dl className="space-y-4">
-            <div className="flex items-center justify-between">
-              <dt className="text-sm text-muted-foreground flex items-center gap-2">
-                <Users className="h-3.5 w-3.5" />
-                Attendees
-              </dt>
-              <dd className="text-sm font-semibold tabular-nums">{attendeesCount}</dd>
-            </div>
-            <div className="flex items-center justify-between">
-              <dt className="text-sm text-muted-foreground flex items-center gap-2">
-                <Mic className="h-3.5 w-3.5" />
-                Speakers
-              </dt>
-              <dd className="text-sm font-semibold tabular-nums">{speakersCount}</dd>
-            </div>
+              ) : null
+            ) : null}
+            {event.website && (
+              <div>
+                <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
+                  <Globe className="h-3 w-3" /> Website
+                </dt>
+                <dd>
+                  <a
+                    href={event.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm font-medium hover:underline underline-offset-2"
+                  >
+                    {event.website.replace(/^https?:\/\//, '')}
+                  </a>
+                </dd>
+              </div>
+            )}
           </dl>
+        </div>
 
-          {event.cfp_open && (
-            <div className="mt-6 pt-6 border-t border-border">
-              <p className="text-xs text-muted-foreground mb-3">CFP is open</p>
+        {/* CFP call-to-action */}
+        {event.cfp_open && (
+          <div className="pt-2">
+            <div className="border border-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium">Call for Proposals is open</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Submit a talk proposal for this event</p>
+              </div>
               <Link href={`/events/${id}/cfp`}>
-                <Button className="w-full bg-foreground text-background hover:bg-foreground/90 h-9 text-sm gap-1.5">
+                <Button className="bg-foreground text-background hover:bg-foreground/90 gap-1.5 shrink-0">
                   <Send className="h-3.5 w-3.5" />
                   Submit a Proposal
                 </Button>
               </Link>
             </div>
-          )}
-        </motion.aside>
-      </div>
+          </div>
+        )}
+
+      </motion.div>
     </div>
   )
 }

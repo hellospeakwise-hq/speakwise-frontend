@@ -24,9 +24,9 @@ export function EventsList({ countryFilter }: EventsListProps) {
     const filteredEvents = useMemo(() => {
         if (!countryFilter || countryFilter.length === 0) return events
         return events.filter(event =>
-            typeof event.location === 'string'
-                ? countryFilter.some(c => event.location?.toLowerCase().includes(c.toLowerCase()))
-                : true
+            event.country
+                ? countryFilter.some(c => event.country!.toLowerCase() === c.toLowerCase())
+                : false
         )
     }, [events, countryFilter])
 

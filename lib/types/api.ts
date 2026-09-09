@@ -14,6 +14,7 @@ export interface Event {
   description: string;
   website: string;
   location: string | null;
+  country: string | null;
   date: string | null;
   date_range: DateRange;
   start_date_time: string;

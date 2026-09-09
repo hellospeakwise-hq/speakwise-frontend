@@ -15,8 +15,19 @@ interface UseEventsReturn {
 
 export function useEvents(): UseEventsReturn {
     const [events, setEvents] = useState<Event[]>([])
+    const [countries, setCountries] = useState<{ id: string; name: string; code: string }[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
+
+    const extractCountries = (evs: Event[]) => {
+        const seen = new Set<string>()
+        return evs
+            .filter(e => e.country)
+            .map(e => e.country!)
+            .filter(c => { if (seen.has(c)) return false; seen.add(c); return true })
+            .sort()
+            .map(c => ({ id: c, name: c, code: c }))
+    }
 
     useEffect(() => {
         const fetchAllData = async () => {
@@ -26,6 +37,7 @@ export function useEvents(): UseEventsReturn {
                 const eventsResponse = await eventsApi.getEvents()
                 const evs = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || [])
                 setEvents(evs)
+                setCountries(extractCountries(evs))
             } catch (err) {
                 console.error('Error fetching data:', err)
                 setError(err instanceof Error ? err.message : 'Failed to load events. Please check if the backend is running.')
@@ -44,6 +56,7 @@ export function useEvents(): UseEventsReturn {
             const eventsResponse = await eventsApi.getEvents()
             const evs = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || [])
             setEvents(evs)
+            setCountries(extractCountries(evs))
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to load events.')
         } finally {
@@ -53,7 +66,7 @@ export function useEvents(): UseEventsReturn {
 
     return {
         events,
-        countries: [],
+        countries,
         tags: [],
         loading,
         error,

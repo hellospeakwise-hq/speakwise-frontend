@@ -35,6 +35,7 @@ const eventFormSchema = z.object({
   description: z.string().optional(),
   website: z.string().url("Please enter a valid URL").optional().or(z.literal("")),
   location: z.string().optional(),
+  country: z.string().optional(),
   start_date_time: z.string().min(1, "Start date and time are required"),
   end_date_time: z.string().min(1, "End date and time are required"),
   cfp_open: z.boolean().default(false),
@@ -74,6 +75,7 @@ export function EventFormDialog({
       description: event?.description || "",
       website: event?.website || "",
       location: typeof event?.location === "string" ? event.location : "",
+      country: event?.country || "",
       start_date_time: toLocalDatetime(event?.start_date_time),
       end_date_time: toLocalDatetime(event?.end_date_time),
       cfp_open: event?.cfp_open || false,
@@ -92,6 +94,7 @@ export function EventFormDialog({
         description: event?.description || "",
         website: event?.website || "",
         location: typeof event?.location === "string" ? event.location : "",
+        country: event?.country || "",
         start_date_time: toLocalDatetime(event?.start_date_time),
         end_date_time: toLocalDatetime(event?.end_date_time),
         cfp_open: event?.cfp_open || false,
@@ -134,6 +137,7 @@ export function EventFormDialog({
         description: values.description,
         website: values.website,
         location: values.location,
+        country: values.country,
         start_date_time: values.start_date_time,
         end_date_time: values.end_date_time,
         cfp_open: values.cfp_open,
@@ -239,14 +243,23 @@ export function EventFormDialog({
               </FormItem>
             )} />
 
-            {/* Location */}
-            <FormField control={form.control} name="location" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Location</FormLabel>
-                <FormControl><Input placeholder="City, venue, or Online" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+            {/* Location + Country */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField control={form.control} name="location" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location</FormLabel>
+                  <FormControl><Input placeholder="City or venue name" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+              <FormField control={form.control} name="country" render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Country</FormLabel>
+                  <FormControl><Input placeholder="e.g. Ghana, Nigeria, UK" {...field} /></FormControl>
+                  <FormMessage />
+                </FormItem>
+              )} />
+            </div>
 
             {/* Dates */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
