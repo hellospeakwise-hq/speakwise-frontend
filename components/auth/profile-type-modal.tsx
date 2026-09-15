@@ -18,6 +18,7 @@ import {
 } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
 import { organizationApi } from "@/lib/api/organizationApi"
+import { apiClient } from "@/lib/api/base"
 import { toast } from "sonner"
 
 type Step = "choose" | "org-form"
@@ -85,10 +86,25 @@ export function ProfileTypeModal({ open, onSpeakerChosen, onOrgChosen }: Profile
         }
     }
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
         if (selectedRole === "speaker") {
-            localStorage.setItem("profile_type", "speaker")
-            onSpeakerChosen()
+            setIsSubmitting(true)
+            try {
+                await apiClient.post("/speakers/", {})
+                localStorage.setItem("profile_type", "speaker")
+                onSpeakerChosen()
+            } catch (err: any) {
+                const data = err?.response?.data ?? {}
+                if (data.detail?.toLowerCase().includes("already exists")) {
+                    // Profile already exists — still proceed
+                    localStorage.setItem("profile_type", "speaker")
+                    onSpeakerChosen()
+                } else {
+                    toast.error(data.detail || "Failed to create speaker profile. Please try again.")
+                }
+            } finally {
+                setIsSubmitting(false)
+            }
         } else {
             setStep("org-form")
         }
@@ -241,9 +257,15 @@ export function ProfileTypeModal({ open, onSpeakerChosen, onOrgChosen }: Profile
                                 <Button
                                     type="button"
                                     onClick={handleContinue}
+                                    disabled={isSubmitting}
                                     className="w-full bg-zinc-950 hover:bg-zinc-900 text-white font-medium text-sm py-3.5 h-auto rounded-2xl shadow-sm transition-all active:scale-[0.99]"
                                 >
-                                    {selectedRole === "speaker" ? "Continue as Speaker" : "Continue to Organization Setup"}
+                                    {isSubmitting ? (
+                                        <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Setting up your profile...
+                                        </>
+                                    ) : selectedRole === "speaker" ? "Continue as Speaker" : "Continue to Organization Setup"}
                                 </Button>
 
                                 <p className="text-center text-[11.5px] text-zinc-400 mt-3.5">

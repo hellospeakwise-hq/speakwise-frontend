@@ -17,6 +17,23 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface SpeakerProfileData {
+  id: string;
+  slug?: string;
+  [key: string]: any;
+}
+
+export interface OrganizationProfileData {
+  id: string;
+  status?: string;
+  [key: string]: any;
+}
+
+export interface LoginProfiles {
+  speaker_profile?: SpeakerProfileData;
+  organization_profile?: OrganizationProfileData;
+}
+
 export interface AuthResponse {
   id: string;
   speaker_id?: string;
@@ -29,17 +46,15 @@ export interface AuthResponse {
   };
   nationality: string;
   username: string;
-  // Nested profile data included in login/register response
-  speaker?: Array<{ id: string; slug?: string; [key: string]: any }>;
-  org_profile?: { id: string; status?: string; [key: string]: any } | null;
 }
 
 export interface LoginResponse extends AuthResponse {
   access_token?: string;
   refresh_token?: string;
-  access?: string;  // New token format from backend
-  refresh?: string; // New token format from backend
-  token?: string;   // Legacy token support
+  access?: string;
+  refresh?: string;
+  token?: string;
+  profiles?: LoginProfiles;
 }
 
 // Auth API service

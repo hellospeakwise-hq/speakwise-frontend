@@ -174,20 +174,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
             // Sync profile type from backend response so it's always accurate,
             // regardless of which device or browser the user logs in from.
-            const speakerList = Array.isArray(response.speaker) ? response.speaker : [];
-            const hasSpeakerProfile = speakerList.length > 0;
-            const hasOrgProfile = !!response.org_profile;
+            // Backend now returns a `profiles` object with speaker_profile or organization_profile.
+            const profiles = response.profiles || {};
+            const hasSpeakerProfile = !!profiles.speaker_profile;
+            const hasOrgProfile = !!profiles.organization_profile;
 
             if (hasSpeakerProfile) {
                 localStorage.setItem('profile_type', 'speaker');
-                if (speakerList[0]?.slug) {
+                if (profiles.speaker_profile?.slug) {
                     const stored = JSON.parse(localStorage.getItem('user') || '{}');
-                    localStorage.setItem('user', JSON.stringify({ ...stored, speaker_slug: speakerList[0].slug }));
+                    localStorage.setItem('user', JSON.stringify({ ...stored, speaker_slug: profiles.speaker_profile.slug }));
                 }
             } else if (hasOrgProfile) {
                 localStorage.setItem('profile_type', 'organization');
-                // Cache org data from login response — works on any device, no separate API call needed
-                localStorage.setItem('cached_org_profile', JSON.stringify(response.org_profile));
+                localStorage.setItem('cached_org_profile', JSON.stringify(profiles.organization_profile));
             }
 
             // Show the profile-type modal only when:

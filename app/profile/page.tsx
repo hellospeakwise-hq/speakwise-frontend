@@ -237,17 +237,16 @@ function ProfilePageContent() {
                 nationality: nationality,
             }
 
-            // Add speaker data as nested array with ID to trigger UPDATE not CREATE
+            // Add speaker data as a single object (backend no longer accepts an array)
             if (speakerData?.id) {
-                updateData.speaker = [{
-                    id: speakerData.id,  // CRITICAL: Include ID to update existing, not create new
+                updateData.speaker = {
+                    id: speakerData.id,
                     user_account: speakerData.user_account,
                     organization: organization,
                     short_bio: shortBio,
                     long_bio: longBio,
                     country: country,
-                    // skill_tag excluded - backend expects objects not integers
-                }]
+                }
             }
 
             console.log('📤 Sending update with data:', JSON.stringify(updateData, null, 2))
@@ -321,11 +320,10 @@ function ProfilePageContent() {
             }
 
             const formData = new FormData()
-            formData.append('speaker[0]id', speakerData.id.toString())
-            formData.append('speaker[0]user_account', speakerData.user_account)
-            // Convert blob to File so the backend sees a proper filename
+            formData.append('speaker.id', speakerData.id.toString())
+            formData.append('speaker.user_account', speakerData.user_account)
             const croppedFile = new File([croppedBlob], 'avatar.jpg', { type: 'image/jpeg' })
-            formData.append('speaker[0]avatar', croppedFile)
+            formData.append('speaker.avatar', croppedFile)
 
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/me/`,
@@ -341,10 +339,8 @@ function ProfilePageContent() {
                 throw new Error(err.detail || 'Failed to upload avatar')
             }
 
-            const freshData = await userApi.getUserProfile()
-            const freshSpeaker = Array.isArray((freshData as any)?.speaker)
-                ? (freshData as any).speaker[0]
-                : (freshData as any)?.speaker
+            const freshData = await userApi.refreshUserProfile()
+            const freshSpeaker = (freshData as any)?.speaker
             const newAvatarPath = freshSpeaker?.avatar
 
             if (newAvatarPath) {

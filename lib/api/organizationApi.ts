@@ -26,6 +26,7 @@ export interface OrganizationProfile {
     branding: string | null;
     contact_email: string | null;
     status: OrgStatus | null;
+    admin_notes: string | null;
     cfps: OrganizationCFP | null;
 }
 

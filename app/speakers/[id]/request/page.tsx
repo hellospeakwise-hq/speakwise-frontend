@@ -2,14 +2,13 @@
 
 import type React from "react"
 import { useState, use, useEffect } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ChevronLeft, Loader2, Mail, MapPin, CalendarDays, MessageSquare } from "lucide-react"
+import { ChevronLeft, Loader2, Mail } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { speakerApi, type Speaker } from "@/lib/api/speakerApi"
 import { speakerRequestApi } from "@/lib/api/speakerRequestApi"
@@ -83,147 +82,157 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
 
   if (authLoading || !isAuthenticated) {
     return (
-      <div className="container py-10 max-w-2xl mx-auto flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-        <span className="ml-2 text-muted-foreground">Checking authentication...</span>
+      <div className="container py-16 max-w-xl mx-auto flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+        <span className="ml-2.5 text-sm text-muted-foreground">Checking authentication...</span>
       </div>
     )
   }
 
   if (loading) {
     return (
-      <div className="container py-10 max-w-2xl mx-auto flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-        <span className="ml-2 text-muted-foreground">Loading...</span>
+      <div className="container py-16 max-w-xl mx-auto flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+        <span className="ml-2.5 text-sm text-muted-foreground">Loading speaker details...</span>
       </div>
     )
   }
 
   if (!speaker) {
     return (
-      <div className="container py-10 max-w-2xl mx-auto text-center py-12">
-        <p className="text-muted-foreground">Speaker not found</p>
+      <div className="container py-16 max-w-xl mx-auto text-center">
+        <p className="text-sm text-muted-foreground">Speaker not found</p>
       </div>
     )
   }
 
   return (
-    <div className="container py-10 max-w-2xl mx-auto">
+    <div className="container py-8 sm:py-12 max-w-xl mx-auto px-4">
+      {/* Back button */}
       <button
         onClick={() => router.push(`/speakers/${id}`)}
-        className="inline-flex items-center mb-6 text-sm font-medium text-muted-foreground hover:text-primary transition-colors"
+        className="inline-flex items-center mb-5 text-xs font-medium text-zinc-400 hover:text-white transition-colors"
       >
-        <ChevronLeft className="mr-1 h-4 w-4" />
+        <ChevronLeft className="mr-1 h-3.5 w-3.5" />
         Back to Speaker Profile
       </button>
 
-      <Card className="border-2">
-        <CardHeader>
-          <div className="flex items-center gap-4">
-            <Avatar className="h-14 w-14 border-2 border-border">
-              {speaker.avatar ? (
-                <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} />
-              ) : (
-                <AvatarFallback className="bg-gradient-to-br from-orange-500 to-amber-400 text-white font-bold">
-                  {speaker.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                </AvatarFallback>
-              )}
-            </Avatar>
+      {/* Main card with the modal design style */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: "easeOut" }}
+        className="bg-white text-zinc-900 rounded-[28px] shadow-[0_30px_70px_-15px_rgba(0,0,0,0.35)] p-7 sm:p-9 border-0"
+      >
+        {/* Header */}
+        <div className="flex items-center gap-3.5 mb-6">
+          <Avatar className="h-13 w-13 rounded-2xl border border-zinc-100 shadow-sm">
+            {speaker.avatar ? (
+              <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} className="object-cover" />
+            ) : (
+              <AvatarFallback className="bg-zinc-950 text-white font-semibold rounded-2xl text-sm">
+                {speaker.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </AvatarFallback>
+            )}
+          </Avatar>
+          <div>
+            <h1 className="font-heading text-2xl font-bold tracking-tight text-zinc-900 leading-tight">
+              Request {speaker.speaker_name}
+            </h1>
+            <p className="text-[13px] text-zinc-500 mt-0.5">
+              Send a speaking invitation directly to their inbox
+            </p>
+          </div>
+        </div>
+
+        {/* Informative banner */}
+        <div className="rounded-2xl bg-[#f8f9fa] border border-zinc-100 p-4 mb-6 flex items-start gap-3">
+          <div className="h-7 w-7 rounded-lg bg-sky-50 text-sky-600 border border-sky-100 flex items-center justify-center shrink-0 mt-0.5">
+            <Mail className="h-4 w-4" />
+          </div>
+          <div className="text-[12.5px] leading-relaxed text-zinc-600">
+            <span className="font-semibold text-zinc-900 block mb-0.5">How email requests work</span>
+            Your invitation is delivered straight to {speaker.speaker_name}&apos;s verified email. They can review event details and accept or decline from their SpeakWise dashboard.
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleEmailSubmit}>
+          <div className="space-y-4">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5 text-blue-500" />
-                Request {speaker.speaker_name}
-              </CardTitle>
-              <CardDescription>
-                The speaker will receive an email notification with your request details
-              </CardDescription>
+              <Label htmlFor="event-name" className="text-xs font-medium text-zinc-700 block mb-1.5">
+                Event Name <span className="text-zinc-400">*</span>
+              </Label>
+              <Input
+                id="event-name"
+                placeholder="e.g. NextGen Web Summit 2026"
+                value={emailEventName}
+                onChange={(e) => setEmailEventName(e.target.value)}
+                className="bg-[#f4f5f7] border-transparent focus:border-zinc-300 focus:bg-white rounded-xl text-zinc-900 text-sm h-11 placeholder:text-zinc-400 transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="location" className="text-xs font-medium text-zinc-700 block mb-1.5">
+                Event Location <span className="text-zinc-400">*</span>
+              </Label>
+              <Input
+                id="location"
+                placeholder="e.g. Nairobi, Kenya or Virtual (Zoom)"
+                value={emailLocation}
+                onChange={(e) => setEmailLocation(e.target.value)}
+                className="bg-[#f4f5f7] border-transparent focus:border-zinc-300 focus:bg-white rounded-xl text-zinc-900 text-sm h-11 placeholder:text-zinc-400 transition-all"
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="email-message" className="text-xs font-medium text-zinc-700 block mb-1.5">
+                Your Message <span className="text-zinc-400">*</span>
+              </Label>
+              <Textarea
+                id="email-message"
+                placeholder="Introduce your event, suggested session topics, expected audience, dates, or honorarium details..."
+                rows={5}
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                className="bg-[#f4f5f7] border-transparent focus:border-zinc-300 focus:bg-white rounded-xl text-zinc-900 text-sm placeholder:text-zinc-400 transition-all p-3.5 resize-none leading-relaxed"
+                required
+              />
+              <p className="text-[11.5px] text-zinc-400 mt-1.5">
+                Be detailed and personal — thoughtful invitations get accepted much faster.
+              </p>
             </div>
           </div>
-        </CardHeader>
-        <form onSubmit={handleEmailSubmit}>
-          <CardContent className="space-y-6">
-            <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-500/5 border border-blue-500/20">
-              <Mail className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-medium text-blue-700 dark:text-blue-400">How email requests work</p>
-                <p className="text-muted-foreground mt-1">
-                  Your request will be sent directly to the speaker&apos;s email. They can accept or decline from their SpeakWise dashboard.
-                </p>
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="event-name" className="flex items-center gap-2">
-                  <CalendarDays className="h-4 w-4 text-orange-500" />
-                  Event Name *
-                </Label>
-                <Input
-                  id="event-name"
-                  placeholder="e.g. TechConf Africa 2026"
-                  value={emailEventName}
-                  onChange={(e) => setEmailEventName(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="location" className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-orange-500" />
-                  Event Location *
-                </Label>
-                <Input
-                  id="location"
-                  placeholder="e.g. Nairobi, Kenya or Virtual"
-                  value={emailLocation}
-                  onChange={(e) => setEmailLocation(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="email-message" className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-orange-500" />
-                  Your Message *
-                </Label>
-                <Textarea
-                  id="email-message"
-                  placeholder="Tell the speaker about your event, what topics you'd like them to cover, expected audience, dates, and any other relevant details..."
-                  rows={6}
-                  value={emailMessage}
-                  onChange={(e) => setEmailMessage(e.target.value)}
-                  required
-                />
-                <p className="text-xs text-muted-foreground">
-                  Be detailed — this is the first impression the speaker will get of your event.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button type="button" variant="outline" onClick={() => router.push(`/speakers/${id}`)}>
+          {/* Action buttons */}
+          <div className="flex items-center justify-between gap-3 pt-6 mt-6 border-t border-zinc-100">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push(`/speakers/${id}`)}
+              className="h-auto py-3.5 px-5 rounded-2xl border border-zinc-200/80 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-50 font-medium text-sm transition-all"
+            >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isSubmitting || !emailEventName.trim() || !emailLocation.trim() || !emailMessage.trim()}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-zinc-950 hover:bg-zinc-900 text-white font-medium text-sm py-3.5 px-6 h-auto rounded-2xl shadow-sm transition-all active:scale-[0.99] disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
+                  Sending invitation...
                 </>
               ) : (
-                <>
-                  <Mail className="mr-2 h-4 w-4" />
-                  Send Email Request
-                </>
+                "Send Email Request"
               )}
             </Button>
-          </CardFooter>
+          </div>
         </form>
-      </Card>
+      </motion.div>
     </div>
   )
 }
