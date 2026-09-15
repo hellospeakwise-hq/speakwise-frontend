@@ -25,7 +25,9 @@ interface AuthContextType {
     setUser: (user: User | null) => void;
     loading: boolean;
     login: (email: string, password: string) => Promise<string>;
-    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string) => Promise<boolean>;
+    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string) => Promise<string>;
+    verifyOtp: (email: string, otp: string) => Promise<void>;
+    resendOtp: (email: string) => Promise<void>;
     logout: () => void;
     isAuthenticated: boolean;
 }
@@ -245,11 +247,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         username: string,
         email: string,
         password: string
-    ) => {
+    ): Promise<string> => {
         setLoading(true);
         try {
             console.log("Attempting registration with:", { first_name: firstName, last_name: lastName, nationality, username, email });
-            const response = await authApi.register({
+            await authApi.register({
                 first_name: firstName,
                 last_name: lastName,
                 nationality,
@@ -258,18 +260,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 password
             });
 
-            console.log("Registration response:", response);
-
-            // Registration successful - account created
-            // Don't set user or isAuthenticated here - user needs to login to get tokens
-            // Just return success, the sign-up form will redirect to signin
-            return true;
+            // Return the email so the sign-up form can pass it to the OTP screen
+            return email;
         } catch (error) {
             console.error("Registration error in context:", error);
             throw error;
         } finally {
             setLoading(false);
         }
+    };
+
+    const verifyOtp = async (email: string, otp: string): Promise<void> => {
+        await authApi.verifyOtp({ email, otp });
+    };
+
+    const resendOtp = async (email: string): Promise<void> => {
+        await authApi.resendOtp({ email });
     };
 
     const logout = async () => {
@@ -288,7 +294,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <AuthContext.Provider value={{ user, setUser, loading, login, register, logout, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, setUser, loading, login, register, verifyOtp, resendOtp, logout, isAuthenticated }}>
             {children}
             <SessionExpiryDialog
                 open={showExpiryWarning}

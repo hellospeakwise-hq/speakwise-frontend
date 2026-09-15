@@ -3,7 +3,6 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,9 +11,9 @@ import { Icons } from "@/components/icons"
 import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
 import { initiateOAuthLogin } from "@/lib/utils/oauth"
+import { OtpVerificationForm } from "@/components/auth/otp-verification-form"
 
 export function SignUpForm() {
-  const router = useRouter()
   const { register } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
@@ -27,6 +26,9 @@ export function SignUpForm() {
   const [lastName, setLastName] = useState("")
   const [nationality, setNationality] = useState("")
   const [username, setUsername] = useState("")
+
+  /** After a successful registration the email is stored here to drive the OTP step */
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null)
 
   const validateForm = () => {
     if (!firstName.trim()) {
@@ -94,50 +96,54 @@ export function SignUpForm() {
     }
     setIsLoading(true)
     try {
-      toast.loading("Creating your account...", { id: "registration" })
-      
-      // Register the user with the auth context
-      await register(
-        firstName, 
-        lastName, 
-        nationality, 
-        username, 
-        email, 
+      toast.loading("Creating your account…", { id: "registration" })
+
+      // register() now returns the registered email on success
+      const confirmedEmail = await register(
+        firstName,
+        lastName,
+        nationality,
+        username,
+        email,
         password
       )
-      
-      toast.success("🎉 Account created successfully! Please sign in to continue.", {
+
+      toast.success("🎉 Account created! Please verify your email to continue.", {
         id: "registration",
-        duration: 3000
+        duration: 3000,
       })
 
-      // Flag that this is a fresh signup — auth-context will show the profile-type
-      // modal after the user logs in for the first time.
-      sessionStorage.setItem('showProfileTypeModal', 'true')
-
-      // Redirect to signin - user needs to login to get tokens
-      setTimeout(() => {
-        router.push("/signin")
-      }, 1500)
-      
+      // Switch to OTP verification step
+      setRegisteredEmail(confirmedEmail)
     } catch (error: any) {
       console.error("Registration error:", error)
       const errorMessage = error.message || "Failed to create account. Please try again."
       setError(errorMessage)
-      
-      toast.error(`❌ Registration failed: ${errorMessage}`, { 
+
+      toast.error(`❌ Registration failed: ${errorMessage}`, {
         id: "registration",
-        duration: 5000 
+        duration: 5000,
       })
     } finally {
       setIsLoading(false)
     }
   }
 
-  const handleOAuthSignup = (provider: 'github' | 'google') => {
+  const handleOAuthSignup = (provider: "github" | "google") => {
     initiateOAuthLogin(provider)
   }
 
+  // ── OTP step ──────────────────────────────────────────────────────────────
+  if (registeredEmail) {
+    return (
+      <OtpVerificationForm
+        email={registeredEmail}
+        onBack={() => setRegisteredEmail(null)}
+      />
+    )
+  }
+
+  // ── Registration form ─────────────────────────────────────────────────────
   return (
     <div className="grid gap-6">
       <form onSubmit={handleSubmit}>
@@ -312,7 +318,7 @@ export function SignUpForm() {
             buttonVariants({ variant: "outline" }),
             "w-full"
           )}
-          onClick={() => handleOAuthSignup('github')}
+          onClick={() => handleOAuthSignup("github")}
         >
           <Icons.gitHub className="mr-2 h-4 w-4" />
           GitHub
@@ -323,7 +329,7 @@ export function SignUpForm() {
             buttonVariants({ variant: "outline" }),
             "w-full"
           )}
-          onClick={() => handleOAuthSignup('google')}
+          onClick={() => handleOAuthSignup("google")}
         >
           <Icons.google className="mr-2 h-4 w-4" />
           Google

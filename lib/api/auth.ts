@@ -12,6 +12,15 @@ export interface RegisterRequest {
   password: string;
 }
 
+export interface VerifyOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface ResendOtpRequest {
+  email: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -248,6 +257,32 @@ export const authApi = {
     if (typeof window === 'undefined') return null;
 
     return localStorage.getItem('accessToken');
+  },
+
+  /**
+   * Verify an email address using the OTP code sent during registration
+   */
+  async verifyOtp(data: VerifyOtpRequest): Promise<{ detail: string }> {
+    try {
+      const response = await apiClient.post<{ detail: string }>('users/auth/verify-otp/', data);
+      return response.data;
+    } catch (error: any) {
+      const detail = error.response?.data?.detail || error.response?.data?.otp?.[0] || 'Invalid or expired OTP code.';
+      throw new Error(detail);
+    }
+  },
+
+  /**
+   * Request a fresh OTP code (respects the server-side resend cooldown)
+   */
+  async resendOtp(data: ResendOtpRequest): Promise<{ detail: string }> {
+    try {
+      const response = await apiClient.post<{ detail: string }>('users/auth/resend-otp/', data);
+      return response.data;
+    } catch (error: any) {
+      const detail = error.response?.data?.detail || 'Failed to resend code. Please try again.';
+      throw new Error(detail);
+    }
   },
 };
 

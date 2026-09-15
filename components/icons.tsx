@@ -33,6 +33,7 @@ import {
   Menu,
   ChevronDown,
   AlertCircle,
+  Mail,
 } from "lucide-react"
 
 export type Icon = typeof ChevronLeft
@@ -67,6 +68,7 @@ export const Icons = {
   menu: Menu,
   chevronDown: ChevronDown,
   alertCircle: AlertCircle,
+  mail: Mail,
   eye: Eye,
   eyeOff: EyeOff,
   gitHub: ({ ...props }: LucideProps) => (

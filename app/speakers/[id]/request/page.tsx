@@ -126,11 +126,11 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       >
         {/* Header */}
         <div className="flex items-center gap-3.5 mb-6">
-          <Avatar className="h-13 w-13 rounded-2xl border border-zinc-100 shadow-sm">
+          <Avatar className="h-12 w-12 rounded-full border border-zinc-100 shadow-sm shrink-0 overflow-hidden">
             {speaker.avatar ? (
-              <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} className="object-cover" />
+              <AvatarImage src={getAvatarUrl(speaker.avatar)} alt={speaker.speaker_name} className="h-full w-full object-cover" />
             ) : (
-              <AvatarFallback className="bg-zinc-950 text-white font-semibold rounded-2xl text-sm">
+              <AvatarFallback className="bg-zinc-950 text-white font-semibold rounded-full text-sm h-full w-full flex items-center justify-center">
                 {speaker.speaker_name.split(' ').map(n => n[0]).join('').slice(0, 2)}
               </AvatarFallback>
             )}
