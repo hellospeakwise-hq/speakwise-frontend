@@ -8,6 +8,10 @@ export interface SpeakerExperience {
     description: string;
     presentation_link?: string;
     video_recording_link?: string;
+    /** Opaque token used in the public feedback (QR) URL. Read-only from backend. */
+    feedback_slug?: string;
+    /** Whether the speaker accepts feedback for this experience. */
+    feedback_enabled?: boolean;
     created_at?: string;
     updated_at?: string;
 }
@@ -19,6 +23,8 @@ export interface CreateExperienceData {
     description: string;
     presentation_link?: string;
     video_recording_link?: string;
+    /** Toggle feedback collection for this experience. Defaults to true on the backend. */
+    feedback_enabled?: boolean;
 }
 
 export const experiencesApi = {

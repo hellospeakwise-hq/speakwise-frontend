@@ -13,6 +13,7 @@ import {
   Star, ChevronRight, Sparkles, Link as LinkIcon,
 } from 'lucide-react';
 import { speakerApi, type Speaker, type FollowPerson } from '@/lib/api/speakerApi';
+import { experiencesApi } from '@/lib/api/experiencesApi';
 import { useAuth } from '@/contexts/auth-context';
 import { ExperiencesList } from './experiences-list';
 
@@ -81,6 +82,15 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
       })
       .catch(() => {});
   }, [speaker, isAuthenticated, id]);
+
+  useEffect(() => {
+    const slug = speaker?.slug || id;
+    if (!slug) return;
+    experiencesApi
+      .getSpeakerExperiencesBySlug(slug)
+      .then((items) => setTotalTalks(items.length))
+      .catch(() => {});
+  }, [speaker?.slug, id]);
 
   const handleFollow = useCallback(async () => {
     if (!speaker) return;
@@ -577,7 +587,11 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                   <Mic className="h-4 w-4 text-muted-foreground" />
                   Stage History
                 </h3>
-                <ExperiencesList speakerSlug={id} />
+                <ExperiencesList
+                  speakerSlug={speaker?.slug || id}
+                  speakerId={speaker?.id}
+                  onCountChange={setTotalTalks}
+                />
               </div>
             )}
 

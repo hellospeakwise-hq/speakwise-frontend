@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { feedbackAPI } from "@/lib/api/feedbackApi"
 
 interface FeedbackVerificationProps {
   eventId: string
@@ -15,7 +14,7 @@ interface FeedbackVerificationProps {
   onVerificationComplete: (verified: boolean, verifiedEmail?: string) => void
 }
 
-export function FeedbackVerification({ eventId, speakerId, onVerificationComplete }: FeedbackVerificationProps) {
+export function FeedbackVerification({ eventId: _eventId, speakerId: _speakerId, onVerificationComplete }: FeedbackVerificationProps) {
   const [email, setEmail] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
   const [verificationResult, setVerificationResult] = useState<"success" | "error" | null>(null)
@@ -31,21 +30,23 @@ export function FeedbackVerification({ eventId, speakerId, onVerificationComplet
     setErrorMessage("")
 
     try {
-      // Call verification endpoint with email and event ID
-      // Backend checks if this email is in the attendance list for this specific event
-      const result = await feedbackAPI.verifyAttendeeEmail(email.trim(), eventId)
-
-      console.log('🔍 Verification result:', result)
-
-      if (result.verified && result.is_attendee) {
-        setVerificationResult("success")
-        setTimeout(() => {
-          onVerificationComplete(true, email.trim())
-        }, 1500)
-      } else {
-        setVerificationResult("error")
-        setErrorMessage(result.message || "You are not registered as an attendee for this event. Please check your email or contact the event organizer.")
-      }
+      /**
+       * NOTE: The event-scoped attendee verification flow has been removed in
+       * feedback-refactor. Feedback is now QR-based and anonymous by default.
+       * This component is legacy — the new public feedback page lives at
+       * /feedback/<feedback_slug> and requires no email verification.
+       *
+       * For now we pass through as verified so the old page compiles
+       * while it's being migrated or removed.
+       */
+      console.warn(
+        '[FeedbackVerification] This component is deprecated. ' +
+        'Use the QR-based /feedback/[slug] flow instead.'
+      )
+      setVerificationResult("success")
+      setTimeout(() => {
+        onVerificationComplete(true, email.trim())
+      }, 500)
     } catch (error) {
       console.error('Verification error:', error)
       setVerificationResult("error")

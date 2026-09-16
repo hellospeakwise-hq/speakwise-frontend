@@ -6,23 +6,18 @@ import { motion, useReducedMotion } from "framer-motion"
 import { SpeakerStats } from "@/components/dashboard/speaker/speaker-stats"
 import { UpcomingEvents } from "@/components/dashboard/speaker/upcoming-events"
 import { RecentFeedback } from "@/components/dashboard/speaker/recent-feedback"
-import { SpeakingRequests } from "@/components/dashboard/speaker/speaking-requests"
 import { FeedbackTrends } from "@/components/dashboard/speaker/feedback-trends"
 import { ProfileCompletionBanner } from "@/components/dashboard/speaker/profile-completion-banner"
 import { MyTalksSection } from "@/components/dashboard/speaker/my-talks-section"
-import { SpeakerDecks } from "@/components/dashboard/speaker/speaker-decks"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Mic, FileText, Presentation, Award } from "lucide-react"
-import { useSpeakerAcceptedEvents } from "@/hooks/use-speaker-events"
+import { Mic, FileText, Award } from "lucide-react"
 import { Notifications } from "@/components/dashboard/speaker/notifications"
 
 const TAB_CLASS = "rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-3 pb-3 pt-1 text-sm font-medium"
 
 export function SpeakerDashboardView() {
   const [activeTab, setActiveTab] = useState("overview")
-  const { events: acceptedEvents } = useSpeakerAcceptedEvents()
-  const hasDeckUploads = false
   const prefersReduced = useReducedMotion()
 
   const fadeUp = (delay = 0) => ({
@@ -70,18 +65,10 @@ export function SpeakerDashboardView() {
           <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b border-border rounded-none p-0 h-auto gap-0 flex-nowrap">
             <TabsTrigger value="overview"      className={TAB_CLASS}>Overview</TabsTrigger>
             <TabsTrigger value="upcoming"      className={TAB_CLASS}>Upcoming Events</TabsTrigger>
-            <TabsTrigger value="requests"      className={TAB_CLASS}>Speaking Requests</TabsTrigger>
             <TabsTrigger value="feedback"      className={TAB_CLASS}>Feedback</TabsTrigger>
             <TabsTrigger value="talks"         className={`${TAB_CLASS} inline-flex items-center gap-1.5`}>
               <Mic className="h-3.5 w-3.5" />
               My Talks
-            </TabsTrigger>
-            <TabsTrigger value="presentations" className={`${TAB_CLASS} inline-flex items-center gap-1.5`}>
-              <Presentation className="h-3.5 w-3.5" />
-              Presentations
-              {hasDeckUploads && (
-                <span className="ml-1 h-1.5 w-1.5 rounded-full bg-foreground" aria-label="Upload available" />
-              )}
             </TabsTrigger>
           </TabsList>
 
@@ -97,10 +84,6 @@ export function SpeakerDashboardView() {
             <UpcomingEvents />
           </TabsContent>
 
-          <TabsContent value="requests" className="mt-6">
-            <SpeakingRequests />
-          </TabsContent>
-
           <TabsContent value="feedback" className="mt-6 space-y-6">
             <FeedbackTrends />
             <RecentFeedback />
@@ -108,10 +91,6 @@ export function SpeakerDashboardView() {
 
           <TabsContent value="talks" className="mt-6">
             <MyTalksSection />
-          </TabsContent>
-
-          <TabsContent value="presentations" className="mt-6">
-            <SpeakerDecks events={acceptedEvents} />
           </TabsContent>
         </Tabs>
       </motion.div>

@@ -1,501 +1,186 @@
-// API client for SpeakWise backend - Feedback endpoints
-import { apiClient } from './base';
+// API client for SpeakWise backend — Feedback endpoints (feedback-refactor)
+import apiClient, { API_CONFIG } from './base';
 
-const API_BASE_URL = `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api`;
+const BASE = `${API_CONFIG.BASE_URL}/api`;
 
-export interface FeedbackData {
-    session: string;
-    attendee: string | null;
-    speaker: string;
+// ─── Types matching the new backend serializers ───────────────────────────────
+
+/** Inline experience summary returned inside every Feedback read row. */
+export interface FeedbackExperience {
+    feedback_slug: string;
+    event_name: string;
+    event_date: string;  // ISO date string e.g. "2024-10-15"
+    topic: string;
+}
+
+/**
+ * Shape returned by GET /api/feedbacks/
+ * (FeedbackReadSerializer on the backend).
+ */
+export interface Feedback {
+    id: string;
+    experience: FeedbackExperience | null;
+    speaker: string;           // SpeakerProfile UUID
+    name: string;              // empty string when anonymous
+    is_anonymous: boolean;
+    overall_rating: number;    // 1–10
+    engagement: number;        // 1–10
+    clarity: number;           // 1–10
+    content_depth: number;     // 1–10
+    speaker_knowledge: number; // 1–10
+    practical_relevance: number; // 1–10
+    comments: string | null;
+    created_at: string;        // ISO datetime
+}
+
+/**
+ * Payload the audience submits to POST /api/feedbacks/rate/<feedback_slug>/
+ * (FeedbackRateSerializer on the backend).
+ */
+export interface FeedbackSubmit {
+    name?: string;              // optional; blank → anonymous
+    comments?: string;
+    overall_rating: number;    // 1–10
+    engagement: number;        // 1–10
+    clarity: number;           // 1–10
+    content_depth: number;     // 1–10
+    speaker_knowledge: number; // 1–10
+    practical_relevance: number; // 1–10
+}
+
+/**
+ * Audience-facing response after a successful POST
+ * (FeedbackSubmittedSerializer — no UUIDs leak).
+ */
+export interface FeedbackSubmitted {
+    experience: FeedbackExperience | null;
+    name: string;
+    is_anonymous: boolean;
     overall_rating: number;
     engagement: number;
     clarity: number;
     content_depth: number;
     speaker_knowledge: number;
     practical_relevance: number;
-    comments?: string | null;  // Backend uses "comments" (plural)
-    is_anonymous?: boolean;
-    is_editable?: boolean;
-}
-
-export interface Feedback extends FeedbackData {
-    id: string;
+    comments: string | null;
     created_at: string;
-    updated_at: string;
-    // Some responses may include these flags
-    is_attendee?: boolean;
 }
 
-export interface AttendeeVerification {
-    email: string;
-    event?: string;
+// ─── API client ───────────────────────────────────────────────────────────────
+
+// ─── Experience info (public, no auth) ───────────────────────────────────────
+
+/** Public presentation context returned by GET /api/feedbacks/rate/<slug>/ */
+export interface ExperienceInfo {
+    topic: string;
+    event_name: string;
+    event_date: string;        // ISO date e.g. "2024-10-15"
+    speaker_name: string;
+    feedback_enabled: boolean;
+    /** Whether the date gate allows submissions right now. */
+    is_open: boolean;
 }
 
 class FeedbackAPI {
-    // Verify attendee email against attendance list for a specific event
-    // This should call a PUBLIC endpoint that checks if email is in attendance list
-    // Backend team needs to create: POST /api/attendees/verify-email/
-    async verifyAttendeeEmail(email: string, eventId: string): Promise<{ verified: boolean; message?: string; is_attendee?: boolean }> {
-        try {
-            console.log('🔐 Verifying attendee email:', email, 'for event:', eventId);
+    /**
+     * GET /api/feedbacks/rate/<feedback_slug>/
+     * Public — returns presentation info for the audience landing page.
+     */
+    async getExperienceInfo(feedbackSlug: string): Promise<ExperienceInfo> {
+        const response = await fetch(`${BASE}/feedbacks/rate/${feedbackSlug}/`);
+        if (!response.ok) {
+            throw new Error(`Presentation not found (${response.status})`);
+        }
+        return response.json();
+    }
 
-            // TODO: Backend team needs to create this PUBLIC endpoint
-            // Endpoint: POST /api/attendees/verify-email/
-            // Body: { email: string, event_id: number }
-            // Response: { is_attendee: boolean, message: string }
-            // This endpoint should NOT require authentication
+    /**
+     * GET /api/feedbacks/
+     * Returns the authenticated speaker's own feedback.
+     * Pass an `experienceSlug` to filter to a single presentation.
+     */
+    async getCurrentSpeakerFeedback(experienceSlug?: string): Promise<Feedback[]> {
+        const params = experienceSlug ? `?experience=${experienceSlug}` : '';
+        const response = await apiClient.get(`/feedbacks/${params}`);
+        return Array.isArray(response.data) ? response.data : response.data?.results ?? [];
+    }
 
-            const response = await fetch(`${API_BASE_URL}/attendees/verify/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    email: email,
-                    event_id: eventId
-                }),
-            });
+    /**
+     * POST /api/feedbacks/rate/<feedback_slug>/
+     * Public endpoint — no authentication required.
+     * Throws an error with a user-friendly message for 403 / 429 / other errors.
+     */
+    async submitFeedback(feedbackSlug: string, data: FeedbackSubmit): Promise<FeedbackSubmitted> {
+        const response = await fetch(`${BASE}/feedbacks/rate/${feedbackSlug}/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            const detail = err.detail ?? err.non_field_errors?.[0] ?? 'Something went wrong.';
+
+            if (response.status === 403) {
+                throw new FeedbackNotOpenError(detail);
             }
-
-            const data = await response.json();
-            console.log('✅ Verification response:', data);
-
-            // Backend should return: { is_attendee: true/false, message: "..." }
-            const isAttendee = data.is_attendee === true;
-
-            return {
-                verified: isAttendee,
-                is_attendee: isAttendee,
-                message: data.message || (isAttendee
-                    ? "Your attendance has been verified successfully."
-                    : "Email not found in attendance list for this event.")
-            };
-        } catch (error) {
-            console.error('Error verifying attendee email:', error);
-
-            const errorMessage = error instanceof Error ? error.message : 'Failed to verify attendance. Please try again.';
-
-            return {
-                verified: false,
-                is_attendee: false,
-                message: errorMessage
-            };
-        }
-    }
-
-    // Legacy method - kept for backward compatibility
-    // Verify attendee email against the uploaded attendance list
-    // NOTE: This is the old method, use verifyAttendeeViaFeedbackEndpoint instead
-    async verifyAttendee(email: string, eventId?: number): Promise<{ verified: boolean; message?: string }> {
-        try {
-            console.log('🔐 Verifying attendee (legacy method):', email, 'for event:', eventId);
-
-            // TODO: Replace with actual backend endpoint when available
-            // For now, this is a placeholder that calls the old endpoint
-            const response = await apiClient.post('/attendees/verify-attendee/', {
-                email,
-                event: eventId
-            });
-
-            console.log('✅ Verification response:', response.data);
-
-            return {
-                verified: response.data.verified || false,
-                message: response.data.message
-            };
-        } catch (error) {
-            console.error('Error verifying attendee:', error);
-            return {
-                verified: false,
-                message: "Failed to verify attendance. Please try again."
-            };
-        }
-    }
-
-    // Submit feedback
-    async submitFeedback(feedbackData: FeedbackData): Promise<Feedback> {
-        try {
-            const response = await fetch(`${API_BASE_URL}/feedbacks/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(feedbackData),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to submit feedback');
+            if (response.status === 429) {
+                throw new FeedbackCooldownError(detail);
             }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error submitting feedback:', error);
-            throw error;
+            throw new Error(detail);
         }
+
+        return response.json();
     }
 
-    // Get feedback by ID
-    async getFeedbackById(feedbackId: string): Promise<Feedback> {
+    /**
+     * GET /api/feedbacks/qrcode/<feedback_slug>/
+     * Requires email-verified speaker auth. Returns an image/png blob URL
+     * the caller is responsible for revoking with URL.revokeObjectURL().
+     */
+    async getQRCodeBlobUrl(feedbackSlug: string): Promise<string> {
         try {
-            const response = await fetch(`${API_BASE_URL}/feedbacks/${feedbackId}/`);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error(`Error fetching feedback ${feedbackId}:`, error);
-            throw error;
-        }
-    }
-
-    // Update feedback (within 24 hours)
-    async updateFeedback(feedbackId: string, feedbackData: Partial<FeedbackData>): Promise<Feedback> {
-        try {
-            const response = await fetch(`${API_BASE_URL}/feedbacks/${feedbackId}/`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(feedbackData),
+            const response = await apiClient.get(`/feedbacks/qrcode/${feedbackSlug}/`, {
+                responseType: 'blob',
             });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.detail || 'Failed to update feedback');
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error(`Error updating feedback ${feedbackId}:`, error);
-            throw error;
-        }
-    }
-
-    // Get all feedback (for speakers/organizers/admins)
-    async getAllFeedback(): Promise<Feedback[]> {
-        try {
-            const response = await fetch(`${API_BASE_URL}/feedbacks/`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching all feedback:', error);
-            throw error;
-        }
-    }
-
-    // Get feedback for a specific session
-    async getSessionFeedback(sessionId: string): Promise<Feedback[]> {
-        try {
-            const allFeedback = await this.getAllFeedback();
-            return allFeedback.filter(feedback => feedback.session === sessionId);
-        } catch (error) {
-            console.error(`Error fetching feedback for session ${sessionId}:`, error);
-            throw error;
-        }
-    }
-
-    // Get feedback for a specific speaker (across all their sessions)
-    async getSpeakerFeedback(speakerId: string): Promise<Feedback[]> {
-        try {
-            // This would need to be implemented based on the relationship between speakers and sessions
-            // For now, we'll need to fetch sessions by speaker first, then get feedback for those sessions
-            const allFeedback = await this.getAllFeedback();
-            // TODO: Filter by speaker's sessions once we have that relationship mapped
-            return allFeedback;
-        } catch (error) {
-            console.error(`Error fetching feedback for speaker ${speakerId}:`, error);
-            throw error;
-        }
-    }
-
-    // Get feedback for the current authenticated speaker
-    async getCurrentSpeakerFeedback(): Promise<Feedback[]> {
-        try {
-            const token = localStorage.getItem('accessToken');
-            const response = await fetch(`${API_BASE_URL}/feedbacks/`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            return await response.json();
-        } catch (error) {
-            console.error('Error fetching current speaker feedback:', error);
-            throw error;
-        }
-    }
-
-    // Get talk details by session ID (since sessions are linked to talks)
-    async getSessionDetails(sessionId: string): Promise<{ title: string; eventName: string; eventDate?: string }> {
-        // Try to get talk details directly using session ID as talk ID
-        // If that fails, try to get session details first
-        return await this.getTalkDetails(sessionId);
-    }
-
-    // Get talk details from talk API
-    async getTalkDetails(talkId: string): Promise<{ title: string; eventName: string; eventDate?: string }> {
-        try {
-            const token = localStorage.getItem('accessToken');
-
-            const response = await fetch(`${API_BASE_URL}/talks/${talkId}/`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            if (!response.ok) {
-                // Don't log 404 errors - endpoint may not exist yet
-                if (response.status !== 404) {
-                    console.warn(`Talk API returned ${response.status} for talk ${talkId}`);
-                }
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const talkData = await response.json();
-
-            // Handle event name and date - fetch event details using the event ID
-            console.log(`Talk data event field:`, talkData.event, typeof talkData.event);
-            let eventName = `Event ${talkId}`;
-            let eventDate = talkData.event?.date || talkData.event_date || talkData.date;
-
-            if (talkData.event && typeof talkData.event === 'string') {
-                // Event is just an ID, fetch the event details (name and date)
-                console.log(`Attempting to fetch event details for ID: ${talkData.event}`);
+            return URL.createObjectURL(response.data);
+        } catch (error: any) {
+            if (error?.response?.data instanceof Blob) {
                 try {
-                    const eventDetails = await this.getEventDetails(talkData.event);
-                    eventName = eventDetails.name;
-                    if (eventDetails.date) {
-                        eventDate = eventDetails.date;
+                    const text = await error.response.data.text();
+                    const parsed = JSON.parse(text);
+                    if (parsed?.detail) {
+                        throw new Error(parsed.detail);
                     }
-                    console.log(`Successfully got event name: ${eventName}, date: ${eventDate}`);
-                } catch (error) {
-                    console.log(`Event API failed, using fallback`);
-                    // If event API fails, use a generic name
-                    eventName = "Conference Event";
-                }
-            } else if (talkData.event?.name) {
-                eventName = talkData.event.name;
-                eventDate = talkData.event.date || eventDate;
-                console.log(`Using event name from talk data: ${eventName}`);
-            } else if (talkData.event_name) {
-                eventName = talkData.event_name;
-                console.log(`Using event_name from talk data: ${eventName}`);
-            }
-
-            return {
-                title: talkData.title || talkData.name || `Talk ${talkId}`,
-                eventName: eventName,
-                eventDate: eventDate
-            };
-        } catch (error) {
-            // Only log non-404 errors to reduce console noise
-            if (error instanceof Error && !error.message.includes('404')) {
-                console.error(`Error fetching talk ${talkId} details:`, error);
-            }
-
-            // Return sample data instead of generic placeholders
-            return this.getSampleSessionData(talkId);
-        }
-    }
-
-    // Get event details by event ID using the correct endpoint
-    async getEventDetails(eventId: string): Promise<{ name: string; date?: string }> {
-        try {
-            const token = localStorage.getItem('accessToken');
-            console.log(`🎪 Fetching event details for event ID: ${eventId}`);
-
-            const response = await fetch(`${API_BASE_URL}/events/${eventId}/`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                }
-            });
-
-            console.log(`📡 Event API response for ${eventId}:`, response.status);
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const eventData = await response.json();
-            console.log(`✅ Event data for ID ${eventId}:`, eventData);
-
-            // Extract the date from the event data - check all possible date fields
-            let eventDate;
-
-            // First, check if there's a formatted 'date' field (the display date)
-            if (eventData.date) {
-                eventDate = eventData.date;
-                console.log(`📅 Using eventData.date: ${eventDate}`);
-            }
-            // Check date_range structure
-            else if (eventData.date_range) {
-                if (typeof eventData.date_range.start === 'string') {
-                    eventDate = eventData.date_range.start;
-                    console.log(`📅 Using date_range.start (string): ${eventDate}`);
-                } else if (eventData.date_range.start?.date) {
-                    eventDate = eventData.date_range.start.date;
-                    console.log(`📅 Using date_range.start.date: ${eventDate}`);
-                } else if (eventData.date_range.start?.datetime) {
-                    eventDate = eventData.date_range.start.datetime;
-                    console.log(`📅 Using date_range.start.datetime: ${eventDate}`);
+                } catch (e: any) {
+                    if (e.message && e.message !== error.message) {
+                        throw e;
+                    }
                 }
             }
-            // Fallback to raw datetime fields
-            else if (eventData.start_date_time) {
-                eventDate = eventData.start_date_time;
-                console.log(`📅 Using start_date_time: ${eventDate}`);
-            }
-            else if (eventData.start_date) {
-                eventDate = eventData.start_date;
-                console.log(`📅 Using start_date: ${eventDate}`);
-            }
-            else if (eventData.created_at) {
-                eventDate = eventData.created_at;
-                console.log(`📅 Using created_at: ${eventDate}`);
-            }
-
-            console.log(`📅 Final eventDate value: ${eventDate}`);
-
-            return {
-                name: eventData.name || eventData.title || `Event ${eventId}`,
-                date: eventDate
-            };
-        } catch (error) {
-            console.error(`❌ Failed to fetch event ${eventId} details:`, error);
-            // Return a fallback instead of throwing
-            return {
-                name: `Event ${eventId}`,
-                date: undefined
-            };
-        }
-    }
-
-    // Generate sample session data for development/demo
-    private getSampleSessionData(sessionId: string): { title: string; eventName: string; eventDate?: string } {
-        const sampleTitles = [
-            "Introduction to Modern Web Development",
-            "Building Scalable React Applications",
-            "The Future of JavaScript Frameworks",
-            "API Design Best Practices",
-            "Database Optimization Strategies",
-            "Cloud Architecture Patterns",
-            "Security in Modern Web Apps",
-            "Performance Optimization Techniques",
-            "Microservices Architecture",
-            "DevOps Best Practices"
-        ];
-
-        const sampleEvents = [
-            "TechConf 2024",
-            "React Summit",
-            "Web Dev Meetup",
-            "Developer Conference",
-            "CodeCamp NYC",
-            "Frontend Masters",
-            "Tech Talk Tuesday",
-            "Innovation Summit",
-            "JSConf",
-            "DevFest"
-        ];
-
-        const sampleDates = [
-            "October 15, 2024",
-            "September 22, 2024",
-            "November 5, 2024",
-            "August 18, 2024",
-            "December 3, 2024"
-        ];
-
-        return {
-            title: sampleTitles[0] || `Talk`,
-            eventName: sampleEvents[0] || `Event`,
-            eventDate: sampleDates[0]
-        };
-    }
-
-    // Get multiple session details efficiently
-    async getMultipleSessionDetails(sessionIds: string[]): Promise<Map<string, { title: string; eventName: string; eventDate?: string }>> {
-        try {
-            // Fetch all session details in parallel (which will get talk details)
-            const sessionPromises = sessionIds.map(async (sessionId) => {
-                const details = await this.getSessionDetails(sessionId);
-                return { sessionId, details };
-            });
-
-            const results = await Promise.all(sessionPromises);
-
-            // Convert results to Map
-            const sessionDetailsMap = new Map<string, { title: string; eventName: string; eventDate?: string }>();
-            results.forEach(({ sessionId, details }) => {
-                sessionDetailsMap.set(sessionId, details);
-            });
-
-            return sessionDetailsMap;
-        } catch (error) {
-            console.error('Error fetching multiple session details:', error);
-
-            // Return map with sample data
-            const fallbackMap = new Map<string, { title: string; eventName: string; eventDate?: string }>();
-            sessionIds.forEach(sessionId => {
-                fallbackMap.set(sessionId, this.getSampleSessionData(sessionId));
-            });
-
-            return fallbackMap;
-        }
-    }
-
-    // Get multiple talk details directly
-    async getMultipleTalkDetails(talkIds: string[]): Promise<Map<string, { title: string; eventName: string; eventDate?: string }>> {
-        try {
-            // Fetch all talk details in parallel
-            const talkPromises = talkIds.map(async (talkId) => {
-                const details = await this.getTalkDetails(talkId);
-                return { talkId, details };
-            });
-
-            const results = await Promise.all(talkPromises);
-
-            // Convert results to Map
-            const talkDetailsMap = new Map<string, { title: string; eventName: string; eventDate?: string }>();
-            results.forEach(({ talkId, details }) => {
-                talkDetailsMap.set(talkId, details);
-            });
-
-            return talkDetailsMap;
-        } catch (error) {
-            console.error('Error fetching multiple talk details:', error);
-
-            // Return map with sample data
-            const fallbackMap = new Map<string, { title: string; eventName: string; eventDate?: string }>();
-            talkIds.forEach(talkId => {
-                fallbackMap.set(talkId, this.getSampleSessionData(talkId));
-            });
-
-            return fallbackMap;
+            throw error;
         }
     }
 }
 
-// Create and export a singleton instance
+// ─── Typed errors for specific backend conditions ─────────────────────────────
+
+/** Thrown when the backend returns 403 because feedback is not yet open or has been disabled. */
+export class FeedbackNotOpenError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'FeedbackNotOpenError';
+    }
+}
+
+/** Thrown when the backend returns 429 because the same IP submitted too recently. */
+export class FeedbackCooldownError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'FeedbackCooldownError';
+    }
+}
+
+// ─── Singleton export ─────────────────────────────────────────────────────────
+
 export const feedbackAPI = new FeedbackAPI();

@@ -18,9 +18,10 @@ import { TalkCoverImage } from "@/components/ui/talk-cover-image"
 interface ExperiencesListProps {
     speakerId?: string
     speakerSlug?: string
+    onCountChange?: (count: number) => void
 }
 
-export function ExperiencesList({ speakerId, speakerSlug }: ExperiencesListProps) {
+export function ExperiencesList({ speakerId, speakerSlug, onCountChange }: ExperiencesListProps) {
     const [experiences, setExperiences] = useState<SpeakerExperience[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedExperience, setSelectedExperience] = useState<SpeakerExperience | null>(null)
@@ -44,6 +45,7 @@ export function ExperiencesList({ speakerId, speakerSlug }: ExperiencesListProps
                     return dateB - dateA
                 })
                 setExperiences(sorted)
+                onCountChange?.(sorted.length)
                 setCurrentPage(1) // Reset to first page on data change
             } catch (error) {
                 console.error('Error fetching experiences:', error)

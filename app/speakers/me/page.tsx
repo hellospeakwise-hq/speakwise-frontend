@@ -32,7 +32,7 @@ export default function MySpeakerProfilePage() {
         const speaker = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker;
         
         if (speaker?.id) {
-          setSpeakerId(speaker.id.toString());
+          setSpeakerId(speaker.slug || speaker.id.toString());
           
           // Also fetch skills from the new skills endpoint
           let userSkills = speaker.skill_tags || [];
@@ -112,14 +112,7 @@ export default function MySpeakerProfilePage() {
   }
 
   return (
-    <div className="container py-10">
-      <Link
-        href="/speakers"
-        className="inline-flex items-center mb-6 text-sm font-medium text-muted-foreground hover:text-primary"
-      >
-        <ChevronLeft className="mr-1 h-4 w-4" />
-        Back to Speakers
-      </Link>
+    <div className="py-6">
       <SpeakerProfile id={speakerId} initialData={speakerData} />
     </div>
   );
