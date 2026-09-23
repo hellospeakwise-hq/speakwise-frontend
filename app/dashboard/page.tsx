@@ -19,10 +19,20 @@ export default function DashboardPage() {
   }, [user, loading, router])
 
   const getRoleDashboardRoute = (role: string): string => {
-    // Org-type users go to organizer dashboard regardless of backend role
-    if (typeof window !== 'undefined' && localStorage.getItem('profile_type') === 'organization') {
-      return '/dashboard/organizer'
+    // Check for a saved redirect path first
+    const savedRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('redirectAfterLogin') : null
+    if (savedRedirect) {
+      sessionStorage.removeItem('redirectAfterLogin')
+      return savedRedirect
     }
+
+    // profile_type is the most reliable signal — it's set explicitly when the user
+    // chooses their profile type in the modal, and synced from the backend on login.
+    const profileType = typeof window !== 'undefined' ? localStorage.getItem('profile_type') : null
+    if (profileType === 'organization') return '/dashboard/organizer'
+    if (profileType === 'speaker') return '/dashboard/speaker'
+
+    // Fall back to backend role
     switch (role) {
       case 'speaker':
         return '/dashboard/speaker'

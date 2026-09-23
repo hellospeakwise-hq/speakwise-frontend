@@ -62,14 +62,23 @@ export function SignInForm() {
       console.error("Login error:", error)
       console.error("Login error message:", error?.message)
       console.error("Login error response:", error?.response?.data)
-      
+
+      // Check if email verification is required
+      const errorMsg = error?.message?.toLowerCase() || error?.response?.data?.detail?.toLowerCase() || ''
+      if (errorMsg.includes('verify') && errorMsg.includes('email')) {
+        // Redirect to email verification page
+        toast.error("Please verify your email address first")
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`)
+        return
+      }
+
       // Provide user-friendly error messages
       let errorMessage = "Unable to sign in. Please try again."
-      
+
       if (error?.message) {
         // Use the message from our improved auth API
         const msg = error.message.toLowerCase();
-        
+
         // Don't show raw "Network error" to user - be more helpful
         if (msg.includes('network') || msg.includes('fetch') || msg.includes('connection')) {
           errorMessage = "Unable to connect. Please check your internet connection and try again.";
@@ -105,7 +114,7 @@ export function SignInForm() {
           }
         }
       }
-      
+
       setError(errorMessage)
       toast.error(errorMessage)
     } finally {

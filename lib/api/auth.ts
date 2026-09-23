@@ -284,6 +284,36 @@ export const authApi = {
       throw new Error(detail);
     }
   },
+
+  /**
+   * Exchange OAuth one-time code for access tokens and user data
+   * NEW: Required for OAuth flow after backend authentication hardening
+   */
+  async exchangeOAuthCode(code: string): Promise<LoginResponse> {
+    console.log('Exchanging OAuth code for tokens');
+
+    try {
+      const response = await apiClient.post<LoginResponse>('users/auth/oauth/token/', { code });
+
+      // Store tokens
+      const accessToken = response.data.access || response.data.access_token;
+      const refreshToken = response.data.refresh || response.data.refresh_token;
+
+      if (accessToken && typeof window !== 'undefined') {
+        localStorage.setItem('accessToken', accessToken);
+      }
+
+      if (refreshToken && typeof window !== 'undefined') {
+        localStorage.setItem('refreshToken', refreshToken);
+      }
+
+      console.log('OAuth token exchange successful');
+      return response.data;
+    } catch (error: any) {
+      console.error('OAuth token exchange failed:', error.response?.data);
+      throw new Error(error.response?.data?.detail || 'Failed to complete OAuth authentication');
+    }
+  },
 };
 
 export default authApi;

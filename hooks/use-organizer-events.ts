@@ -106,9 +106,11 @@ export function useOrganizerEvents(): UseOrganizerEventsReturn {
         }
     }
 
-    const toggleEventStatus = async (slug: string, _isActive: boolean): Promise<Event> => {
+    const toggleEventStatus = async (slug: string, isActive: boolean): Promise<Event> => {
         try {
-            const updatedEvent = await eventsApi.updateEvent(slug, {})
+            // Note: non-superusers cannot set is_active — this will be ignored by the backend
+            // unless the logged-in user is a superuser. The backend strips is_active for regular users.
+            const updatedEvent = await eventsApi.updateEvent(slug, { is_active: isActive } as any)
             setEvents(prevEvents =>
                 prevEvents.map(event =>
                     event.slug === slug ? updatedEvent : event

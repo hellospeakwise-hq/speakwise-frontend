@@ -31,7 +31,7 @@ export function MainNav() {
   const pathname = usePathname()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [speakerId, setSpeakerId] = useState<number | null>(null)
+  const [speakerSlug, setSpeakerSlug] = useState<string | null>(null)
   const { user, logout, isAuthenticated } = useAuth()
 
   useEffect(() => {
@@ -41,13 +41,28 @@ export function MainNav() {
   useEffect(() => {
     const fetchProfileData = async () => {
       if (isAuthenticated) {
-        try {
-          const profile = await userApi.getUserProfile()
-          const data = profile as any
-          const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
-          if (speakerData?.id) setSpeakerId(speakerData.id)
-        } catch {
-          // silent
+        // Check localStorage first for speaker slug (set during login)
+        const storedUser = localStorage.getItem('user')
+        if (storedUser) {
+          try {
+            const userData = JSON.parse(storedUser)
+            if (userData.speaker_slug) {
+              setSpeakerSlug(userData.speaker_slug)
+              console.log('✅ Speaker slug from localStorage:', userData.speaker_slug)
+              return
+            }
+          } catch (e) {
+            console.error('Failed to parse stored user:', e)
+          }
+        }
+
+        // Fallback: check if profile_type is speaker, then fetch from speaker API
+        const profileType = localStorage.getItem('profile_type')
+        if (profileType === 'speaker') {
+          // For speaker users, show My Profile even if we don't have slug yet
+          // They can access via /speakers/me which doesn't need slug
+          setSpeakerSlug('me') // Use 'me' as a placeholder
+          console.log('✅ User is a speaker, showing My Profile link')
         }
       }
     }
@@ -138,9 +153,9 @@ export function MainNav() {
               <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-200">
                 <DropdownMenuLabel className="text-zinc-400">My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator className="bg-zinc-800" />
-                {speakerId && (
+                {speakerSlug && (
                   <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">
-                    <Link href="/speakers/me" className="w-full">View Profile</Link>
+                    <Link href="/speakers/me" className="w-full">My Profile</Link>
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">

@@ -3,7 +3,7 @@ import Link from "next/link"
 import Image from "next/image"
 import { Calendar, MapPin, ImageIcon, Loader2, LayoutGrid, List } from "lucide-react"
 import { useMemo, useState } from "react"
-import { formatDateFromMaybe } from '@/lib/utils/event-utils'
+import { formatDateFromMaybe, isEventUpcoming, isEventPast } from '@/lib/utils/event-utils'
 import { getEventImageUrl } from '@/lib/utils/event-utils'
 import { useEvents } from "@/hooks/use-events"
 import type { Event } from "@/lib/types/api"
@@ -11,24 +11,45 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
 
+type Period = "all" | "upcoming" | "past"
+
 interface EventsListProps {
     countryFilter?: string[]
+    search?: string
+    period?: Period
+    cfpOnly?: boolean
 }
 
 type ViewMode = "grid" | "list"
 
-export function EventsList({ countryFilter }: EventsListProps) {
+export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly = false }: EventsListProps) {
     const { events, loading, error } = useEvents()
     const [viewMode, setViewMode] = useState<ViewMode>("grid")
 
     const filteredEvents = useMemo(() => {
-        if (!countryFilter || countryFilter.length === 0) return events
-        return events.filter(event =>
-            event.country
-                ? countryFilter.some(c => event.country!.toLowerCase() === c.toLowerCase())
-                : false
-        )
-    }, [events, countryFilter])
+        return events.filter((event) => {
+            // Country filter
+            if (countryFilter && countryFilter.length > 0) {
+                if (!event.country || !countryFilter.some(c => event.country!.toLowerCase() === c.toLowerCase())) return false
+            }
+            // Search: title, nickname, location, country
+            if (search.trim()) {
+                const q = search.toLowerCase()
+                const hit =
+                    event.title?.toLowerCase().includes(q) ||
+                    event.event_nickname?.toLowerCase().includes(q) ||
+                    event.location?.toLowerCase().includes(q) ||
+                    event.country?.toLowerCase().includes(q)
+                if (!hit) return false
+            }
+            // CFP filter
+            if (cfpOnly && !event.cfp_open) return false
+            // Period filter
+            if (period === 'upcoming' && !isEventUpcoming(event)) return false
+            if (period === 'past' && !isEventPast(event)) return false
+            return true
+        })
+    }, [events, countryFilter, search, cfpOnly, period])
 
     const getDateString = (val?: string | null) => formatDateFromMaybe(val as any)
 
@@ -60,9 +81,8 @@ export function EventsList({ countryFilter }: EventsListProps) {
 
             <div className="flex items-center justify-between">
                 <p className="text-sm text-muted-foreground">
-                    Showing {filteredEvents.length} events
-                    {filteredEvents.length === 0 && !loading && " (No events found)"}
-                    {(countryFilter && countryFilter.length > 0) && ` (filtered)`}
+                    Showing {filteredEvents.length} of {events.length} event{events.length !== 1 ? 's' : ''}
+                    {filteredEvents.length !== events.length && ' (filtered)'}
                 </p>
                 <div className="flex items-center gap-1 rounded-xl border bg-muted/40 p-1">
                     <Button
@@ -89,10 +109,7 @@ export function EventsList({ countryFilter }: EventsListProps) {
             {filteredEvents.length === 0 && !loading ? (
                 <div className="text-center py-12">
                     <p className="text-muted-foreground">
-                        {(countryFilter && countryFilter.length > 0)
-                            ? "No events found matching the selected filters."
-                            : "No events available at the moment."
-                        }
+                        No events match your current filters.
                     </p>
                 </div>
             ) : viewMode === "grid" ? (

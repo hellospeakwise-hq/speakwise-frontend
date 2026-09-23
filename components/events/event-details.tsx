@@ -60,10 +60,22 @@ export function EventDetails({ id }: EventDetailsProps) {
       try {
         setLoading(true)
         setError(null)
+
+        // For organizers: prefer the private route so pending/inactive events load correctly
+        if (canManageEvent) {
+          try {
+            const data = await eventsApi.getPrivateEvent(id)
+            setEvent(data)
+            return
+          } catch {
+            // Fall through to public lookup if private route fails (e.g. not the owner)
+          }
+        }
+
+        // Public path: try from cached list first, then fetch
         const eventFromList = allEvents.find(e => e.slug === id)
         if (eventFromList && !eventsLoading) {
           setEvent(eventFromList)
-          setLoading(false)
           return
         }
         if (!eventsLoading) {
@@ -82,7 +94,7 @@ export function EventDetails({ id }: EventDetailsProps) {
       }
     }
     if (id) loadEvent()
-  }, [id, allEvents, eventsLoading])
+  }, [id, allEvents, eventsLoading, canManageEvent])
 
 if (loading) return <LoadingSkeleton />
 

@@ -53,7 +53,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return hasToken && hasUser;
     });
 
-    const [loading, setLoading] = useState<boolean>(false);
+    // Start as true so no component renders until checkAuth() has resolved the user's real role/profile_type.
+    // This prevents the speaker-dashboard flash for org users.
+    const [loading, setLoading] = useState<boolean>(true);
     const [showExpiryWarning, setShowExpiryWarning] = useState(false);
     const [showProfileTypeModal, setShowProfileTypeModal] = useState(false);
     const router = useRouter();
@@ -114,6 +116,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(null);
             }
             console.log('[Auth] checkAuth end', { isAuthenticated });
+            setLoading(false);
         };
         
         checkAuth();

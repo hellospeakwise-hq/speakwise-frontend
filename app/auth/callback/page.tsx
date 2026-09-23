@@ -4,13 +4,13 @@ import { useEffect, useState, Suspense, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Icons } from "@/components/icons"
 import { toast } from "sonner"
+import { authApi } from "@/lib/api/auth"
 
 function OAuthCallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState('')
-  const [isNewUser, setIsNewUser] = useState(false)
   const hasRun = useRef(false)
 
   useEffect(() => {
@@ -20,18 +20,13 @@ function OAuthCallbackContent() {
 
     const handleCallback = async () => {
       try {
-        // Get tokens from URL - support both formats
-        const accessToken = searchParams.get('access_token') || searchParams.get('access')
-        const refreshToken = searchParams.get('refresh_token') || searchParams.get('refresh')
+        // NEW FLOW: Get one-time code from URL (not tokens)
+        const code = searchParams.get('code')
         const error = searchParams.get('error')
         const errorDescription = searchParams.get('error_description')
-        
-        // Get user data from URL (backend passes this in the 'user' param)
-        const userParam = searchParams.get('user')
 
-        console.log('=== OAuth Callback ===')
-        console.log('Access Token:', accessToken ? 'received' : 'missing')
-        console.log('User param:', userParam ? 'received' : 'missing')
+        console.log('=== OAuth Callback (New Flow) ===')
+        console.log('Code:', code ? 'received' : 'missing')
 
         if (error) {
           setStatus('error')
@@ -41,68 +36,66 @@ function OAuthCallbackContent() {
           return
         }
 
-        if (!accessToken) {
+        if (!code) {
           setStatus('error')
-          setErrorMessage('No access token received')
-          toast.error('Authentication failed: No access token received')
+          setErrorMessage('No authorization code received')
+          toast.error('Authentication failed: No authorization code received')
           setTimeout(() => router.replace('/signin'), 2000)
           return
         }
 
-        // Store tokens in localStorage
-        localStorage.setItem('accessToken', accessToken)
-        if (refreshToken) {
-          localStorage.setItem('refreshToken', refreshToken)
+        // Exchange code for tokens and user data
+        const response = await authApi.exchangeOAuthCode(code)
+
+        // Extract user and profile data from response
+        const userData = {
+          id: response.id,
+          first_name: response.first_name || '',
+          last_name: response.last_name || '',
+          email: response.email,
+          role: response.role || { id: '2', role: 'speaker' },
+          userType: response.role?.role || 'speaker'
         }
 
-        // Parse user data from URL param
-        let userData = null
-        if (userParam) {
-          try {
-            // Backend sends Python dict format, need to parse it
-            const cleanedUserParam = userParam
-              .replace(/'/g, '"')
-              .replace(/None/g, 'null')
-              .replace(/True/g, 'true')
-              .replace(/False/g, 'false')
-            const parsedUser = JSON.parse(cleanedUserParam)
-            
-            userData = {
-              id: parsedUser.id,
-              first_name: parsedUser.first_name || '',
-              last_name: parsedUser.last_name || '',
-              email: parsedUser.email,
-              role: { id: 2, role: 'speaker' },
-              userType: 'speaker'
-            }
-          } catch (e) {
-            console.log('Could not parse user param:', e)
+        // Store user data
+        localStorage.setItem('user', JSON.stringify(userData))
+        console.log('User data stored:', userData)
+
+        // Handle profile type from new response structure
+        const profiles = response.profiles || {}
+        const hasSpeakerProfile = !!profiles.speaker_profile
+        const hasOrgProfile = !!profiles.organization_profile
+
+        if (hasSpeakerProfile) {
+          localStorage.setItem('profile_type', 'speaker')
+          if (profiles.speaker_profile?.slug) {
+            const stored = JSON.parse(localStorage.getItem('user') || '{}')
+            localStorage.setItem('user', JSON.stringify({ ...stored, speaker_slug: profiles.speaker_profile.slug }))
           }
+        } else if (hasOrgProfile) {
+          localStorage.setItem('profile_type', 'organization')
+          localStorage.setItem('cached_org_profile', JSON.stringify(profiles.organization_profile))
         }
-
-        // If we have user data, store it
-        if (userData) {
-          localStorage.setItem('user', JSON.stringify(userData))
-          console.log('User data stored:', userData)
-        }
-
-        // Check if profile is incomplete (new user)
-        const profileIncomplete = !userData?.first_name || userData.first_name === ''
-        setIsNewUser(profileIncomplete)
 
         setStatus('success')
 
-        // Determine redirect
+        // Determine redirect based on profile existence
         let redirectPath = '/'
-        if (profileIncomplete) {
-          redirectPath = '/profile'
-          toast.success('Hey new Speaker! 🎤 Complete your profile to get started!', { duration: 5000 })
-        } else {
+        if (!hasSpeakerProfile && !hasOrgProfile) {
+          // New user - show profile type modal
+          sessionStorage.setItem('showProfileTypeModal', 'true')
+          redirectPath = '/'
+          toast.success('Welcome to SpeakWise! 🎉', { duration: 3000 })
+        } else if (hasSpeakerProfile) {
+          redirectPath = '/dashboard/speaker'
+          toast.success('Welcome back! 👋')
+        } else if (hasOrgProfile) {
+          redirectPath = '/dashboard/organizer'
           toast.success('Welcome back! 👋')
         }
 
         console.log('Redirecting to:', redirectPath)
-        
+
         // Use replace to avoid back-button issues
         setTimeout(() => {
           window.location.href = redirectPath
@@ -111,8 +104,8 @@ function OAuthCallbackContent() {
       } catch (error: any) {
         console.error('OAuth callback error:', error)
         setStatus('error')
-        setErrorMessage(error.message || 'An error occurred')
-        toast.error('Authentication failed')
+        setErrorMessage(error.message || 'An error occurred during authentication')
+        toast.error(error.message || 'Authentication failed')
         setTimeout(() => router.replace('/signin'), 2000)
       }
     }
@@ -135,21 +128,19 @@ function OAuthCallbackContent() {
               </p>
             </>
           )}
-          
+
           {status === 'success' && (
             <>
               <Icons.check className="mx-auto h-12 w-12 text-green-600" />
               <h1 className="text-2xl font-semibold tracking-tight">
-                {isNewUser ? 'Welcome to SpeakWise! 🎉' : 'Welcome back!'}
+                Welcome to SpeakWise! 🎉
               </h1>
               <p className="text-sm text-muted-foreground">
-                {isNewUser 
-                  ? 'Taking you to complete your profile...' 
-                  : 'Taking you home...'}
+                Taking you to your dashboard...
               </p>
             </>
           )}
-          
+
           {status === 'error' && (
             <>
               <Icons.alertCircle className="mx-auto h-12 w-12 text-red-600" />

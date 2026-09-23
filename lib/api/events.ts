@@ -35,12 +35,23 @@ export interface EventsParams {
   search?: string;
   page?: number;
   limit?: number;
+  // Supported by django-filters on the backend (events-qa+)
+  event_nickname?: string;
+  location?: string;
+  slug?: string;
+  submitted_by?: string;
+  is_active?: boolean;
+  cfp_open?: boolean;
+  cfp_open_date?: string;
+  cfp_deadline?: string;
+  start_date_time?: string;
+  end_date_time?: string;
 }
 
 // Events API service
 export const eventsApi = {
   /**
-   * Get all events
+   * Get all published events with broad filtering support.
    */
   async getEvents(params?: EventsParams): Promise<EventsApiResponse> {
     const response = await apiClient.get<EventsApiResponse>('/events/', { params });
@@ -49,17 +60,27 @@ export const eventsApi = {
 
   /**
    * Get events submitted by the current user (includes inactive/pending).
+   * Uses the renamed /events/me/ endpoint (was /events/mine).
    */
   async getMyEvents(): Promise<Event[]> {
-    const response = await apiClient.get<Event[]>('/events/mine');
+    const response = await apiClient.get<Event[]>('/events/me/');
     return Array.isArray(response.data) ? response.data : (response.data as any).results ?? [];
   },
 
   /**
-   * Get single event
+   * Get a public event by slug (active events only).
    */
   async getEvent(slug: string): Promise<Event> {
     const response = await apiClient.get<Event>(`/events/${slug}/`);
+    return response.data;
+  },
+
+  /**
+   * Get the authenticated user's own event by slug.
+   * Works for both active AND pending/inactive events — use this in organizer flows.
+   */
+  async getPrivateEvent(slug: string): Promise<Event> {
+    const response = await apiClient.get<Event>(`/events/private/${slug}/`);
     return response.data;
   },
 
@@ -88,12 +109,13 @@ export const eventsApi = {
   },
 
   /**
-   * Upload event image via FormData PATCH
+   * Upload event image via FormData PATCH to the private route.
+   * Requires authentication — only the event owner or superuser can do this.
    */
   async _uploadEventImage(slug: string, imageFile: File): Promise<Event> {
     const formData = new FormData();
     formData.append('event_image', imageFile);
-    const response = await apiClient.patch<Event>(`/events/${slug}/`, formData, {
+    const response = await apiClient.patch<Event>(`/events/private/${slug}/`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
@@ -123,17 +145,18 @@ export const eventsApi = {
   },
 
   /**
-   * Update event.
+   * Update the current user's own event via the private route.
+   * Non-superusers cannot set is_active (backend strips it).
    * Step 1: PATCH JSON with event data.
    * Step 2: If image provided, PATCH with FormData to upload the image.
    */
   async updateEvent(slug: string, data: Partial<CreateEventRequest>): Promise<Event> {
     const imageFile = data.event_image;
 
-    // Step 1: Update event data with JSON body
+    // Step 1: Update event data with JSON body via private route
     const jsonBody = this._buildJsonBody(data);
     console.log('Updating event with JSON body:', jsonBody);
-    const response = await apiClient.patch<Event>(`/events/${slug}/`, jsonBody, {
+    const response = await apiClient.patch<Event>(`/events/private/${slug}/`, jsonBody, {
       headers: { 'Content-Type': 'application/json' },
     });
     let savedEvent = response.data;
@@ -148,10 +171,10 @@ export const eventsApi = {
   },
 
   /**
-   * Delete event
+   * Delete the current user's own event via the private route.
    */
   async deleteEvent(slug: string): Promise<void> {
-    await apiClient.delete(`/events/${slug}/`);
+    await apiClient.delete(`/events/private/${slug}/`);
   },
 
 };
