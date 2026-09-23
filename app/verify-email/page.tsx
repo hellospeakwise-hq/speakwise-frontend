@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { Suspense, useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Icons } from "@/components/icons"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,8 @@ import { toast } from "sonner"
 import { authApi } from "@/lib/api/auth"
 import Link from "next/link"
 
-export default function VerifyEmailPage() {
+// Inner component that uses useSearchParams — must be inside <Suspense>
+function VerifyEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [email, setEmail] = useState("")
@@ -97,102 +98,119 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <div className="container flex h-screen w-screen flex-col items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px]">
-        {/* Header */}
-        <div className="flex flex-col space-y-2 text-center">
-          <Icons.mail className="mx-auto h-12 w-12 text-primary" />
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Verify your email
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            We sent a 6-digit code to{" "}
-            {email && <span className="font-medium text-foreground">{email}</span>}
-          </p>
-          <p className="text-xs text-muted-foreground">
-            Check your inbox and enter the code below
-          </p>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleVerify} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={isVerifying}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="otp">Verification Code</Label>
-            <Input
-              id="otp"
-              type="text"
-              placeholder="000000"
-              value={otp}
-              onChange={(e) => {
-                const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6)
-                setOtp(value)
-              }}
-              maxLength={6}
-              disabled={isVerifying}
-              className="text-center text-2xl tracking-widest font-mono"
-              required
-            />
-            <p className="text-xs text-muted-foreground">
-              Enter the 6-digit code from your email
-            </p>
-          </div>
-
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={isVerifying || otp.length !== 6}
-          >
-            {isVerifying && (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            Verify Email
-          </Button>
-        </form>
-
-        {/* Resend */}
-        <div className="text-center space-y-2">
-          <p className="text-sm text-muted-foreground">
-            Didn't receive the code?
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full"
-            onClick={() => handleResendOtp()}
-            disabled={!canResend || isResending || resendCooldown > 0}
-          >
-            {isResending && (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            {resendCooldown > 0
-              ? `Resend in ${resendCooldown}s`
-              : "Resend Code"}
-          </Button>
-        </div>
-
-        {/* Back to signin */}
-        <div className="text-center">
-          <Link
-            href="/signin"
-            className="text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline"
-          >
-            Back to sign in
-          </Link>
-        </div>
+    <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px]">
+      {/* Header */}
+      <div className="flex flex-col space-y-2 text-center">
+        <Icons.mail className="mx-auto h-12 w-12 text-primary" />
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Verify your email
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          We sent a 6-digit code to{" "}
+          {email && <span className="font-medium text-foreground">{email}</span>}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Check your inbox and enter the code below
+        </p>
       </div>
+
+      {/* Form */}
+      <form onSubmit={handleVerify} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="name@example.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            disabled={isVerifying}
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="otp">Verification Code</Label>
+          <Input
+            id="otp"
+            type="text"
+            placeholder="000000"
+            value={otp}
+            onChange={(e) => {
+              const value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6)
+              setOtp(value)
+            }}
+            maxLength={6}
+            disabled={isVerifying}
+            className="text-center text-2xl tracking-widest font-mono"
+            required
+          />
+          <p className="text-xs text-muted-foreground">
+            Enter the 6-digit code from your email
+          </p>
+        </div>
+
+        <Button
+          type="submit"
+          className="w-full"
+          disabled={isVerifying || otp.length !== 6}
+        >
+          {isVerifying && (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Verify Email
+        </Button>
+      </form>
+
+      {/* Resend */}
+      <div className="text-center space-y-2">
+        <p className="text-sm text-muted-foreground">
+          Didn't receive the code?
+        </p>
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full"
+          onClick={() => handleResendOtp()}
+          disabled={!canResend || isResending || resendCooldown > 0}
+        >
+          {isResending && (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          {resendCooldown > 0
+            ? `Resend in ${resendCooldown}s`
+            : "Resend Code"}
+        </Button>
+      </div>
+
+      {/* Back to signin */}
+      <div className="text-center">
+        <Link
+          href="/signin"
+          className="text-sm text-muted-foreground hover:text-primary underline-offset-4 hover:underline"
+        >
+          Back to sign in
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+// Outer page wraps the inner component in Suspense — required by Next.js
+// when useSearchParams() is used inside a page during static generation.
+export default function VerifyEmailPage() {
+  return (
+    <div className="container flex h-screen w-screen flex-col items-center justify-center">
+      <Suspense
+        fallback={
+          <div className="flex flex-col items-center gap-3">
+            <Icons.spinner className="h-8 w-8 animate-spin text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Loading…</p>
+          </div>
+        }
+      >
+        <VerifyEmailContent />
+      </Suspense>
     </div>
   )
 }
