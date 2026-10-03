@@ -7,7 +7,7 @@ import * as React from "react";
 import { EmailLayout, brand } from "./components/email-layout";
 import { EmailButton } from "./components/email-button";
 
-const BASE_URL = "https://speak-wise.live";
+const BASE_URL = "https://speakwise.live";
 
 interface SpeakerEmailRequestReceivedProps {
   speakerName: string;

@@ -7,7 +7,7 @@ import * as React from "react";
 import { EmailLayout, brand } from "./components/email-layout";
 import { EmailButton } from "./components/email-button";
 
-const BASE_URL = "https://speak-wise.live";
+const BASE_URL = "https://speakwise.live";
 
 interface RequestRejectedProps {
   requesterName: string;
@@ -20,7 +20,7 @@ export default function RequestRejected({
   requesterName = "Kofi Mensah",
   speakerName = "Alex Johnson",
   eventName = "DevFest Accra 2025",
-  discoverUrl = "https://speak-wise.live/speakers",
+  discoverUrl = "https://speakwise.live/speakers",
 }: RequestRejectedProps) {
   return (
     <EmailLayout

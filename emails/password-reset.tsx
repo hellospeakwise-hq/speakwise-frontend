@@ -14,7 +14,7 @@ interface PasswordResetProps {
 
 export default function PasswordReset({
   userName = "Alex Johnson",
-  resetUrl = "https://speak-wise.live/reset-password?token=abc123&email=alex@example.com",
+  resetUrl = "https://speakwise.live/reset-password?token=abc123&email=alex@example.com",
   expiryHours = 24,
 }: PasswordResetProps) {
   return (

@@ -53,7 +53,7 @@ export const metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://speak-wise.live",
+    url: "https://speakwise.live",
     title: "SpeakWise - GitHub for Speakers",
     description:
       "Build your speaking portfolio, showcase your conference talks, and get anonymous feedback from attendees. The GitHub for speakers.",

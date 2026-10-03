@@ -13,7 +13,7 @@ import {
 } from "@react-email/components";
 import * as React from "react";
 
-const BASE_URL = "https://speak-wise.live";
+const BASE_URL = "https://speakwise.live";
 
 export const brand = {
   dark: "#0f172a",

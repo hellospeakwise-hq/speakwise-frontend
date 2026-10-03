@@ -323,7 +323,7 @@ function ReviewsDrawer({ talk, open, onClose }: { talk: Talk; open: boolean; onC
 // ─── Share link modal ─────────────────────────────────────────────────────────
 
 function ShareModal({ talk, open, onClose }: { talk: Talk; open: boolean; onClose: () => void }) {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://speak-wise.live'
+    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://speakwise.live'
     const reviewUrl = `${baseUrl}/review/${talk.slug}`
     const [copied, setCopied] = useState(false)
 

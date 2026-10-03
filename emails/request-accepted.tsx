@@ -7,7 +7,7 @@ import * as React from "react";
 import { EmailLayout, brand } from "./components/email-layout";
 import { EmailButton } from "./components/email-button";
 
-const BASE_URL = "https://speak-wise.live";
+const BASE_URL = "https://speakwise.live";
 
 interface RequestAcceptedProps {
   requesterName: string;
@@ -27,8 +27,8 @@ export default function RequestAccepted({
   eventName = "DevFest Accra 2025",
   eventDate = "October 18, 2025",
   eventLocation = "Accra International Conference Centre",
-  speakerProfileUrl = "https://speak-wise.live/speakers/1",
-  dashboardUrl = "https://speak-wise.live/dashboard/organizer",
+  speakerProfileUrl = "https://speakwise.live/speakers/1",
+  dashboardUrl = "https://speakwise.live/dashboard/organizer",
 }: RequestAcceptedProps) {
   return (
     <EmailLayout
