@@ -9,7 +9,13 @@
     "lint": "next lint",
     "lint:ci": "next lint --max-warnings 50",
     "email": "email dev --dir emails --port 3001",
-    "export-emails": "tsx scripts/export-email-templates.tsx"
+    "export-emails": "tsx scripts/export-email-templates.tsx",
+    "test:e2e": "dotenv -e .env.test -- playwright test",
+    "test:e2e:ui": "dotenv -e .env.test -- playwright test --ui",
+    "test:e2e:headed": "dotenv -e .env.test -- playwright test --headed",
+    "test:e2e:report": "playwright show-report",
+    "test:e2e:auth": "dotenv -e .env.test -- playwright test --project=auth",
+    "test:e2e:public": "dotenv -e .env.test -- playwright test --project=public"
   },
   "dependencies": {
     "@ducanh2912/next-pwa": "^10.2.9",
@@ -81,12 +87,14 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@react-email/ui": "6.0.0",
     "@tailwindcss/typography": "^0.5.19",
     "@types/lodash": "^4.17.24",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^8",
     "eslint-config-next": "15.2.7",
     "postcss": "^8",
