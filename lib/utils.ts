@@ -13,9 +13,10 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
  * @param seed - Unique identifier (user ID, email, or name)
  * @param style - Avatar style: 'lorelei' | 'notionists' | 'micah' | 'adventurer' | 'personas'
  */
-export function getDefaultAvatar(seed: string, style: 'lorelei' | 'notionists' | 'micah' | 'adventurer' | 'personas' = 'notionists'): string {
-  // Clean the seed for URL
-  const cleanSeed = encodeURIComponent(seed.toLowerCase().trim())
+export function getDefaultAvatar(seed: string = 'user', style: 'lorelei' | 'notionists' | 'micah' | 'adventurer' | 'personas' = 'notionists'): string {
+  // Clean the seed for URL safely
+  const safeSeed = typeof seed === 'string' && seed.trim() ? seed.trim() : 'user'
+  const cleanSeed = encodeURIComponent(safeSeed.toLowerCase())
   // DiceBear API - generates unique SVG avatars with modern styles
   return `https://api.dicebear.com/7.x/${style}/svg?seed=${cleanSeed}&backgroundColor=f97316,fb923c,fdba74,fed7aa&backgroundType=gradientLinear&backgroundRotation=0,360`
 }

@@ -39,7 +39,7 @@ export function SkillsCombobox({ selectedSkills, onSkillAdd, onCreateSkill }: Re
       try {
         // Use getSkills() - the skill-tags endpoint no longer exists
         const skills = await speakerApi.getSkills()
-        setAllSkills(skills)
+        setAllSkills(Array.isArray(skills) ? skills : [])
       } catch (error) {
         console.error("Failed to load skills:", error)
         setAllSkills([])
@@ -52,13 +52,15 @@ export function SkillsCombobox({ selectedSkills, onSkillAdd, onCreateSkill }: Re
 
   // Filter skills based on search and exclude already selected
   const filteredSkills = React.useMemo(() => {
-    const selectedIds = new Set(selectedSkills.map(s => s.id))
-    return allSkills.filter(skill => {
+    const safeSelected = Array.isArray(selectedSkills) ? selectedSkills : []
+    const safeAll = Array.isArray(allSkills) ? allSkills : []
+    const selectedIds = new Set(safeSelected.map(s => s.id))
+    return safeAll.filter(skill => {
       // Exclude already selected skills
       if (selectedIds.has(skill.id)) return false
       // Filter by search term
       if (searchValue) {
-        return skill.name.toLowerCase().includes(searchValue.toLowerCase())
+        return (skill.name || '').toLowerCase().includes(searchValue.toLowerCase())
       }
       return true
     })

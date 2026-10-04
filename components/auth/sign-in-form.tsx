@@ -64,8 +64,12 @@ export function SignInForm() {
       console.error("Login error response:", error?.response?.data)
 
       // Check if email verification is required
-      const errorMsg = error?.message?.toLowerCase() || error?.response?.data?.detail?.toLowerCase() || ''
-      if (errorMsg.includes('verify') && errorMsg.includes('email')) {
+      const rawDetail = error?.response?.data?.detail;
+      const detailStr = typeof rawDetail === 'string' ? rawDetail : Array.isArray(rawDetail) ? rawDetail.join(' ') : '';
+      const rawMsg = typeof error?.message === 'string' ? error.message : '';
+      const combinedError = (rawMsg + ' ' + detailStr).toLowerCase();
+
+      if (combinedError.includes('verify') && combinedError.includes('email')) {
         // Redirect to email verification page
         toast.error("Please verify your email address first")
         router.push(`/verify-email?email=${encodeURIComponent(email)}`)
@@ -75,9 +79,9 @@ export function SignInForm() {
       // Provide user-friendly error messages
       let errorMessage = "Unable to sign in. Please try again."
 
-      if (error?.message) {
+      if (rawMsg) {
         // Use the message from our improved auth API
-        const msg = error.message.toLowerCase();
+        const msg = rawMsg.toLowerCase();
 
         // Don't show raw "Network error" to user - be more helpful
         if (msg.includes('network') || msg.includes('fetch') || msg.includes('connection')) {
@@ -86,13 +90,13 @@ export function SignInForm() {
           errorMessage = "Incorrect email or password. Please try again.";
         } else {
           // Use the actual error message from backend
-          errorMessage = error.message;
+          errorMessage = rawMsg;
         }
       } else if (error?.response?.data) {
         // Parse the response data for user-friendly messages
         const data = error.response.data;
         if (data.detail) {
-          errorMessage = data.detail;
+          errorMessage = typeof data.detail === 'string' ? data.detail : Array.isArray(data.detail) ? data.detail.join('. ') : String(data.detail);
         } else if (data.non_field_errors && Array.isArray(data.non_field_errors)) {
           errorMessage = data.non_field_errors.join('. ');
         } else if (data.email && Array.isArray(data.email)) {
@@ -104,7 +108,7 @@ export function SignInForm() {
           const messages: string[] = [];
           for (const [field, errors] of Object.entries(data)) {
             if (Array.isArray(errors)) {
-              errors.forEach((err: string) => messages.push(err));
+              errors.forEach((err: any) => messages.push(String(err)));
             } else if (typeof errors === 'string') {
               messages.push(errors);
             }

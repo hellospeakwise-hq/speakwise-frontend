@@ -227,10 +227,16 @@ export const speakerApi = {
         return response.data;
     },
 
-    // Get speaker's skills (new endpoint)
+    // Get speaker's skills (new endpoint - handles paginated or raw array)
     async getSkills(): Promise<SkillTag[]> {
-        const response = await apiClient.get<SkillTag[]>('/speakers/skills/');
-        return response.data;
+        const response = await apiClient.get<any>('/speakers/skills/');
+        if (Array.isArray(response.data)) {
+            return response.data;
+        }
+        if (response.data && Array.isArray(response.data.results)) {
+            return response.data.results;
+        }
+        return [];
     },
 
     // Get skill by ID

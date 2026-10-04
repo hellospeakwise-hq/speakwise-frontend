@@ -153,13 +153,20 @@ export const authApi = {
           throw new Error('Incorrect email or password');
         } else if (errorData?.detail) {
           // If detail contains authentication-related keywords, provide friendly message
-          const detail = errorData.detail.toLowerCase();
-          if (detail.includes('invalid') || detail.includes('incorrect') || detail.includes('authentication') || detail.includes('credentials')) {
+          const rawDetail = errorData.detail;
+          const detailStr = typeof rawDetail === 'string'
+            ? rawDetail
+            : Array.isArray(rawDetail)
+              ? rawDetail.join(' ')
+              : String(rawDetail);
+          const lowerDetail = detailStr.toLowerCase();
+          if (lowerDetail.includes('invalid') || lowerDetail.includes('incorrect') || lowerDetail.includes('authentication') || lowerDetail.includes('credentials')) {
             throw new Error('Incorrect email or password');
           }
-          throw new Error(errorData.detail);
+          throw new Error(detailStr);
         } else if (errorData?.message) {
-          throw new Error(errorData.message);
+          const msg = typeof errorData.message === 'string' ? errorData.message : JSON.stringify(errorData.message);
+          throw new Error(msg);
         } else {
           // Generic auth error message for 400/401 status codes
           throw new Error('Incorrect email or password');
@@ -267,7 +274,12 @@ export const authApi = {
       const response = await apiClient.post<{ detail: string }>('users/auth/verify-otp/', data);
       return response.data;
     } catch (error: any) {
-      const detail = error.response?.data?.detail || error.response?.data?.otp?.[0] || 'Invalid or expired OTP code.';
+      const rawDetail = error.response?.data?.detail;
+      const detail = typeof rawDetail === 'string'
+        ? rawDetail
+        : Array.isArray(rawDetail)
+          ? rawDetail.join(' ')
+          : error.response?.data?.otp?.[0] || 'Invalid or expired OTP code.';
       throw new Error(detail);
     }
   },
@@ -280,7 +292,12 @@ export const authApi = {
       const response = await apiClient.post<{ detail: string }>('users/auth/resend-otp/', data);
       return response.data;
     } catch (error: any) {
-      const detail = error.response?.data?.detail || 'Failed to resend code. Please try again.';
+      const rawDetail = error.response?.data?.detail;
+      const detail = typeof rawDetail === 'string'
+        ? rawDetail
+        : Array.isArray(rawDetail)
+          ? rawDetail.join(' ')
+          : 'Failed to resend code. Please try again.';
       throw new Error(detail);
     }
   },
@@ -311,7 +328,13 @@ export const authApi = {
       return response.data;
     } catch (error: any) {
       console.error('OAuth token exchange failed:', error.response?.data);
-      throw new Error(error.response?.data?.detail || 'Failed to complete OAuth authentication');
+      const rawDetail = error.response?.data?.detail;
+      const detail = typeof rawDetail === 'string'
+        ? rawDetail
+        : Array.isArray(rawDetail)
+          ? rawDetail.join(' ')
+          : 'Failed to complete OAuth authentication';
+      throw new Error(detail);
     }
   },
 };

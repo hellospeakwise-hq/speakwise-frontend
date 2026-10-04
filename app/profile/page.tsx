@@ -147,10 +147,11 @@ function ProfilePageContent() {
         try {
             // Load speaker's skills from the new endpoint
             const skills = await speakerApi.getSkills()
-            setSkillTags(skills as any)
+            setSkillTags(Array.isArray(skills) ? skills : (skills as any)?.results || [])
         } catch (error) {
             // Silently fail - skills will be empty
             console.error('Failed to load skills:', error)
+            setSkillTags([])
         }
     }
 

@@ -74,12 +74,14 @@ export function ProfileTypeModal({ open, onSpeakerChosen, onOrgChosen }: Profile
             onOrgChosen()
         } catch (err: any) {
             const data = err?.response?.data ?? {}
-            if (data.name?.[0]?.toLowerCase().includes("already exists")) {
+            const rawDetail = data.detail
+            const detailStr = typeof rawDetail === 'string' ? rawDetail : Array.isArray(rawDetail) ? rawDetail.join(' ') : ''
+            if (typeof data.name?.[0] === 'string' && data.name[0].toLowerCase().includes("already exists")) {
                 toast.error("An organization with this name already exists. Please choose a different name.")
-            } else if (data.owner?.[0]?.toLowerCase().includes("already exists")) {
+            } else if (typeof data.owner?.[0] === 'string' && data.owner[0].toLowerCase().includes("already exists")) {
                 toast.error("You already have an organization profile.")
             } else {
-                toast.error(data.name?.[0] || data.detail || "Failed to create organization")
+                toast.error(data.name?.[0] || detailStr || "Failed to create organization")
             }
         } finally {
             setIsSubmitting(false)
@@ -95,12 +97,14 @@ export function ProfileTypeModal({ open, onSpeakerChosen, onOrgChosen }: Profile
                 onSpeakerChosen()
             } catch (err: any) {
                 const data = err?.response?.data ?? {}
-                if (data.detail?.toLowerCase().includes("already exists")) {
+                const rawDetail = data.detail
+                const detailStr = typeof rawDetail === 'string' ? rawDetail : Array.isArray(rawDetail) ? rawDetail.join(' ') : ''
+                if (detailStr.toLowerCase().includes("already exists")) {
                     // Profile already exists — still proceed
                     localStorage.setItem("profile_type", "speaker")
                     onSpeakerChosen()
                 } else {
-                    toast.error(data.detail || "Failed to create speaker profile. Please try again.")
+                    toast.error(detailStr || "Failed to create speaker profile. Please try again.")
                 }
             } finally {
                 setIsSubmitting(false)
