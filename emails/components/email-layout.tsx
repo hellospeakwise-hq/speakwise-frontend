@@ -13,7 +13,7 @@ import {
 } from "@react-email/components";
 import * as React from "react";
 
-const BASE_URL = "https://speakwise.live";
+const BASE_URL = "https://www.speakwise.live";
 
 export const brand = {
   dark: "#0f172a",
@@ -23,7 +23,7 @@ export const brand = {
   blueLight: "#eff6ff",
   border: "#e2e8f0",
   muted: "#64748b",
-  mutedLight: "#94a3b8",
+  mutedLight: "#cbd5e1",
   light: "#f8fafc",
   white: "#ffffff",
   success: "#16a34a",
@@ -45,6 +45,9 @@ export function EmailLayout({
   children,
   announcementText,
 }: EmailLayoutProps) {
+  // Strip em-dashes and hyphens if present in announcement
+  const cleanAnnouncement = announcementText?.replace(/\s*[—–-]\s*/g, ": ");
+
   return (
     <Html>
       <Head />
@@ -52,23 +55,33 @@ export function EmailLayout({
       <Body style={styles.body}>
         <Container style={styles.container}>
 
-          {/* Logo header */}
+          {/* Logo header with Icon and Brand Name */}
           <Section style={styles.logoHeader}>
-            <Link href={BASE_URL}>
-              <Img
-                src={`${BASE_URL}/logo-black.png`}
-                alt="SpeakWise"
-                height={30}
-                style={{ display: "block", margin: "0 auto" }}
-              />
+            <Link href={BASE_URL} style={{ textDecoration: "none", display: "inline-block" }}>
+              <Row style={{ margin: "0 auto", textAlign: "center" }}>
+                <Column style={{ verticalAlign: "middle", paddingRight: "8px" }}>
+                  <Img
+                    src={`${BASE_URL}/logo-black.png`}
+                    alt="SpeakWise"
+                    height={38}
+                    width={38}
+                    style={{ display: "inline-block", verticalAlign: "middle" }}
+                  />
+                </Column>
+                <Column style={{ verticalAlign: "middle" }}>
+                  <Text style={{ fontSize: "20px", fontWeight: "800", color: "#0f172a", margin: 0, letterSpacing: "-0.5px" }}>
+                    SpeakWise
+                  </Text>
+                </Column>
+              </Row>
             </Link>
           </Section>
 
           {/* Optional announcement strip */}
-          {announcementText && (
+          {cleanAnnouncement && (
             <Section style={styles.announcementBar}>
               <Text style={styles.announcementText}>
-                ✦ {announcementText} ✦
+                {cleanAnnouncement}
               </Text>
             </Section>
           )}
@@ -78,13 +91,23 @@ export function EmailLayout({
 
           {/* Footer */}
           <Section style={styles.footer}>
-            <Link href={BASE_URL}>
-              <Img
-                src={`${BASE_URL}/logo-white.png`}
-                alt="SpeakWise"
-                height={28}
-                style={{ display: "block", margin: "0 auto 20px" }}
-              />
+            <Link href={BASE_URL} style={{ textDecoration: "none", display: "inline-block", marginBottom: "16px" }}>
+              <Row style={{ margin: "0 auto", textAlign: "center" }}>
+                <Column style={{ verticalAlign: "middle", paddingRight: "8px" }}>
+                  <Img
+                    src={`${BASE_URL}/logo-white.png`}
+                    alt="SpeakWise"
+                    height={26}
+                    width={26}
+                    style={{ display: "inline-block", verticalAlign: "middle" }}
+                  />
+                </Column>
+                <Column style={{ verticalAlign: "middle" }}>
+                  <Text style={{ fontSize: "16px", fontWeight: "700", color: "#ffffff", margin: 0, letterSpacing: "-0.3px" }}>
+                    SpeakWise
+                  </Text>
+                </Column>
+              </Row>
             </Link>
 
             <Row style={{ marginBottom: "12px" }}>
@@ -112,11 +135,11 @@ export function EmailLayout({
             <Text style={styles.footerCopy}>
               © {new Date().getFullYear()} SpeakWise. All rights reserved.
               <br />
-              <Link href={`${BASE_URL}/privacy-policy`} style={styles.footerLink}>
+              <Link href={`${BASE_URL}/privacy`} style={styles.footerLink}>
                 Privacy Policy
               </Link>
               {" · "}
-              <Link href={`${BASE_URL}/terms-of-service`} style={styles.footerLink}>
+              <Link href={`${BASE_URL}/terms`} style={styles.footerLink}>
                 Terms
               </Link>
             </Text>
@@ -143,11 +166,13 @@ const styles: Record<string, React.CSSProperties> = {
     margin: "0 auto",
     overflow: "hidden",
     boxShadow: "0 4px 24px rgba(0,0,0,0.10)",
+    border: "1px solid #cbd5e1",
   },
   logoHeader: {
     backgroundColor: brand.white,
     borderBottom: `1px solid ${brand.border}`,
     padding: "20px 32px",
+    textAlign: "center" as const,
   },
   announcementBar: {
     backgroundColor: brand.blue,
@@ -156,8 +181,8 @@ const styles: Record<string, React.CSSProperties> = {
   announcementText: {
     color: brand.white,
     fontSize: "12px",
-    fontWeight: "600",
-    letterSpacing: "0.05em",
+    fontWeight: "700",
+    letterSpacing: "0.03em",
     margin: 0,
     textAlign: "center" as const,
   },
@@ -165,9 +190,10 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: brand.dark,
     padding: "36px 32px 28px",
     textAlign: "center" as const,
+    borderTop: "1px solid #1e293b",
   },
   footerBtn: {
-    border: `1.5px solid rgba(255,255,255,0.3)`,
+    border: `1.5px solid rgba(255,255,255,0.4)`,
     borderRadius: "50px",
     color: brand.white,
     display: "inline-block",
@@ -178,14 +204,15 @@ const styles: Record<string, React.CSSProperties> = {
     textDecoration: "none",
   },
   footerCopy: {
-    color: "#64748b",
-    fontSize: "11px",
+    color: "#cbd5e1",
+    fontSize: "12px",
     lineHeight: "1.8",
     margin: "20px 0 0",
     textAlign: "center" as const,
   },
   footerLink: {
-    color: "#64748b",
+    color: "#60a5fa",
     textDecoration: "underline",
+    fontWeight: "500",
   },
 };
