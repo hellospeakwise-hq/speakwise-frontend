@@ -44,10 +44,11 @@ export function SpeakersDirectory() {
   }
 
   // Filter speakers based on search query
-  const filteredSpeakers = speakers.filter((speaker) =>
+  const safeSpeakers = Array.isArray(speakers) ? speakers : []
+  const filteredSpeakers = safeSpeakers.filter((speaker) =>
     (speaker.speaker_name || `Speaker ${speaker.id}`).toLowerCase().includes(searchQuery.toLowerCase()) ||
-    speaker.organization.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    speaker.country.toLowerCase().includes(searchQuery.toLowerCase())
+    (speaker.organization || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (speaker.country || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (

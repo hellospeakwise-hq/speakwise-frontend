@@ -26,7 +26,8 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
         console.log('All speaker requests:', speakerRequests)
 
         // Filter to only accepted requests
-        const acceptedRequests = speakerRequests.filter(req => req.status === 'accepted')
+        const safeRequests = Array.isArray(speakerRequests) ? speakerRequests : []
+        const acceptedRequests = safeRequests.filter(req => req.status === 'accepted')
         console.log('Accepted requests:', acceptedRequests)
 
         if (acceptedRequests.length > 0) {

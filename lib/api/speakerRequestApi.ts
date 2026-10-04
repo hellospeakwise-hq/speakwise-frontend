@@ -67,8 +67,11 @@ export const speakerRequestApi = {
 
     // Get incoming speaker requests for the authenticated speaker
     async getSpeakerIncomingRequests(): Promise<SpeakerRequest[]> {
-        const response = await apiClient.get('/speaker-requests/incoming/');
-        return response.data;
+        const response = await apiClient.get<any>('/speaker-requests/incoming/');
+        const data = response.data;
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.results)) return data.results;
+        return [];
     },
 
     // Accept a speaker request (respond with status: 'accepted')

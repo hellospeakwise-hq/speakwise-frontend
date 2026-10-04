@@ -26,14 +26,16 @@ export function useSpeakerAcceptedEvents() {
         const acceptedEventIds = new Set<string>()
 
         // Accepted speaker requests
-        requests
-          .filter((r) => r.status === "accepted")
-          .forEach((r) => acceptedEventIds.add(r.event))
+        const safeRequests = Array.isArray(requests) ? requests : (requests as any)?.results ?? []
+        safeRequests
+          .filter((r: any) => r.status === "accepted")
+          .forEach((r: any) => acceptedEventIds.add(r.event))
 
         // Accepted CFP submissions — event is stored as `event` (ID) on each submission
-        cfpSubmissions
-          .filter((s) => s.status === "accepted")
-          .forEach((s) => acceptedEventIds.add(s.event))
+        const safeCFPs = Array.isArray(cfpSubmissions) ? cfpSubmissions : (cfpSubmissions as any)?.results ?? []
+        safeCFPs
+          .filter((s: any) => s.status === "accepted")
+          .forEach((s: any) => acceptedEventIds.add(s.event))
 
         setEvents(all.filter((e: Event) => acceptedEventIds.has(e.id)))
       } catch {

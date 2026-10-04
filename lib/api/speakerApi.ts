@@ -150,8 +150,11 @@ export const speakerApi = {
         return cachedFetch(
             'speakers_list',
             async () => {
-                const response = await apiClient.get<Speaker[]>('/speakers/');
-                return response.data;
+                const response = await apiClient.get<any>('/speakers/');
+                const data = response.data;
+                if (Array.isArray(data)) return data;
+                if (data && Array.isArray(data.results)) return data.results;
+                return [];
             },
             { ttl: CACHE_TTL.MEDIUM }
         );
