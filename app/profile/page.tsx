@@ -133,8 +133,21 @@ function ProfilePageContent() {
     const loadProfile = async () => {
         try {
             setIsLoadingProfile(true)
-            const data = await userApi.getUserProfile()
-            setProfileData(data)
+            const userData = await userApi.refreshUserProfile()
+            if (localStorage.getItem('profile_type') === 'speaker') {
+                try {
+                    const speaker = await speakerApi.getProfile()
+                    setProfileData({ ...userData, speaker })
+                } catch (error: any) {
+                    const missingSpeaker =
+                        error?.response?.status === 404 ||
+                        error?.message?.toLowerCase().includes('speaker profile not found')
+                    if (!missingSpeaker) throw error
+                    setProfileData(userData)
+                }
+            } else {
+                setProfileData(userData)
+            }
         } catch (error) {
             console.error('Failed to load profile:', error)
             toast.error("Failed to load profile")
@@ -144,12 +157,16 @@ function ProfilePageContent() {
     }
 
     const loadSkills = async () => {
+        const speakerData = profileData && (profileData as any)?.speaker
+        if (!speakerData) {
+            setSkillTags([])
+            return
+        }
+
         try {
-            // Load speaker's skills from the new endpoint
             const skills = await speakerApi.getSkills()
             setSkillTags(Array.isArray(skills) ? skills : (skills as any)?.results || [])
         } catch (error) {
-            // Silently fail - skills will be empty
             console.error('Failed to load skills:', error)
             setSkillTags([])
         }
@@ -229,41 +246,28 @@ function ProfilePageContent() {
         try {
             const data = profileData as any
             const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
-            
-            // Build update data with nested speaker including ID for update (not create)
-            const updateData: any = {
+
+            const updateData = {
                 first_name: firstName,
                 last_name: lastName,
                 username: username,
                 nationality: nationality,
             }
 
-            // Add speaker data as a single object (backend no longer accepts an array)
+            let updatedSpeaker = speakerData
             if (speakerData?.id) {
-                updateData.speaker = {
-                    id: speakerData.id,
-                    user_account: speakerData.user_account,
+                updatedSpeaker = await speakerApi.updateProfile({
                     organization: organization,
                     short_bio: shortBio,
                     long_bio: longBio,
                     country: country,
-                }
+                })
             }
 
-            console.log('📤 Sending update with data:', JSON.stringify(updateData, null, 2))
             const updatedProfile = await userApi.updateUserProfile(updateData)
-            console.log('📥 Received updated profile:', updatedProfile)
-
-            // Update state with new data
-            setProfileData(updatedProfile)
+            setProfileData({ ...updatedProfile, speaker: updatedSpeaker })
             toast.success("Profile updated successfully")
             setIsEditing(false)
-
-            // Reload to verify
-            setTimeout(async () => {
-                const freshData = await userApi.getUserProfile()
-                setProfileData(freshData)
-            }, 500)
         } catch (error: any) {
             console.error('Failed to update profile:', error)
             console.error('Error response:', error.response?.data)
@@ -312,22 +316,12 @@ function ProfilePageContent() {
 
         try {
             const data = profileData as any
-            const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
-
-            if (!speakerData?.id) {
-                toast.error("Speaker profile not found")
-                setCurrentAvatarUrl(null)
-                return
-            }
-
-            const formData = new FormData()
-            formData.append('speaker.id', speakerData.id.toString())
-            formData.append('speaker.user_account', speakerData.user_account)
             const croppedFile = new File([croppedBlob], 'avatar.jpg', { type: 'image/jpeg' })
-            formData.append('speaker.avatar', croppedFile)
+            const formData = new FormData()
+            formData.append('avatar', croppedFile)
 
             const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/users/me/`,
+                `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}/api/speakers/me/`,
                 {
                     method: 'PATCH',
                     headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
@@ -340,8 +334,7 @@ function ProfilePageContent() {
                 throw new Error(err.detail || 'Failed to upload avatar')
             }
 
-            const freshData = await userApi.refreshUserProfile()
-            const freshSpeaker = (freshData as any)?.speaker
+            const freshSpeaker = await speakerApi.getProfile()
             const newAvatarPath = freshSpeaker?.avatar
 
             if (newAvatarPath) {
@@ -354,7 +347,7 @@ function ProfilePageContent() {
                 setCurrentAvatarUrl(`${absoluteUrl}?t=${newKey}`)
             }
 
-            setProfileData(freshData)
+            setProfileData({ ...data, speaker: freshSpeaker })
             toast.success('Profile picture updated!')
             window.dispatchEvent(new CustomEvent('avatarUpdated'))
         } catch (error: any) {
@@ -981,7 +974,7 @@ function ProfilePageContent() {
                                 const speakerData = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker
                                 const trackerData = {
                                     user: data?.user || data,
-                                    speaker: speakerData
+                                    speaker: speakerData ? { ...speakerData, skill_tags: skillTags } : speakerData
                                 }
                                 return (
                                     <ProfileCompletionTracker 

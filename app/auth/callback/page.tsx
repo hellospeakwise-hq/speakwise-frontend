@@ -53,7 +53,7 @@ function OAuthCallbackContent() {
           first_name: response.first_name || '',
           last_name: response.last_name || '',
           email: response.email,
-          role: response.role || { id: '2', role: 'speaker' },
+          role: response.role || { id: response.id, role: 'speaker' },
           userType: response.role?.role || 'speaker'
         }
 
@@ -62,7 +62,7 @@ function OAuthCallbackContent() {
         console.log('User data stored:', userData)
 
         // Handle profile type from new response structure
-        const profiles = response.profiles || {}
+        const profiles = response.profile || response.profiles || {}
         const hasSpeakerProfile = !!profiles.speaker_profile
         const hasOrgProfile = !!profiles.organization_profile
 

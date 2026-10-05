@@ -3,16 +3,20 @@ import { cachedFetch, CACHE_TTL } from '../utils/cache';
 
 export interface SpeakerProfile {
     id: string;
-    speaker_user: string;
+    speaker_user?: string;
+    user_account: string;
+    speaker_name: string;
+    slug?: string;
+    social_links: SocialLink[];
     organization: string;
     short_bio: string;
     long_bio: string;
     country: string;
     avatar?: string;
-    skill_tags: string[];
-    events_spoken: string[];
-    created_at: string;
-    updated_at: string;
+    skill_tags: SkillTag[];
+    events_spoken?: string[];
+    created_at?: string;
+    updated_at?: string;
 }
 
 export interface SkillTag {
@@ -196,7 +200,9 @@ export const speakerApi = {
         const mine = profiles.find(
             (p) => p.username === user?.username || p.user_account === user?.id
         );
-        if (!mine?.slug) throw new Error('Speaker profile not found for current user');
+        if (!mine?.slug) {
+            throw new Error('Speaker profile not found. Create a speaker profile first.');
+        }
 
         // Cache it so we don't re-fetch on every call
         if (user && typeof window !== 'undefined') {
@@ -207,24 +213,21 @@ export const speakerApi = {
 
     // Get speaker profile
     async getProfile(): Promise<SpeakerProfile> {
-        const slug = await this._getMySlug();
-        const response = await apiClient.get<SpeakerProfile>(`/speakers/${slug}/`);
+        const response = await apiClient.get<SpeakerProfile>('/speakers/me/');
         return response.data;
     },
 
     // Update speaker profile
     async updateProfile(data: UpdateSpeakerProfileData): Promise<SpeakerProfile> {
-        const slug = await this._getMySlug();
-        const response = await apiClient.patch<SpeakerProfile>(`/speakers/${slug}/`, data);
+        const response = await apiClient.patch<SpeakerProfile>('/speakers/me/', data);
         return response.data;
     },
 
     // Upload speaker avatar via PATCH on the slug endpoint (multipart)
     async uploadAvatar(file: File): Promise<SpeakerProfile> {
-        const slug = await this._getMySlug();
         const formData = new FormData();
         formData.append('avatar', file);
-        const response = await apiClient.patch<SpeakerProfile>(`/speakers/${slug}/`, formData, {
+        const response = await apiClient.patch<SpeakerProfile>('/speakers/me/', formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
         return response.data;

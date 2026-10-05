@@ -56,16 +56,12 @@ export function RecentFeedback({ limit }: RecentFeedbackProps) {
         {limit && feedback.length > 0 && (
           <div className="flex gap-2">
             <Link href="/dashboard/speaker/feedback">
-              <Button variant="ghost" size="sm" className="text-orange-600 dark:text-orange-400">
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
                 View All
               </Button>
             </Link>
             <Link href="/dashboard/speaker/feedback-by-talks">
-              <Button
-                variant="outline"
-                size="sm"
-                className="text-orange-600 dark:text-orange-400 border-orange-200 hover:bg-orange-50 dark:border-orange-800 dark:hover:bg-orange-900/20"
-              >
+              <Button variant="outline" size="sm">
                 By Presentation
               </Button>
             </Link>
@@ -140,8 +136,8 @@ export function RecentFeedback({ limit }: RecentFeedbackProps) {
                     {highScoreBadges(item).map((badge) => (
                       <Badge
                         key={badge}
-                        variant="outline"
-                        className="bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100 dark:bg-orange-900/20 dark:text-orange-400 dark:border-orange-800 dark:hover:bg-orange-900/30"
+                        variant="secondary"
+                        className="text-xs font-normal"
                       >
                         {badge}
                       </Badge>

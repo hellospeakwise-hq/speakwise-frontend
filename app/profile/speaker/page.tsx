@@ -57,7 +57,7 @@ export default function SpeakerProfilePage() {
             setShortBio(profileData.short_bio || "")
             setLongBio(profileData.long_bio || "")
             setCountry(profileData.country || "")
-            setSelectedSkills(profileData.skill_tags || [])
+            setSelectedSkills((profileData.skill_tags || []).map((skill) => skill.id))
         } catch (error) {
             console.error("Error loading profile:", error)
             toast.error("Failed to load profile data")

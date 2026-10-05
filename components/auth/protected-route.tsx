@@ -38,10 +38,9 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
         // If roles are specified, enforce them using profile_type + userType
         if (roles && roles.length > 0 && user) {
             const profileType = localStorage.getItem('profile_type')
+            const userRole = user.userType || user.role?.role || 'speaker'
 
-            // Determine the effective user type:
-            // profile_type in localStorage is the most reliable signal right after signup/login
-            let effectiveRole: string = user.userType || user.role?.role || 'speaker'
+            let effectiveRole: string = userRole
             if (profileType === 'organization') {
                 effectiveRole = 'organizer'
             } else if (profileType === 'speaker') {
@@ -56,7 +55,7 @@ export function ProtectedRoute({ children, roles }: ProtectedRouteProps) {
                 } else if (effectiveRole === 'speaker') {
                     router.replace('/dashboard/speaker')
                 } else {
-                    router.replace('/dashboard/attendee')
+                    router.replace('/dashboard/speaker')
                 }
                 return
             }

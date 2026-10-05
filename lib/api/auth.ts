@@ -49,12 +49,13 @@ export interface AuthResponse {
   first_name: string;
   last_name: string;
   email: string;
-  role: {
+  role?: {
     id: string;
     role: UserRole;
   };
-  nationality: string;
-  username: string;
+  userType?: UserRole;
+  nationality?: string;
+  username?: string;
 }
 
 export interface LoginResponse extends AuthResponse {
@@ -63,6 +64,7 @@ export interface LoginResponse extends AuthResponse {
   access?: string;
   refresh?: string;
   token?: string;
+  profile?: LoginProfiles;
   profiles?: LoginProfiles;
 }
 

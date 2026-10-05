@@ -26,46 +26,34 @@ export default function MySpeakerProfilePage() {
 
       try {
         setLoading(true);
-        // Use /api/users/me/ to get authenticated user's profile
-        const profile = await userApi.getUserProfile();
-        const data = profile as any;
-        const speaker = Array.isArray(data?.speaker) ? data?.speaker[0] : data?.speaker;
-        
-        if (speaker?.id) {
-          setSpeakerId(speaker.slug || speaker.id.toString());
-          
-          // Also fetch skills from the new skills endpoint
-          let userSkills = speaker.skill_tags || [];
-          try {
-            const skills = await speakerApi.getSkills();
-            if (skills && skills.length > 0) {
-              userSkills = skills;
-            }
-          } catch (err) {
-            console.log('Could not fetch skills from /speakers/skills/', err);
-          }
-          
-          // Transform to Speaker type
-          setSpeakerData({
-            id: speaker.id,
-            speaker_name: speaker.speaker_name || `${data?.user?.first_name || ''} ${data?.user?.last_name || ''}`.trim() || 'Speaker',
-            organization: speaker.organization || '',
-            short_bio: speaker.short_bio || '',
-            long_bio: speaker.long_bio || '',
-            country: speaker.country || '',
-            avatar: speaker.avatar || '',
-            user_account: speaker.user_account || '',
-            username: data?.user?.username,
-            slug: speaker.slug,
-            social_links: speaker.social_links || [],
-            skill_tags: userSkills,
-          });
-        } else {
-          setError('No speaker profile found. Please complete your profile setup.');
-        }
+        const [account, speaker] = await Promise.all([
+          userApi.refreshUserProfile(),
+          speakerApi.getProfile(),
+        ]);
+
+        const accountUser = account.user || account;
+        const skillTags = speaker.skill_tags || [];
+        const skills = await speakerApi.getSkills();
+
+        setSpeakerId(speaker.slug || speaker.id);
+        setSpeakerData({
+          ...speaker,
+          speaker_name: speaker.speaker_name ||
+            `${accountUser.first_name || ''} ${accountUser.last_name || ''}`.trim() ||
+            'Speaker',
+          avatar: speaker.avatar || '',
+          username: accountUser.username,
+          skill_tags: skills.length ? skills : skillTags,
+          social_links: speaker.social_links || [],
+        });
       } catch (err) {
         console.error('Error fetching own profile:', err);
-        setError('Failed to load your speaker profile.');
+        const status = (err as { response?: { status?: number } })?.response?.status;
+        setError(
+          status === 404
+            ? 'No speaker profile found. Please complete your profile setup.'
+            : 'Failed to load your speaker profile.'
+        );
       } finally {
         setLoading(false);
       }

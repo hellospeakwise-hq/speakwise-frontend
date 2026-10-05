@@ -6,8 +6,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 export interface SkillTag {
     id: string;
     name: string;
-    description: string;
-    duration: number;
+    description?: string;
+    duration?: number;
 }
 
 export interface User {
@@ -28,14 +28,14 @@ export interface SpeakerProfile {
     short_bio: string;
     long_bio: string;
     country: string;
-    avatar: string;
+    avatar?: string;
     user_account: string;
     experiences?: any[];
 }
 
-export interface UserProfileResponse {
-    user: User;
-    speaker: SpeakerProfile;
+export interface UserProfileResponse extends User {
+    user?: User;
+    speaker?: SpeakerProfile;
 }
 
 export interface UpdateUserData {
@@ -81,7 +81,7 @@ export const userApi = {
 
     // Update user profile (PATCH /api/users/me/)
     // Expects flat structure: all fields at root level
-    async updateUserProfile(data: any): Promise<UserProfileResponse> {
+    async updateUserProfile(data: UpdateUserData): Promise<UserProfileResponse> {
         console.log('==========================================');
         console.log('📤 SENDING PROFILE UPDATE');
         console.log('==========================================');

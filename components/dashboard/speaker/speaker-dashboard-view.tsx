@@ -9,9 +9,10 @@ import { RecentFeedback } from "@/components/dashboard/speaker/recent-feedback"
 import { FeedbackTrends } from "@/components/dashboard/speaker/feedback-trends"
 import { ProfileCompletionBanner } from "@/components/dashboard/speaker/profile-completion-banner"
 import { MyTalksSection } from "@/components/dashboard/speaker/my-talks-section"
+import { QrQuickAccess } from "@/components/dashboard/speaker/qr-quick-access"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
-import { Mic, FileText, Award } from "lucide-react"
+import { Mic, FileText, Award, QrCode } from "lucide-react"
 import { Notifications } from "@/components/dashboard/speaker/notifications"
 
 const TAB_CLASS = "rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-3 pb-3 pt-1 text-sm font-medium"
@@ -44,8 +45,8 @@ export function SpeakerDashboardView() {
           </Button>
           <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1.5">
             <Link href="/dashboard/speaker/experiences">
-              <Award className="h-3.5 w-3.5" />
-              Experiences
+              <QrCode className="h-3.5 w-3.5" />
+              Get QR Code
             </Link>
           </Button>
         </div>
@@ -73,6 +74,7 @@ export function SpeakerDashboardView() {
           </TabsList>
 
           <TabsContent value="overview" className="mt-6 space-y-6">
+            <QrQuickAccess />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <UpcomingEvents limit={3} />
               <RecentFeedback limit={3} />

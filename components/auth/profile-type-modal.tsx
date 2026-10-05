@@ -115,8 +115,7 @@ export function ProfileTypeModal({ open, onSpeakerChosen, onOrgChosen }: Profile
     }
 
     const handleDismiss = () => {
-        localStorage.setItem("profile_type", "speaker")
-        onSpeakerChosen()
+        toast.error("Choose a profile type to continue")
     }
 
     return (

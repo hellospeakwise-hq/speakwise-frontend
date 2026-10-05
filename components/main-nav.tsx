@@ -70,16 +70,20 @@ export function MainNav() {
   }, [mounted, isAuthenticated])
 
   const dashboardHref = useMemo(() => {
-    if (mounted && localStorage.getItem('profile_type') === 'organization') {
-      return '/dashboard/organizer'
-    }
-    if (!user?.role?.role) return "/dashboard"
+    const storedProfileType = mounted ? localStorage.getItem('profile_type') : null
+    const currentRole = user?.role?.role || user?.userType || 'speaker'
+    const effectiveRole =
+      storedProfileType === 'organization'
+        ? 'organizer'
+        : storedProfileType === 'speaker'
+          ? 'speaker'
+          : currentRole
+
     const map: Record<string, string> = {
       speaker: "/dashboard/speaker",
       organizer: "/dashboard/organizer",
-      // attendee: "/dashboard/attendee",
     }
-    return map[user.role.role] ?? "/dashboard"
+    return map[effectiveRole] ?? "/dashboard/speaker"
   }, [user, mounted])
 
   const displayName = user

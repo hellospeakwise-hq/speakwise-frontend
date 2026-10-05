@@ -12,35 +12,36 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      // Redirect to role-specific dashboard
-      const roleRoute = getRoleDashboardRoute(user.role?.role || user.userType)
+      const role = user.role?.role || user.userType || 'attendee'
+      const roleRoute = getRoleDashboardRoute(role)
       router.push(roleRoute)
     }
   }, [user, loading, router])
 
   const getRoleDashboardRoute = (role: string): string => {
-    // Check for a saved redirect path first
     const savedRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('redirectAfterLogin') : null
-    if (savedRedirect) {
+    if (savedRedirect && !savedRedirect.startsWith('/dashboard/attendee')) {
       sessionStorage.removeItem('redirectAfterLogin')
       return savedRedirect
     }
+    if (savedRedirect) sessionStorage.removeItem('redirectAfterLogin')
 
-    // profile_type is the most reliable signal — it's set explicitly when the user
-    // chooses their profile type in the modal, and synced from the backend on login.
-    const profileType = typeof window !== 'undefined' ? localStorage.getItem('profile_type') : null
-    if (profileType === 'organization') return '/dashboard/organizer'
-    if (profileType === 'speaker') return '/dashboard/speaker'
+    const storedProfileType = typeof window !== 'undefined' ? localStorage.getItem('profile_type') : null
+    const effectiveRole =
+      storedProfileType === 'organization'
+        ? 'organizer'
+        : storedProfileType === 'speaker'
+          ? 'speaker'
+          : role
 
-    // Fall back to backend role
-    switch (role) {
+    switch (effectiveRole) {
       case 'speaker':
         return '/dashboard/speaker'
       case 'organizer':
         return '/dashboard/organizer'
       case 'attendee':
       default:
-        return '/dashboard/attendee'
+        return '/dashboard/speaker'
     }
   }
 

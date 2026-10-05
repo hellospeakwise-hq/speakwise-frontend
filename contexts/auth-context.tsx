@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authApi, type AuthResponse } from '@/lib/api/auth';
+import { authApi, type LoginResponse } from '@/lib/api/auth';
 import { useRouter } from 'next/navigation';
 import { scheduleTokenRefresh, cancelTokenRefresh, initializeTokenRefresh, setSessionCallbacks } from '@/lib/utils/tokenRefresh'
 import { SessionExpiryDialog } from '@/components/auth/session-expiry-dialog';
@@ -33,6 +33,20 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const normalizeRole = (value?: string | null): User['userType'] => {
+    if (value === 'organizer' || value === 'speaker' || value === 'admin') {
+        return value;
+    }
+    return 'speaker';
+};
+
+const resolveServerProfileType = (response: LoginResponse): 'speaker' | 'organization' | null => {
+    const profiles = response.profile ?? response.profiles ?? {};
+    if (profiles.speaker_profile) return 'speaker';
+    if (profiles.organization_profile) return 'organization';
+    return null;
+};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Initialize state from localStorage immediately (before render)
@@ -76,7 +90,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 if (storedUser) {
                     try {
                         const userData = JSON.parse(storedUser);
-                        setUser(userData);
+                        const savedProfileType = localStorage.getItem('profile_type');
+                        const storedRole = normalizeRole(
+                            savedProfileType === 'organization'
+                                ? 'organizer'
+                                : savedProfileType === 'speaker'
+                                    ? 'speaker'
+                                    : userData.role?.role || userData.userType
+                        );
+                        const normalizedUser = {
+                            ...userData,
+                            role: { ...(userData.role || {}), id: userData.role?.id || userData.id, role: storedRole },
+                            userType: storedRole
+                        };
+                        setUser(normalizedUser);
+                        localStorage.setItem('user', JSON.stringify(normalizedUser));
                         setIsAuthenticated(true);
                     } catch (parseError) {
                         console.error('Error parsing stored user', parseError);
@@ -86,18 +114,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Try to get fresh user profile from API in the background
                 try {
                     const userProfile = await authApi.getProfile();
-                    // Safely handle missing role property
+                    const storedUserData = storedUser ? JSON.parse(storedUser) : {};
+                    const savedProfileType = localStorage.getItem('profile_type');
+                    const resolvedRole = normalizeRole(
+                        userProfile.role?.role ||
+                        userProfile.userType ||
+                        (savedProfileType === 'organization' ? 'organizer' : savedProfileType === 'speaker' ? 'speaker' : null) ||
+                        storedUserData.role?.role ||
+                        storedUserData.userType
+                    );
                     const userWithType = {
+                        ...storedUserData,
                         ...userProfile,
-                        userType: userProfile.role?.role || 'speaker'
+                        userType: resolvedRole,
+                        role: userProfile.role ?? { id: userProfile.id, role: resolvedRole }
                     };
                     setUser(userWithType);
                     setIsAuthenticated(true);
                     localStorage.setItem('user', JSON.stringify(userWithType));
                 } catch (error: any) {
                     console.warn('[Auth] getProfile failed', error?.response?.status, error?.response?.data);
-                    // Silently handle 404 - endpoint not implemented yet
-                    // Only log unexpected errors
+                    // Treat a missing profile endpoint response differently from other auth failures.
                     if (error?.response?.status !== 404) {
                         console.error('Error validating authentication', error);
                     }
@@ -109,6 +146,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         setUser(null);
                     }
                     // Otherwise, continue with stored user data (404 is expected during development)
+                }
+
+                if (sessionStorage.getItem('showProfileTypeModal') === 'true' && !localStorage.getItem('profile_type')) {
+                    sessionStorage.removeItem('showProfileTypeModal');
+                    setShowProfileTypeModal(true);
                 }
             } else {
                 console.log('[Auth] not authenticated (no access token)');
@@ -158,16 +200,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 }
             }
 
-            // Create user data from response - use the actual role from backend
-            // Default to speaker role if not provided by backend
+            const serverProfileType = resolveServerProfileType(response);
+            const resolvedRole = serverProfileType === 'organization'
+                ? 'organizer'
+                : serverProfileType === 'speaker'
+                    ? 'speaker'
+                    : normalizeRole(response.role?.role || null);
+
             const userData: User = {
                 id: response.id,
                 speaker_id: response.speaker_id,
                 first_name: response.first_name,
                 last_name: response.last_name,
                 email: response.email,
-                role: response.role || { id: '2', role: 'speaker' }, // Default to speaker if role not provided
-                userType: response.role?.role || 'speaker' // Default to speaker
+                role: response.role || { id: response.id, role: resolvedRole },
+                userType: resolvedRole
             };
 
             setUser(userData);
@@ -177,10 +224,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             scheduleTokenRefresh();
             console.log('[Auth] scheduled token refresh');
 
-            // Sync profile type from backend response so it's always accurate,
-            // regardless of which device or browser the user logs in from.
-            // Backend now returns a `profiles` object with speaker_profile or organization_profile.
-            const profiles = response.profiles || {};
+            // Sync profile type from the backend response so it stays authoritative.
+            const profiles = response.profile || response.profiles || {};
             const hasSpeakerProfile = !!profiles.speaker_profile;
             const hasOrgProfile = !!profiles.organization_profile;
 
@@ -193,13 +238,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else if (hasOrgProfile) {
                 localStorage.setItem('profile_type', 'organization');
                 localStorage.setItem('cached_org_profile', JSON.stringify(profiles.organization_profile));
+            } else {
+                localStorage.removeItem('profile_type');
             }
 
-            // Show the profile-type modal only when:
-            // 1. This is a fresh signup (sessionStorage flag set by sign-up-form), AND
-            // 2. The backend confirms no profile exists yet
             const isNewSignup = typeof window !== 'undefined' && sessionStorage.getItem('showProfileTypeModal') === 'true';
-            if (isNewSignup && !hasSpeakerProfile && !hasOrgProfile) {
+            if (!hasSpeakerProfile && !hasOrgProfile) {
                 sessionStorage.removeItem('showProfileTypeModal');
                 setShowProfileTypeModal(true);
                 return '/';
@@ -219,27 +263,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Check for a saved redirect path first
         const savedRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('redirectAfterLogin') : null;
 
-        if (savedRedirect) {
+        if (savedRedirect && !savedRedirect.startsWith('/dashboard/attendee')) {
             // Clear the stored redirect
             sessionStorage.removeItem('redirectAfterLogin');
             return savedRedirect;
         }
+        if (savedRedirect) sessionStorage.removeItem('redirectAfterLogin');
 
-        // Org-type users go to the org dashboard regardless of backend role
-        const profileType = typeof window !== 'undefined' ? localStorage.getItem('profile_type') : null;
-        if (profileType === 'organization') {
+        const userRole = normalizeRole(user.role?.role || user.userType || null);
+        const storedProfileType = typeof window !== 'undefined' ? localStorage.getItem('profile_type') : null;
+        const effectiveProfileType = storedProfileType;
+
+        if (effectiveProfileType === 'organization') {
             return '/dashboard/organizer';
         }
+        if (effectiveProfileType === 'speaker') {
+            return '/dashboard/speaker';
+        }
 
-        // Default redirects based on role
-        switch (user.role.role) {
+        switch (userRole) {
             case 'speaker':
                 return '/dashboard/speaker';
             case 'organizer':
                 return '/dashboard/organizer';
-            case 'attendee':
             default:
-                return '/dashboard/attendee';
+                return '/dashboard/speaker';
         }
     };
 
@@ -312,12 +360,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             <ProfileTypeModal
                 open={showProfileTypeModal}
                 onSpeakerChosen={() => {
+                    if (user) {
+                        const speakerUser = {
+                            ...user,
+                            role: { id: user.id, role: 'speaker' as const },
+                            userType: 'speaker' as const
+                        };
+                        setUser(speakerUser);
+                        localStorage.setItem('user', JSON.stringify(speakerUser));
+                    }
                     setShowProfileTypeModal(false);
                     router.push('/dashboard/speaker');
                 }}
                 onOrgChosen={() => {
+                    if (user) {
+                        const organizerUser = {
+                            ...user,
+                            role: { id: user.id, role: 'organizer' as const },
+                            userType: 'organizer' as const
+                        };
+                        setUser(organizerUser);
+                        localStorage.setItem('user', JSON.stringify(organizerUser));
+                    }
                     setShowProfileTypeModal(false);
-                    router.push('/profile');
+                    router.push('/dashboard/organizer');
                 }}
             />
         </AuthContext.Provider>

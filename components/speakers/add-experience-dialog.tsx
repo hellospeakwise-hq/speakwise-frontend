@@ -22,23 +22,51 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 
+import { type SpeakerExperience } from "@/lib/api/experiencesApi"
+
 interface AddExperienceDialogProps {
-    onSuccess?: () => void
+    onSuccess?: (created?: SpeakerExperience) => void
+    trigger?: React.ReactNode
+    initialData?: Partial<CreateExperienceData>
 }
 
-export function AddExperienceDialog({ onSuccess }: AddExperienceDialogProps) {
+export function AddExperienceDialog({ onSuccess, trigger, initialData }: AddExperienceDialogProps) {
     const [open, setOpen] = useState(false)
     const [loading, setLoading] = useState(false)
-    const [date, setDate] = useState<Date>()
+    const [date, setDate] = useState<Date | undefined>(() => {
+        if (initialData?.event_date) {
+            const parsed = new Date(initialData.event_date)
+            return isNaN(parsed.getTime()) ? undefined : parsed
+        }
+        return undefined
+    })
 
     const [formData, setFormData] = useState<CreateExperienceData>({
-        event_name: '',
-        event_date: '',
-        topic: '',
-        description: '',
-        presentation_link: '',
-        video_recording_link: '',
+        event_name: initialData?.event_name || '',
+        event_date: initialData?.event_date || '',
+        topic: initialData?.topic || '',
+        description: initialData?.description || '',
+        presentation_link: initialData?.presentation_link || '',
+        video_recording_link: initialData?.video_recording_link || '',
     })
+
+    const handleOpenChange = (nextOpen: boolean) => {
+        setOpen(nextOpen)
+        if (nextOpen && initialData) {
+            setFormData({
+                event_name: initialData.event_name || '',
+                event_date: initialData.event_date || '',
+                topic: initialData.topic || '',
+                description: initialData.description || '',
+                presentation_link: initialData.presentation_link || '',
+                video_recording_link: initialData.video_recording_link || '',
+            })
+            if (initialData.event_date) {
+                const parsed = new Date(initialData.event_date)
+                setDate(isNaN(parsed.getTime()) ? undefined : parsed)
+            }
+        }
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -50,8 +78,8 @@ export function AddExperienceDialog({ onSuccess }: AddExperienceDialogProps) {
 
         try {
             setLoading(true)
-            await experiencesApi.createExperience(formData)
-            toast.success('Talk/Conference experience added successfully!')
+            const created = await experiencesApi.createExperience(formData)
+            toast.success('Talk/Conference experience added successfully! Feedback QR is ready.')
             setOpen(false)
 
             // Reset form
@@ -66,7 +94,7 @@ export function AddExperienceDialog({ onSuccess }: AddExperienceDialogProps) {
             setDate(undefined)
 
             if (onSuccess) {
-                onSuccess()
+                onSuccess(created)
             }
         } catch (error) {
             console.error('Error adding experience:', error)
@@ -87,13 +115,17 @@ export function AddExperienceDialog({ onSuccess }: AddExperienceDialogProps) {
     }
 
     return (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-                <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    <span className="hidden sm:inline">Add Talk/Conference Experience</span>
-                    <span className="sm:hidden">Add Experience</span>
-                </Button>
+                {trigger ? (
+                    trigger
+                ) : (
+                    <Button>
+                        <Plus className="mr-2 h-4 w-4" />
+                        <span className="hidden sm:inline">Add Talk/Conference Experience</span>
+                        <span className="sm:hidden">Add Experience</span>
+                    </Button>
+                )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>

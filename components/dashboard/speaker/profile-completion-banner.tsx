@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useAuth } from "@/contexts/auth-context"
 import { userApi, type SpeakerProfile, type User } from "@/lib/api/userApi"
+import { speakerApi } from "@/lib/api/speakerApi"
 import { cn } from "@/lib/utils"
 import { calculateProfileCompletion } from "@/lib/utils/profile-completion"
 
@@ -64,16 +65,12 @@ export function ProfileCompletionBanner() {
     const fetchSpeakerProfile = async () => {
       try {
         // Use the same source as the profile page so completion matches exactly
-        const profile = await userApi.getUserProfile() as any
+        const profile = await userApi.refreshUserProfile() as any
 
         // Handle user data - could be nested under 'user' or at root level
         const profileUser = profile?.user || profile
 
-        // Handle speaker data - could be nested object, array, or at root
-        let speakerData = profile?.speaker
-        if (Array.isArray(speakerData)) {
-          speakerData = speakerData[0]
-        }
+        const speakerData = await speakerApi.getProfile()
 
         if (mounted && profileUser && speakerData) {
           calculateCompletion(profileUser, speakerData)

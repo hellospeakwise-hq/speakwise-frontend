@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { Calendar, MapPin, Users, Clock, ExternalLink, CalendarPlus, Loader2 } from "lucide-react"
+import { Calendar, MapPin, Users, Clock, ExternalLink, CalendarPlus, Loader2, QrCode } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { speakerRequestApi } from "@/lib/api/speakerRequestApi"
 import { eventsApi } from "@/lib/api/events"
 import { type Event } from "@/lib/types/api"
+import { AddExperienceDialog } from "@/components/speakers/add-experience-dialog"
 
 interface UpcomingEventsProps {
   limit?: number
@@ -87,7 +88,7 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-orange-500" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             <span className="ml-2 text-muted-foreground">Loading events...</span>
           </div>
         </CardContent>
@@ -104,7 +105,7 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
         </div>
         {limit && events.length > limit && (
           <Link href="/dashboard/speaker/upcoming">
-            <Button variant="ghost" size="sm" className="text-orange-600 dark:text-orange-400">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
               View All
             </Button>
           </Link>
@@ -128,7 +129,7 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
                     )}
                     <div className="flex flex-wrap gap-4 mt-2 text-sm text-muted-foreground">
                       <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1 text-orange-500" />
+                        <Calendar className="h-4 w-4 mr-1 text-muted-foreground" />
                         {(() => {
                           try {
                             const raw = event.date ?? event.start_date_time
@@ -147,7 +148,7 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
                     </div>
                     {event.location && (
                       <div className="flex items-center mt-1 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 mr-1 text-orange-500" />
+                        <MapPin className="h-4 w-4 mr-1 text-muted-foreground" />
                         {event.location}
                       </div>
                     )}
@@ -160,6 +161,22 @@ export function UpcomingEvents({ limit }: UpcomingEventsProps) {
                         View Event
                       </Button>
                     </Link>
+                    <AddExperienceDialog
+                      initialData={{
+                        event_name: event.title,
+                        event_date: (event.date ?? event.start_date_time ?? '').split('T')[0],
+                      }}
+                      trigger={
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full justify-start gap-2"
+                        >
+                          <QrCode className="h-4 w-4" />
+                          Get Feedback QR
+                        </Button>
+                      }
+                    />
                   </div>
                 </div>
               </div>

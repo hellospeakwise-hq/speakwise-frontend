@@ -1,4 +1,4 @@
-import apiClient from './base';
+import apiClient, { normalizeListResponse } from './base';
 
 export interface SpeakerExperience {
     id?: string;
@@ -32,7 +32,7 @@ export const experiencesApi = {
     async getMyExperiences(): Promise<SpeakerExperience[]> {
         try {
             const response = await apiClient.get('/speakers/experiences/');
-            return response.data;
+            return normalizeListResponse<SpeakerExperience>(response.data);
         } catch (error: any) {
             console.error('Error fetching experiences:', error);
             throw error;
@@ -43,7 +43,7 @@ export const experiencesApi = {
     async getSpeakerExperiencesBySlug(slug: string): Promise<SpeakerExperience[]> {
         try {
             const response = await apiClient.get(`/speakers/${slug}/experiences/`);
-            return response.data || [];
+            return normalizeListResponse<SpeakerExperience>(response.data);
         } catch (error: any) {
             console.error('Error fetching speaker experiences:', error);
             return []; // Return empty array instead of throwing
