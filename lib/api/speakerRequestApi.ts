@@ -1,4 +1,4 @@
-import apiClient from './base';
+import apiClient, { normalizeListResponse } from './base';
 
 export interface SpeakerRequest {
     id?: string;
@@ -26,10 +26,10 @@ export const speakerRequestApi = {
     // Get all speaker requests (for organizers)
     // REQUIRED: Organization ID must be provided
     async getSpeakerRequests(organizationId: string): Promise<SpeakerRequest[]> {
-        const response = await apiClient.get('/speaker-requests/', {
+        const response = await apiClient.get<any>('/speaker-requests/', {
             params: { organization: organizationId }
         });
-        return response.data;
+        return normalizeListResponse<SpeakerRequest>(response.data);
     },
 
     // Get a specific speaker request by ID
@@ -102,8 +102,8 @@ export const speakerRequestApi = {
 
     // Get email requests sent or received by the authenticated user
     async getEmailRequests(): Promise<EmailSpeakerRequest[]> {
-        const response = await apiClient.get('/speaker-requests/email-requests/');
-        return response.data;
+        const response = await apiClient.get<any>('/speaker-requests/email-requests/');
+        return normalizeListResponse<EmailSpeakerRequest>(response.data);
     },
 
     // Create a new email speaker request

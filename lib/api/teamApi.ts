@@ -1,3 +1,5 @@
+import { normalizeListResponse } from './base';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
 export interface SocialLink {
@@ -35,7 +37,7 @@ export async function fetchTeamMembers(): Promise<TeamMember[]> {
 
     const data = await response.json();
     console.log('Team members fetched successfully:', data);
-    return data;
+    return normalizeListResponse<TeamMember>(data);
   } catch (error) {
     console.error('Error fetching team members:', error);
     throw error;

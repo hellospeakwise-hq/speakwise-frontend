@@ -1,5 +1,13 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
+export function normalizeListResponse<T>(data: T | { results?: T[] } | null | undefined): T[] {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object' && Array.isArray((data as { results?: T[] }).results)) {
+    return (data as { results: T[] }).results;
+  }
+  return [];
+}
+
 // API configuration
 export const API_CONFIG = {
   BASE_URL: process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000',
