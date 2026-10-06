@@ -250,8 +250,8 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
               {/* Name block */}
               <div className="w-full md:text-left text-center">
                 <h1 className="text-2xl font-bold leading-tight">{speakerName}</h1>
-                {speaker.slug && (
-                  <p className="text-lg text-muted-foreground font-normal mt-0.5">@{speaker.slug}</p>
+                {(speaker.username || speaker.slug) && (
+                  <p className="text-lg text-muted-foreground font-normal mt-0.5">@{speaker.username || speaker.slug}</p>
                 )}
                 {speaker.organization && (
                   <p className="text-sm text-muted-foreground mt-1">{speaker.organization}</p>

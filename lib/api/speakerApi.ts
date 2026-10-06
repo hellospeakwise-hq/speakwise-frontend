@@ -6,6 +6,7 @@ export interface SpeakerProfile {
     speaker_user?: string;
     user_account: string;
     speaker_name: string;
+    username?: string;
     slug?: string;
     social_links: SocialLink[];
     organization: string;
