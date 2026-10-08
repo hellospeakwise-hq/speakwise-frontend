@@ -24,12 +24,14 @@ import { AddExperienceDialog } from "@/components/speakers/add-experience-dialog
 import { ProfileCompletionTracker } from "@/components/profile/profile-completion-tracker"
 import { SkillsCombobox } from "@/components/profile/skills-combobox"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { getDefaultAvatar, getAvatarUrl } from "@/lib/utils"
 import { AvatarCropDialog } from "@/components/profile/avatar-crop-dialog"
+import { getApiErrorMessage, getApiFieldErrors } from "@/lib/utils/api-errors"
 
 function ProfilePageContent() {
     const { user } = useAuth()
+    const router = useRouter()
     const searchParams = useSearchParams()
     const [mounted, setMounted] = useState(false)
     const [isEditing, setIsEditing] = useState(false)
@@ -44,6 +46,7 @@ function ProfilePageContent() {
     // const [organizations, setOrganizations] = useState<Organization[]>([])
     // const [isLoadingOrgs, setIsLoadingOrgs] = useState(false)
     const [showWelcomeBanner, setShowWelcomeBanner] = useState(false)
+    const [profileSetupMode, setProfileSetupMode] = useState<"welcome" | "resume" | null>(null)
     const [isOrgUser, setIsOrgUser] = useState(false)
     const [orgProfile, setOrgProfile] = useState<OrganizationProfile | null>(null)
     const [isLoadingOrg, setIsLoadingOrg] = useState(false)
@@ -53,16 +56,25 @@ function ProfilePageContent() {
     const [orgBrandingPreview, setOrgBrandingPreview] = useState<string | null>(null)
     const [isEditingOrg, setIsEditingOrg] = useState(false)
 
-    // Check if this is a new OAuth user
+    // Welcome OAuth users to profile setup, then remove the query so refreshes don't repeat the toast.
     useEffect(() => {
-        const isNewOAuthUser = searchParams.get('welcome') === 'true' || 
-                              sessionStorage.getItem('newOAuthUser') === 'true'
-        if (isNewOAuthUser) {
+        const setupMode = searchParams.get('setup')
+        const legacyWelcome = searchParams.get('welcome') === 'true' ||
+            sessionStorage.getItem('newOAuthUser') === 'true'
+        if (setupMode === 'welcome' || setupMode === 'resume' || legacyWelcome) {
+            const mode = setupMode === 'resume' ? 'resume' : 'welcome'
+            setProfileSetupMode(mode)
             setShowWelcomeBanner(true)
-            // Clear the flag so it doesn't show again
+            setIsEditing(true)
+            toast.success(
+                mode === 'welcome'
+                    ? "Welcome to SpeakWise,let's set up your profile."
+                    : "Let's finish setting up your profile."
+            )
             sessionStorage.removeItem('newOAuthUser')
+            if (setupMode) router.replace('/profile')
         }
-    }, [searchParams])
+    }, [router, searchParams])
 
     // Onboarding
     const { shouldShowOnboarding, completeOnboarding } = useOnboarding('PROFILE')
@@ -72,6 +84,7 @@ function ProfilePageContent() {
     const [lastName, setLastName] = useState('')
     const [username, setUsername] = useState('')
     const [nationality, setNationality] = useState('')
+    const [accountFieldErrors, setAccountFieldErrors] = useState<Record<string, string>>({})
     const [organization, setOrganization] = useState("")
     const [shortBio, setShortBio] = useState("")
     const [longBio, setLongBio] = useState("")
@@ -242,6 +255,22 @@ function ProfilePageContent() {
     // }
 
     const handleSaveProfile = async () => {
+        const missingRequiredFields = [
+            !firstName.trim() && ['first_name', 'First name'],
+            !lastName.trim() && ['last_name', 'Last name'],
+            !nationality.trim() && ['nationality', 'Nationality'],
+        ].filter((field): field is [string, string] => Boolean(field))
+
+        if (missingRequiredFields.length) {
+            const errors = Object.fromEntries(
+                missingRequiredFields.map(([field, label]) => [field, `${label} is required.`]),
+            )
+            setAccountFieldErrors(errors)
+            toast.error(Object.values(errors).join(' '))
+            return
+        }
+
+        setAccountFieldErrors({})
         setIsSaving(true)
         try {
             const data = profileData as any
@@ -272,26 +301,11 @@ function ProfilePageContent() {
             console.error('Failed to update profile:', error)
             console.error('Error response:', error.response?.data)
             const data = error.response?.data
-            let errorMessage = "Failed to update profile"
-            if (data) {
-                if (data.detail) {
-                    errorMessage = data.detail
-                } else if (data.message) {
-                    errorMessage = data.message
-                } else if (typeof data === 'object') {
-                    // Field-level validation errors e.g. { nationality: ["This field may not be blank."] }
-                    const fieldErrors = Object.entries(data)
-                        .map(([field, msgs]) => {
-                            const label = field.replace(/_/g, ' ')
-                            const msg = Array.isArray(msgs) ? msgs[0] : msgs
-                            return `${label.charAt(0).toUpperCase() + label.slice(1)}: ${msg}`
-                        })
-                        .join('\n')
-                    if (fieldErrors) errorMessage = fieldErrors
-                }
-            } else if (error.message) {
-                errorMessage = error.message
-            }
+            const fieldErrors = getApiFieldErrors(data)
+            setAccountFieldErrors(fieldErrors)
+            const errorMessage =
+                getApiErrorMessage(data) ??
+                (error instanceof Error ? error.message : "We couldn't save your profile. Please try again.")
             toast.error(errorMessage)
         } finally {
             setIsSaving(false)
@@ -331,7 +345,10 @@ function ProfilePageContent() {
 
             if (!response.ok) {
                 const err = await response.json()
-                throw new Error(err.detail || 'Failed to upload avatar')
+                throw new Error(
+                    getApiErrorMessage(err, response.status) ??
+                        'We couldn’t upload your profile picture. Please try again.',
+                )
             }
 
             const freshSpeaker = await speakerApi.getProfile()
@@ -460,11 +477,14 @@ function ProfilePageContent() {
                                         <Sparkles className="h-5 w-5 text-orange-500 mt-0.5 mr-3" />
                                         <div>
                                             <AlertTitle className="text-orange-800 dark:text-orange-300 text-lg">
-                                                Welcome to SpeakWise! 🎉
+                                                {profileSetupMode === 'resume' ? "Let's finish your profile" : "Welcome to SpeakWise"}
                                             </AlertTitle>
                                             <AlertDescription className="text-orange-700 dark:text-orange-400 mt-2">
-                                                <p>Your account has been created. Complete your profile below to help organizers find you and invite you to speak at their events.</p>
-                                                <p className="mt-2 text-sm">Speakers with complete profiles are <span className="font-semibold">3x more likely</span> to receive speaking invitations.</p>
+                                                <p>
+                                                    {isOrgUser
+                                                        ? "Add your organization's details so people can understand the events you host and how to connect with you."
+                                                        : "Add your personal details and professional information so organizers can find you and invite you to speak at their events."}
+                                                </p>
                                             </AlertDescription>
                                         </div>
                                     </div>
@@ -617,24 +637,56 @@ function ProfilePageContent() {
                             <form className="space-y-4">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <div className="space-y-2">
-                                        <Label htmlFor="firstName">First Name</Label>
+                                        <Label htmlFor="firstName">
+                                            First Name <span aria-hidden="true" className="text-destructive">*</span>
+                                        </Label>
                                         <Input
                                             id="firstName"
                                             value={firstName}
-                                            onChange={(e) => setFirstName(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value
+                                                setFirstName(value)
+                                                if (value.trim()) {
+                                                    setAccountFieldErrors((errors) => ({ ...errors, first_name: '' }))
+                                                }
+                                            }}
                                             disabled={!isEditing}
                                             placeholder="Enter your first name"
+                                            required
+                                            aria-invalid={Boolean(accountFieldErrors.first_name)}
+                                            aria-describedby={accountFieldErrors.first_name ? "firstName-error" : undefined}
                                         />
+                                        {accountFieldErrors.first_name && (
+                                            <p id="firstName-error" className="text-sm text-destructive" role="alert">
+                                                {accountFieldErrors.first_name}
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="lastName">Last Name</Label>
+                                        <Label htmlFor="lastName">
+                                            Last Name <span aria-hidden="true" className="text-destructive">*</span>
+                                        </Label>
                                         <Input
                                             id="lastName"
                                             value={lastName}
-                                            onChange={(e) => setLastName(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value
+                                                setLastName(value)
+                                                if (value.trim()) {
+                                                    setAccountFieldErrors((errors) => ({ ...errors, last_name: '' }))
+                                                }
+                                            }}
                                             disabled={!isEditing}
                                             placeholder="Enter your last name"
+                                            required
+                                            aria-invalid={Boolean(accountFieldErrors.last_name)}
+                                            aria-describedby={accountFieldErrors.last_name ? "lastName-error" : undefined}
                                         />
+                                        {accountFieldErrors.last_name && (
+                                            <p id="lastName-error" className="text-sm text-destructive" role="alert">
+                                                {accountFieldErrors.last_name}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -660,14 +712,30 @@ function ProfilePageContent() {
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="nationality">Nationality</Label>
+                                        <Label htmlFor="nationality">
+                                            Nationality <span aria-hidden="true" className="text-destructive">*</span>
+                                        </Label>
                                         <Input
                                             id="nationality"
                                             value={nationality}
-                                            onChange={(e) => setNationality(e.target.value)}
+                                            onChange={(e) => {
+                                                const value = e.target.value
+                                                setNationality(value)
+                                                if (value.trim()) {
+                                                    setAccountFieldErrors((errors) => ({ ...errors, nationality: '' }))
+                                                }
+                                            }}
                                             disabled={!isEditing}
                                             placeholder="Enter your nationality"
+                                            required
+                                            aria-invalid={Boolean(accountFieldErrors.nationality)}
+                                            aria-describedby={accountFieldErrors.nationality ? "nationality-error" : undefined}
                                         />
+                                        {accountFieldErrors.nationality && (
+                                            <p id="nationality-error" className="text-sm text-destructive" role="alert">
+                                                {accountFieldErrors.nationality}
+                                            </p>
+                                        )}
                                     </div>
                                 </div>
                             </form>

@@ -65,6 +65,11 @@ function OAuthCallbackContent() {
         const profiles = response.profile || response.profiles || {}
         const hasSpeakerProfile = !!profiles.speaker_profile
         const hasOrgProfile = !!profiles.organization_profile
+        const hasCompleteAccountDetails = [
+          response.first_name,
+          response.last_name,
+          response.nationality,
+        ].every((value) => typeof value === "string" && value.trim().length > 0)
 
         if (hasSpeakerProfile) {
           localStorage.setItem('profile_type', 'speaker')
@@ -82,10 +87,14 @@ function OAuthCallbackContent() {
         // Determine redirect based on profile existence
         let redirectPath = '/'
         if (!hasSpeakerProfile && !hasOrgProfile) {
-          // New user - show profile type modal
+          // New users choose their profile type before completing profile details.
+          localStorage.removeItem('profile_type')
+          localStorage.removeItem('cached_org_profile')
           sessionStorage.setItem('showProfileTypeModal', 'true')
+          sessionStorage.setItem('oauthProfileSetup', 'true')
           redirectPath = '/'
-          toast.success('Welcome to SpeakWise! 🎉', { duration: 3000 })
+        } else if (!hasCompleteAccountDetails) {
+          redirectPath = '/profile?setup=resume'
         } else if (hasSpeakerProfile) {
           redirectPath = '/dashboard/speaker'
           toast.success('Welcome back! 👋')
@@ -98,8 +107,8 @@ function OAuthCallbackContent() {
 
         // Use replace to avoid back-button issues
         setTimeout(() => {
-          window.location.href = redirectPath
-        }, 1000)
+          window.location.assign(redirectPath)
+        }, 500)
 
       } catch (error: any) {
         console.error('OAuth callback error:', error)

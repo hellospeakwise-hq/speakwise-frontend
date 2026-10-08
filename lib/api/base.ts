@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
+import { getApiErrorMessage } from '@/lib/utils/api-errors';
 
 export function normalizeListResponse<T>(data: T | { results?: T[] } | null | undefined): T[] {
   if (Array.isArray(data)) return data;
@@ -62,6 +63,11 @@ apiClient.interceptors.response.use(
   },
   async (error: AxiosError) => {
     const originalRequest: any = error.config;
+
+    if (error.response) {
+      const userMessage = getApiErrorMessage(error.response.data, error.response.status);
+      if (userMessage) error.message = userMessage;
+    }
     
     // Handle token expiration
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -166,15 +172,7 @@ apiClient.interceptors.response.use(
     }
 
     // Handle API errors for non-auth endpoints
-    const errorData = error.response?.data as any;
-    const errorMessage = (Array.isArray(errorData) && errorData[0])
-                        || errorData?.message
-                        || errorData?.detail
-                        || errorData?.non_field_errors?.[0]
-                        || error.message
-                        || 'An unexpected error occurred';
-
-    throw new Error(errorMessage);
+    return Promise.reject(error);
   }
 );
 

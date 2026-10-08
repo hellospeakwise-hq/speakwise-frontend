@@ -148,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     // Otherwise, continue with stored user data (404 is expected during development)
                 }
 
-                if (sessionStorage.getItem('showProfileTypeModal') === 'true' && !localStorage.getItem('profile_type')) {
+                if (sessionStorage.getItem('showProfileTypeModal') === 'true') {
                     sessionStorage.removeItem('showProfileTypeModal');
                     setShowProfileTypeModal(true);
                 }
@@ -344,6 +344,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     };
 
+    const navigateAfterProfileTypeSelection = (dashboardPath: string) => {
+        if (sessionStorage.getItem('oauthProfileSetup') === 'true') {
+            sessionStorage.removeItem('oauthProfileSetup');
+            router.push('/profile?setup=welcome');
+            return;
+        }
+        router.push(dashboardPath);
+    };
+
     return (
         <AuthContext.Provider value={{ user, setUser, loading, login, register, verifyOtp, resendOtp, logout, isAuthenticated }}>
             {children}
@@ -370,7 +379,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         localStorage.setItem('user', JSON.stringify(speakerUser));
                     }
                     setShowProfileTypeModal(false);
-                    router.push('/dashboard/speaker');
+                    navigateAfterProfileTypeSelection('/dashboard/speaker');
                 }}
                 onOrgChosen={() => {
                     if (user) {
@@ -383,7 +392,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                         localStorage.setItem('user', JSON.stringify(organizerUser));
                     }
                     setShowProfileTypeModal(false);
-                    router.push('/dashboard/organizer');
+                    navigateAfterProfileTypeSelection('/dashboard/organizer');
                 }}
             />
         </AuthContext.Provider>

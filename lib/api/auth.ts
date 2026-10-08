@@ -1,4 +1,5 @@
 import { apiClient } from './base';
+import { getApiErrorMessage } from '@/lib/utils/api-errors';
 
 // Types
 export type UserRole = 'attendee' | 'speaker' | 'organizer' | 'admin';
@@ -90,32 +91,11 @@ export const authApi = {
       return response.data;
     } catch (error: any) {
       console.error('Registration error:', error.response?.data);
-      
-      // Parse error response to get user-friendly message
-      const errorData = error.response?.data;
-      if (errorData && typeof errorData === 'object') {
-        const messages: string[] = [];
-        for (const [field, errors] of Object.entries(errorData)) {
-          if (Array.isArray(errors)) {
-            errors.forEach((err: string) => {
-              // Check if error already contains field context
-              if (err.toLowerCase().includes(field.toLowerCase()) || err.toLowerCase().includes('this')) {
-                messages.push(err);
-              } else {
-                const fieldName = field.replace(/_/g, ' ').replace(/^./, c => c.toUpperCase());
-                messages.push(`${fieldName}: ${err}`);
-              }
-            });
-          } else if (typeof errors === 'string') {
-            messages.push(errors);
-          }
-        }
-        if (messages.length > 0) {
-          throw new Error(messages.join('. '));
-        }
-      }
-      
-      throw new Error(error.message || 'Registration failed. Please try again.');
+      throw new Error(
+        getApiErrorMessage(error.response?.data, error.response?.status) ??
+          error.message ??
+          'We couldn’t create your account. Please try again.',
+      );
     }
   },
 
@@ -170,6 +150,10 @@ export const authApi = {
           const msg = typeof errorData.message === 'string' ? errorData.message : JSON.stringify(errorData.message);
           throw new Error(msg);
         } else {
+          const validationMessage = getApiErrorMessage(errorData);
+          if (validationMessage) {
+            throw new Error(validationMessage);
+          }
           // Generic auth error message for 400/401 status codes
           throw new Error('Incorrect email or password');
         }
