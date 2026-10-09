@@ -1034,6 +1034,7 @@ function ProfilePageContent() {
                     </div>
 
                     {/* Sticky Sidebar - Profile Completion Tracker */}
+                    {!isOrgUser && (
                     <div className="hidden lg:block w-72 flex-shrink-0">
                         <div className="sticky top-24">
                             {(() => {
@@ -1052,6 +1053,7 @@ function ProfilePageContent() {
                             })()}
                         </div>
                     </div>
+                    )}
                 </div>
             </div>
 
@@ -1065,7 +1067,7 @@ function ProfilePageContent() {
             {/* Onboarding Tour */}
             <OnboardingTour
                 steps={profileOnboardingSteps}
-                run={shouldShowOnboarding && !isLoadingProfile}
+                run={shouldShowOnboarding && !isLoadingProfile && !isOrgUser}
                 onComplete={completeOnboarding}
             />
 

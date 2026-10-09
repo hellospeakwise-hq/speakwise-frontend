@@ -6,16 +6,12 @@ import { useEffect, useState } from "react"
 import Image from "next/image"
 import { organizationApi, type OrganizationProfile } from "@/lib/api/organizationApi"
 import { Building2, Clock, CheckCircle2, XCircle } from "lucide-react"
-import { OnboardingTour } from "@/components/onboarding/onboarding-tour"
-import { organizerDashboardSteps } from "@/components/onboarding/onboarding-steps"
-import { useOnboarding } from "@/hooks/use-onboarding"
 
 export default function OrganizerDashboardPage() {
     const [org, setOrg] = useState<OrganizationProfile | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [showApprovedBanner, setShowApprovedBanner] = useState(false)
 
-    const { shouldShowOnboarding, completeOnboarding } = useOnboarding('ORGANIZER_DASHBOARD')
 
     useEffect(() => {
         const load = async () => {
@@ -67,7 +63,7 @@ export default function OrganizerDashboardPage() {
                 {/* Header */}
                 <div className="flex items-start gap-4">
                     {/* Logo */}
-                    <div className="hidden sm:flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-200/40">
+                    <div className="relative hidden sm:flex h-12 w-12 flex-shrink-0 items-center overflow-hidden justify-center rounded-2xl bg-amber-500/10 border border-amber-200/40">
                         {org?.branding ? (
                             <Image src={org.branding} alt={org.name} fill sizes="48px" className="rounded-2xl object-cover" />
                         ) : (
@@ -148,11 +144,6 @@ export default function OrganizerDashboardPage() {
                 {org && <OrganizerDashboard />}
             </div>
 
-            <OnboardingTour
-                steps={organizerDashboardSteps}
-                run={shouldShowOnboarding && !isLoading && !!org}
-                onComplete={completeOnboarding}
-            />
         </ProtectedRoute>
     )
 }
