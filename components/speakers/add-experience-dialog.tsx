@@ -23,6 +23,7 @@ import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 
 import { type SpeakerExperience } from "@/lib/api/experiencesApi"
+import { TalkCoverImage } from "@/components/ui/talk-cover-image"
 
 interface AddExperienceDialogProps {
     onSuccess?: (created?: SpeakerExperience) => void
@@ -184,6 +185,18 @@ export function AddExperienceDialog({ onSuccess, trigger, initialData }: AddExpe
                                 className="w-full"
                                 required
                             />
+                        </div>
+
+                        <div className="space-y-2">
+                            <p className="text-sm font-medium">Experience cover preview</p>
+                            <TalkCoverImage
+                                title={formData.topic}
+                                eventName={formData.event_name}
+                                className="aspect-[16/9] w-full rounded-md"
+                            />
+                            <p className="text-sm text-muted-foreground">
+                                Generated from your event name and talk title.
+                            </p>
                         </div>
 
                         {/* Description */}

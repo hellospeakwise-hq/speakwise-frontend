@@ -109,7 +109,7 @@ export function ExperiencesList({ speakerId, speakerSlug, onCountChange }: Exper
                         {/* Generated cover image */}
                         <TalkCoverImage
                             title={experience.topic}
-                            category={experience.event_name}
+                            eventName={experience.event_name}
                             className="w-full sm:w-64 h-48 sm:h-auto flex-shrink-0"
                         />
                         
