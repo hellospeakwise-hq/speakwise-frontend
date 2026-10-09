@@ -3,6 +3,7 @@
 import { OrganizerDashboard } from "@/components/dashboard/organizer-dashboard"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { useEffect, useState } from "react"
+import Image from "next/image"
 import { organizationApi, type OrganizationProfile } from "@/lib/api/organizationApi"
 import { Building2, Clock, CheckCircle2, XCircle } from "lucide-react"
 import { OnboardingTour } from "@/components/onboarding/onboarding-tour"
@@ -68,7 +69,7 @@ export default function OrganizerDashboardPage() {
                     {/* Logo */}
                     <div className="hidden sm:flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-200/40">
                         {org?.branding ? (
-                            <img src={org.branding} alt={org.name} className="h-full w-full rounded-2xl object-cover" />
+                            <Image src={org.branding} alt={org.name} fill sizes="48px" className="rounded-2xl object-cover" />
                         ) : (
                             <span className="text-base font-bold text-amber-600">
                                 {org?.name?.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase() ?? "?"}

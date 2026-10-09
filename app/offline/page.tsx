@@ -33,10 +33,10 @@ export default function OfflinePage() {
       </div>
 
       <h1 className="text-3xl font-bold tracking-tight text-foreground mb-3">
-        You're offline
+        You&apos;re offline
       </h1>
       <p className="text-muted-foreground max-w-sm mb-8 leading-relaxed">
-        It looks like you've lost your internet connection. Check your network and try again.
+        It looks like you&apos;ve lost your internet connection. Check your network and try again.
       </p>
 
       <button
@@ -47,7 +47,7 @@ export default function OfflinePage() {
       </button>
 
       <p className="mt-6 text-xs text-muted-foreground/60">
-        SpeakWise • Pages you've visited before may still be available
+        SpeakWise • Pages you&apos;ve visited before may still be available
       </p>
     </div>
   )

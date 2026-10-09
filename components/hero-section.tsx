@@ -116,13 +116,13 @@ export function HeroSection() {
                 </div>
                 
                 {/* Floating badge */}
-                <div className="absolute -top-4 -right-4 bg-gradient-to-br from-orange-500 to-orange-600 text-white rounded-2xl shadow-xl p-4 animate-bounce">
+                <div className="absolute -top-4 -right-4 bg-orange-600 text-white rounded-2xl shadow-sm p-4">
                   <div className="text-2xl font-bold">4.9</div>
                   <div className="text-xs">Rating</div>
                 </div>
                 
                 {/* Floating badge 2 */}
-                <div className="absolute -bottom-4 -left-4 bg-gradient-to-br from-purple-500 to-purple-600 text-white rounded-2xl shadow-xl p-4">
+                <div className="absolute -bottom-4 -left-4 bg-zinc-800 text-white rounded-2xl shadow-sm p-4">
                   <div className="text-2xl font-bold">500+</div>
                   <div className="text-xs">Reviews</div>
                 </div>

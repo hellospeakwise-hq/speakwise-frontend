@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { Download, X } from 'lucide-react'
 
 interface BeforeInstallPromptEvent extends Event {
@@ -74,8 +75,7 @@ export function PWAInstallPrompt() {
     >
       {/* App icon */}
       <div className="shrink-0 h-12 w-12 rounded-xl overflow-hidden ring-1 ring-white/10">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/icons/icon-192x192.png" alt="SpeakWise" className="h-full w-full object-cover" />
+        <Image src="/icons/icon-192x192.png" alt="SpeakWise" width={48} height={48} className="h-full w-full object-cover" />
       </div>
 
       {/* Text */}

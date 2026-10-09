@@ -2,6 +2,7 @@
 
 import { useState, useEffect, use, useMemo } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Building2, Globe, Mail, Calendar, ExternalLink, ChevronLeft, Clock, Loader2, MapPin, Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -40,9 +41,11 @@ function OrgEventCard({ event }: { event: Event }) {
                 {/* Image / placeholder */}
                 <div className="relative h-36 w-full overflow-hidden bg-muted">
                     {imageUrl ? (
-                        <img
+                        <Image
                             src={imageUrl}
                             alt={event.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
                             className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                     ) : (
@@ -307,7 +310,7 @@ export default function OrganizationDetailPage({ params }: { params: Promise<{ i
             <div className="container max-w-4xl mx-auto py-20 text-center">
                 <Building2 className="h-12 w-12 text-muted-foreground/40 mx-auto mb-4" />
                 <h1 className="text-2xl font-bold mb-2">Organization not found</h1>
-                <p className="text-muted-foreground mb-6">This organization doesn't exist or hasn't been approved yet.</p>
+                <p className="text-muted-foreground mb-6">This organization doesn&apos;t exist or hasn&apos;t been approved yet.</p>
                 <Button asChild variant="outline">
                     <Link href="/organizations">Browse Organizations</Link>
                 </Button>
@@ -337,9 +340,9 @@ export default function OrganizationDetailPage({ params }: { params: Promise<{ i
                 <div className="mb-8">
                     <div className="flex items-center gap-4 mb-4">
                         {/* Logo avatar */}
-                        <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl overflow-hidden bg-muted border border-border flex-shrink-0 flex items-center justify-center">
+                        <div className="relative h-16 w-16 sm:h-20 sm:w-20 rounded-2xl overflow-hidden bg-muted border border-border flex-shrink-0 flex items-center justify-center">
                             {org.branding ? (
-                                <img src={org.branding} alt={org.name} className="h-full w-full object-cover" />
+                                <Image src={org.branding} alt={org.name} fill sizes="80px" className="object-cover" />
                             ) : (
                                 <span className="text-2xl font-bold text-muted-foreground">
                                     {org.name.split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}

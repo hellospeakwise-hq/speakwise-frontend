@@ -116,7 +116,7 @@ export default function DiscoverPage() {
                 </div>
                 <h2 className="text-2xl font-bold">Coming Soon!</h2>
                 <p className="text-muted-foreground">
-                  We're building an amazing directory of developer conferences, meetups, and CFPs from around the world. 
+                  We&apos;re building an amazing directory of developer conferences, meetups, and CFPs from around the world. 
                   Stay tuned for updates!
                 </p>
                 <Button size="lg" className="mt-4" disabled>

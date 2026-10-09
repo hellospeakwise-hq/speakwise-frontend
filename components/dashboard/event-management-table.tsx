@@ -435,7 +435,7 @@ export function EventManagementTable({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Event</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{eventToDelete?.title}"? This action cannot be undone.
+              Are you sure you want to delete &quot;{eventToDelete?.title}&quot;? This action cannot be undone.
               All associated sessions, speakers, and feedback will also be removed.
             </AlertDialogDescription>
           </AlertDialogHeader>

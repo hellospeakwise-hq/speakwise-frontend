@@ -9,7 +9,6 @@ interface SpeakerStatsData {
   averageRating: number | null
   totalFeedback: number
   upcomingEvents: number
-  speakerRank: number | null
 }
 
 export function SpeakerStats() {
@@ -17,7 +16,6 @@ export function SpeakerStats() {
     averageRating: null,
     totalFeedback: 0,
     upcomingEvents: 0,
-    speakerRank: null,
   })
   const [loading, setLoading] = useState(true)
 
@@ -40,9 +38,9 @@ export function SpeakerStats() {
 
         if (feedbackData.length > 0) {
           const avgRating = feedbackData.reduce((sum: number, item: any) => sum + item.overall_rating, 0) / feedbackData.length
-          setStats({ averageRating: avgRating, totalFeedback: feedbackData.length, upcomingEvents: upcomingEventsCount, speakerRank: null })
+          setStats({ averageRating: avgRating, totalFeedback: feedbackData.length, upcomingEvents: upcomingEventsCount })
         } else {
-          setStats({ averageRating: null, totalFeedback: 0, upcomingEvents: upcomingEventsCount, speakerRank: null })
+          setStats({ averageRating: null, totalFeedback: 0, upcomingEvents: upcomingEventsCount })
         }
       } catch {
       } finally {
@@ -54,8 +52,8 @@ export function SpeakerStats() {
 
   if (loading) {
     return (
-      <div className="border border-border rounded-lg bg-card grid grid-cols-2 md:grid-cols-4 divide-x divide-border animate-pulse">
-        {[0, 1, 2, 3].map(i => (
+      <div className="border border-border rounded-lg bg-card grid grid-cols-2 md:grid-cols-3 divide-x divide-border animate-pulse">
+        {[0, 1, 2].map(i => (
           <div key={i} className="px-5 py-4 space-y-2">
             <div className="h-3 w-20 bg-muted rounded" />
             <div className="h-7 w-12 bg-muted rounded" />
@@ -70,11 +68,10 @@ export function SpeakerStats() {
     { label: "Avg Rating",      value: stats.averageRating ? `${stats.averageRating.toFixed(1)}/10` : "—", sub: stats.averageRating ? "Across all events" : "No ratings yet" },
     { label: "Feedback",        value: stats.totalFeedback.toString(),                                       sub: stats.totalFeedback > 0 ? "From attendees" : "No feedback yet" },
     { label: "Upcoming Events", value: stats.upcomingEvents.toString(),                                      sub: stats.upcomingEvents > 0 ? "Next 6 months" : "No upcoming events" },
-    { label: "Speaker Rank",    value: stats.speakerRank ? `#${stats.speakerRank}` : "—",                  sub: stats.speakerRank ? "In your category" : "Not ranked yet" },
   ]
 
   return (
-    <div className="border border-border rounded-lg bg-card grid grid-cols-2 md:grid-cols-4 divide-x divide-border">
+    <div className="border border-border rounded-lg bg-card grid grid-cols-2 md:grid-cols-3 divide-x divide-border">
       {items.map((item) => (
         <div key={item.label} className="px-5 py-4 flex flex-col gap-1">
           <span className="text-xs text-muted-foreground">{item.label}</span>

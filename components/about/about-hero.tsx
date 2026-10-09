@@ -14,7 +14,7 @@ export function AboutHero() {
             Building the Global Reputation Layer for Public Speaking
           </h1>
           <p className="max-w-[700px] text-muted-foreground md:text-xl mx-auto">
-            We're creating a transparent, data-driven ecosystem where speakers grow through structured feedback 
+            We&apos;re creating a transparent, data-driven ecosystem where speakers grow through structured feedback 
             and organizers discover talent based on real performance, not just social proof.
           </p>
         </div>

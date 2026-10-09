@@ -35,8 +35,8 @@ export function SponsorBanner() {
             <p className="text-xs sm:text-sm md:text-base font-medium leading-tight">
               <span className="font-semibold">Experiencing slow performance?</span>
               {' '}
-              <span className="hidden sm:inline">We're currently on limited hosting due to funding constraints. Help us improve by sponsoring SpeakWise!</span>
-              <span className="sm:hidden"> We're on limited hosting due to funding. Help us improve by sponsoring SpeakWise! </span>
+              <span className="hidden sm:inline">We&apos;re currently on limited hosting due to funding constraints. Help us improve by sponsoring SpeakWise!</span>
+              <span className="sm:hidden"> We&apos;re on limited hosting due to funding. Help us improve by sponsoring SpeakWise! </span>
             </p>
           </div>
           

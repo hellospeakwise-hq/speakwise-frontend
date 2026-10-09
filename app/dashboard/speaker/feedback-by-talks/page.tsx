@@ -93,7 +93,7 @@ function FeedbackRow({ item }: { item: Feedback }) {
       </div>
 
       {item.comments && (
-        <p className="text-sm text-muted-foreground italic mb-3">"{item.comments}"</p>
+        <p className="text-sm text-muted-foreground italic mb-3">&quot;{item.comments}&quot;</p>
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -226,7 +226,7 @@ export default function SpeakerFeedbackByPresentationsPage() {
           </Link>
           <h1 className="text-3xl font-bold">Feedback by Presentation</h1>
           <p className="text-muted-foreground">
-            Grouped by each talk you've delivered
+            Grouped by each talk you&apos;ve delivered
           </p>
         </div>
         <Link href="/dashboard/speaker/feedback">

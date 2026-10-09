@@ -87,6 +87,18 @@ export default async function globalSetup(_config: FullConfig) {
   // Always write public state with cookie consent pre-accepted
   fs.writeFileSync(PUBLIC_STATE, CONSENT_STATE)
 
+  const selectedProjects = process.argv.flatMap((arg, index, args) => {
+    if (arg.startsWith('--project=')) return arg.slice('--project='.length).split(',')
+    if (arg === '--project') return (args[index + 1] ?? '').split(',')
+    return []
+  }).filter(Boolean)
+
+  if (selectedProjects.length > 0 && selectedProjects.every(project => project === 'public')) {
+    fs.writeFileSync(SPEAKER_STATE, EMPTY_STATE)
+    fs.writeFileSync(ORG_STATE, EMPTY_STATE)
+    return
+  }
+
   const speakerEmail = process.env.TEST_SPEAKER_EMAIL
   const speakerPass  = process.env.TEST_SPEAKER_PASSWORD
   const orgEmail     = process.env.TEST_ORG_EMAIL
@@ -120,4 +132,3 @@ export default async function globalSetup(_config: FullConfig) {
 
   await browser.close()
 }
-

@@ -62,9 +62,11 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: Readonly<Speak
 
                         {/* Large Image Section */}
                         <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-b from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-900">
-                            <img
+                            <Image
                                 src={getAvatarUrl(speaker.avatar, speaker.speaker_name || `speaker-${speaker.id}`)}
                                 alt={speaker.speaker_name || `Speaker ${speaker.id}`}
+                                fill
+                                sizes="(max-width: 640px) 100vw, 320px"
                                 className="w-full h-full object-cover"
                             />
                             {/* Gradient overlay for text readability */}

@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, MapPin, Clock, Globe, Send, ArrowLeft } from "lucide-react"
+import { Calendar, MapPin, Clock, Globe, Send, ArrowLeft, ArrowUpRight, ExternalLink, TicketCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { motion, useReducedMotion } from "framer-motion"
@@ -17,10 +17,10 @@ interface EventDetailsProps {
 
 function LoadingSkeleton() {
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-20 animate-pulse">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-20 animate-pulse">
       <div className="h-3.5 w-28 bg-muted rounded mb-8" />
       <div className="h-60 bg-muted rounded-xl mb-8" />
-      <div className="lg:grid lg:grid-cols-[1fr_240px] lg:gap-12">
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-10">
         <div className="space-y-3">
           <div className="h-4 w-32 bg-muted rounded mb-5" />
           {[100, 92, 96, 88, 80].map((w, i) => (
@@ -28,9 +28,8 @@ function LoadingSkeleton() {
           ))}
         </div>
         <div className="hidden lg:block space-y-3 pt-1">
-          <div className="h-3 w-12 bg-muted rounded mb-5" />
-          <div className="h-4 w-full bg-muted rounded" />
-          <div className="h-4 w-full bg-muted rounded" />
+          <div className="h-36 w-full bg-muted rounded-xl" />
+          <div className="h-24 w-full bg-muted rounded-xl" />
         </div>
       </div>
     </div>
@@ -112,28 +111,46 @@ if (loading) return <LoadingSkeleton />
     )
   }
 
-  const locationStr = event.location || 'TBA'
-  const locationShort = event.location || 'TBA'
+  const locationStr = event.location || ''
 
-  const dateDisplay = event.date_range
-    ? `${getDateString(event.date_range.start)} – ${getDateString(event.date_range.end)}`
-    : event.date || 'TBA'
+  const dateRange = [event.date_range?.start, event.date_range?.end]
+    .filter((value): value is string => Boolean(value))
+    .map(getDateString)
+  const dateDisplay = dateRange.length
+    ? [...new Set(dateRange)].join(' – ')
+    : event.date || 'Date to be announced'
 
-  const timeDisplay = event.date_range
-    ? `${getTimeString(event.date_range.start)} – ${getTimeString(event.date_range.end)}`
+  const timeRange = [event.date_range?.start, event.date_range?.end]
+    .filter((value): value is string => Boolean(value))
+    .map(getTimeString)
+    .filter(Boolean)
+  const timeDisplay = timeRange.length
+    ? [...new Set(timeRange)].join(' – ')
     : event.start_date_time
       ? new Date(event.start_date_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : 'TBA'
+      : null
 
-  const tags = null
+  const websiteUrl = (() => {
+    if (!event.website) return null
+    try {
+      const url = new URL(event.website.startsWith('http') ? event.website : `https://${event.website}`)
+      return url.protocol === 'http:' || url.protocol === 'https:' ? url : null
+    } catch {
+      return null
+    }
+  })()
+  const locationLabel = [locationStr, event.country].filter(Boolean).join(', ')
+  const directionsUrl = locationLabel
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationLabel)}`
+    : null
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6 pb-20">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-20">
 
       {/* Hero */}
       <motion.div
         {...fadeUp(0)}
-        className="relative h-56 md:h-72 w-full rounded-xl overflow-hidden mb-8"
+        className="relative h-64 md:h-[340px] w-full rounded-xl overflow-hidden mb-8"
         style={{
           backgroundImage: event.event_image
             ? `url(${getEventImageUrl(event.event_image)})`
@@ -164,104 +181,142 @@ if (loading) return <LoadingSkeleton />
           <h1 className="text-2xl md:text-3xl font-bold text-white leading-tight mb-2">
             {event.title}
           </h1>
-          <div className="flex flex-wrap gap-4 text-sm text-white/75">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-white/85">
             <span className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5" />
+              <Calendar className="h-3.5 w-3.5 shrink-0" />
               {dateDisplay}
             </span>
-            <span className="flex items-center gap-1.5">
-              <MapPin className="h-3.5 w-3.5" />
-              {locationShort}
-            </span>
+            {locationLabel && (
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                {locationLabel}
+              </span>
+            )}
           </div>
         </div>
       </motion.div>
 
-      {/* Content */}
-      <motion.div {...fadeUp(0.08)} className="max-w-2xl space-y-8">
+      <motion.div {...fadeUp(0.08)} className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-14">
+        <div className="min-w-0 space-y-8">
+          {event.description && (
+            <section aria-labelledby="event-about">
+              <h2 id="event-about" className="text-lg font-semibold tracking-tight">About this event</h2>
+              <p className="mt-3 max-w-3xl whitespace-pre-line text-sm leading-7 text-muted-foreground">
+                {event.description}
+              </p>
+            </section>
+          )}
 
-        {/* About */}
-        {event.description && (
-          <div>
-            <p className="text-sm font-semibold mb-3">About</p>
-            <p className="text-sm text-muted-foreground leading-relaxed">{event.description}</p>
-          </div>
-        )}
-
-        {/* Event Details */}
-        <div>
-          <p className="text-xs text-muted-foreground uppercase tracking-wide mb-4">Event details</p>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
-            <div>
-              <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
-                <Calendar className="h-3 w-3" /> Date
-              </dt>
-              <dd className="text-sm font-medium">{dateDisplay}</dd>
-            </div>
-            <div>
-              <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
-                <Clock className="h-3 w-3" /> Time
-              </dt>
-              <dd className="text-sm font-medium">{timeDisplay}</dd>
-            </div>
-            {locationStr !== 'TBA' && (
-              <div>
-                <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
-                  <MapPin className="h-3 w-3" /> Location
-                </dt>
-                <dd className="text-sm font-medium">
-                  {locationStr}{event.country ? `, ${event.country}` : ''}
-                </dd>
-              </div>
-            )}
-            {!locationStr || locationStr === 'TBA' ? (
-              event.country ? (
+          <section aria-labelledby="event-details">
+            <h2 id="event-details" className="text-lg font-semibold tracking-tight">Event details</h2>
+            <dl className="mt-5 grid gap-x-8 gap-y-6 sm:grid-cols-2">
+              <div className="flex gap-3">
+                <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                 <div>
-                  <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
-                    <MapPin className="h-3 w-3" /> Country
-                  </dt>
-                  <dd className="text-sm font-medium">{event.country}</dd>
+                  <dt className="text-xs text-muted-foreground">Dates</dt>
+                  <dd className="mt-1 text-sm font-medium">{dateDisplay}</dd>
                 </div>
-              ) : null
-            ) : null}
-            {event.website && (
-              <div>
-                <dt className="text-[11px] text-muted-foreground/70 mb-0.5 flex items-center gap-1.5">
-                  <Globe className="h-3 w-3" /> Website
-                </dt>
-                <dd>
-                  <a
-                    href={event.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm font-medium hover:underline underline-offset-2"
-                  >
-                    {event.website.replace(/^https?:\/\//, '')}
-                  </a>
-                </dd>
               </div>
-            )}
-          </dl>
+              {timeDisplay && (
+                <div className="flex gap-3">
+                  <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Time</dt>
+                    <dd className="mt-1 text-sm font-medium">{timeDisplay}</dd>
+                  </div>
+                </div>
+              )}
+              {locationLabel && (
+                <div className="flex gap-3">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Location</dt>
+                    <dd className="mt-1 text-sm font-medium">{locationLabel}</dd>
+                    {directionsUrl && (
+                      <a
+                        href={directionsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline underline-offset-4"
+                      >
+                        Get directions <ArrowUpRight className="h-3.5 w-3.5" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+              {event.is_free !== null && (
+                <div className="flex gap-3">
+                  <TicketCheck className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div>
+                    <dt className="text-xs text-muted-foreground">Admission</dt>
+                    <dd className="mt-1 text-sm font-medium">
+                      {event.is_free
+                        ? "Free — registration may be required"
+                        : "Ticket required"}
+                    </dd>
+                  </div>
+                </div>
+              )}
+            </dl>
+          </section>
         </div>
 
-        {/* CFP call-to-action */}
-        {event.cfp_open && (
-          <div className="pt-2">
-            <div className="border border-border rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <p className="text-sm font-medium">Call for Proposals is open</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Submit a talk proposal for this event</p>
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          {event.cfp_open && (
+            <section className="rounded-xl border border-border bg-card p-5" aria-labelledby="cfp-heading">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h2 id="cfp-heading" className="font-semibold">Call for proposals</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {event.is_cfp_currently_open
+                      ? "Share a talk idea with the event organizers."
+                      : "This event isn't accepting proposals right now."}
+                  </p>
+                </div>
+                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-medium ${
+                  event.is_cfp_currently_open
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground"
+                }`}>
+                  {event.is_cfp_currently_open ? "Open" : "Closed"}
+                </span>
               </div>
-              <Link href={`/events/${id}/cfp`}>
-                <Button className="bg-foreground text-background hover:bg-foreground/90 gap-1.5 shrink-0">
-                  <Send className="h-3.5 w-3.5" />
-                  Submit a Proposal
+              {event.cfp_deadline && (
+                <p className="mt-4 text-sm">
+                  <span className="text-muted-foreground">Deadline: </span>
+                  <span className="font-medium">{getDateString(event.cfp_deadline)}</span>
+                </p>
+              )}
+              {event.is_cfp_currently_open && (
+                <Button asChild className="mt-5 w-full gap-2">
+                  <Link href={`/events/${id}/cfp`}>
+                    <Send className="h-4 w-4" />
+                    Submit a proposal
+                  </Link>
                 </Button>
-              </Link>
-            </div>
-          </div>
-        )}
+              )}
+            </section>
+          )}
 
+          {websiteUrl && (
+            <section className="rounded-xl border border-border bg-card p-5" aria-labelledby="event-website-heading">
+              <div className="flex items-start gap-3">
+                <Globe className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0">
+                  <h2 id="event-website-heading" className="font-semibold">Event website</h2>
+                  <p className="mt-1 truncate text-sm text-muted-foreground">{websiteUrl.host}</p>
+                </div>
+              </div>
+              <Button asChild variant="outline" className="mt-4 w-full gap-2">
+                <a href={websiteUrl.toString()} target="_blank" rel="noopener noreferrer">
+                  Visit event website
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </Button>
+            </section>
+          )}
+        </aside>
       </motion.div>
     </div>
   )

@@ -12,17 +12,19 @@ import { Badge } from "@/components/ui/badge"
 
 
 type Period = "all" | "upcoming" | "past"
+type AdmissionFilter = "all" | "free" | "ticketed"
 
 interface EventsListProps {
     countryFilter?: string[]
     search?: string
     period?: Period
     cfpOnly?: boolean
+    admission?: AdmissionFilter
 }
 
 type ViewMode = "grid" | "list"
 
-export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly = false }: EventsListProps) {
+export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly = false, admission = 'all' }: EventsListProps) {
     const { events, loading, error } = useEvents()
     const [viewMode, setViewMode] = useState<ViewMode>("grid")
 
@@ -44,12 +46,14 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
             }
             // CFP filter
             if (cfpOnly && !event.cfp_open) return false
+            if (admission === 'free' && event.is_free !== true) return false
+            if (admission === 'ticketed' && event.is_free !== false) return false
             // Period filter
             if (period === 'upcoming' && !isEventUpcoming(event)) return false
             if (period === 'past' && !isEventPast(event)) return false
             return true
         })
-    }, [events, countryFilter, search, cfpOnly, period])
+    }, [events, countryFilter, search, cfpOnly, period, admission])
 
     const getDateString = (val?: string | null) => formatDateFromMaybe(val as any)
 
@@ -88,18 +92,20 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
                     <Button
                         variant={viewMode === "grid" ? "default" : "ghost"}
                         size="icon"
-                        className={`h-7 w-7 rounded-lg ${viewMode === "grid" ? "bg-foreground text-background shadow-sm hover:bg-foreground/90" : "hover:bg-muted"}`}
+                        className={`h-11 w-11 rounded-lg ${viewMode === "grid" ? "bg-foreground text-background shadow-sm hover:bg-foreground/90" : "hover:bg-muted"}`}
                         onClick={() => setViewMode("grid")}
                         aria-label="Grid view"
+                        aria-pressed={viewMode === "grid"}
                     >
                         <LayoutGrid className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                         variant={viewMode === "list" ? "default" : "ghost"}
                         size="icon"
-                        className={`h-7 w-7 rounded-lg ${viewMode === "list" ? "bg-foreground text-background shadow-sm hover:bg-foreground/90" : "hover:bg-muted"}`}
+                        className={`h-11 w-11 rounded-lg ${viewMode === "list" ? "bg-foreground text-background shadow-sm hover:bg-foreground/90" : "hover:bg-muted"}`}
                         onClick={() => setViewMode("list")}
                         aria-label="List view"
+                        aria-pressed={viewMode === "list"}
                     >
                         <List className="h-3.5 w-3.5" />
                     </Button>
@@ -119,6 +125,7 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
                         const title = event.title
                         const dateStr = getDateRangeString(event)
                         const location = getLocationString(event)
+                        const imageUrl = event.event_image ? getEventImageUrl(event.event_image) : null
 
                         return (
                             <Link
@@ -129,29 +136,30 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
                                 {/* Image — inset with padding, rounded corners */}
                                 <div className="p-3 pb-0">
                                     <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
-                                        {event.event_image ? (
-                                            <img
-                                                src={getEventImageUrl(event.event_image)}
+                                        {imageUrl ? (
+                                            <Image
+                                                src={imageUrl}
                                                 alt={`${title} flyer`}
+                                                fill
+                                                sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                                                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                                                onError={(e) => {
-                                                    const target = e.currentTarget
-                                                    target.style.display = 'none'
-                                                    target.nextElementSibling?.removeAttribute('hidden')
-                                                }}
                                             />
-                                        ) : null}
-                                        <div
-                                            className="flex h-full items-center justify-center"
-                                            hidden={!!event.event_image}
-                                        >
-                                            <ImageIcon className="h-10 w-10 text-zinc-400" />
-                                        </div>
+                                        ) : (
+                                            <div className="flex h-full items-center justify-center">
+                                                <ImageIcon className="h-10 w-10 text-zinc-400" />
+                                            </div>
+                                        )}
 
                                         {/* Active pill — top right of image */}
                                         {event.is_active && (
                                             <span className="absolute top-3 right-3 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
                                                 Active
+                                            </span>
+                                        )}
+
+                                        {event.is_free !== null && (
+                                            <span className="absolute top-3 left-3 rounded-full bg-background/95 px-2.5 py-1 text-[10px] font-semibold text-foreground">
+                                                {event.is_free ? "Free" : "Ticketed"}
                                             </span>
                                         )}
 
@@ -195,7 +203,7 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
                                 <div className="relative w-32 sm:w-44 shrink-0 bg-gray-100 dark:bg-gray-800">
                                     {event.event_image ? (
                                         <Image
-                                            src={getEventImageUrl(event.event_image) || '/fallback.jpg'}
+                                            src={getEventImageUrl(event.event_image) || '/placeholder.jpg'}
                                             alt={`${event.title} flyer`}
                                             fill
                                             className="object-cover"
@@ -232,6 +240,11 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
                                             <Calendar className="h-3.5 w-3.5 text-orange-500" />
                                             <span>{getDateRangeString(event)}</span>
                                         </div>
+                                        {event.is_free !== null && (
+                                            <Badge variant="outline" className="mt-3 w-fit text-xs">
+                                                {event.is_free ? "Free" : "Ticketed"}
+                                            </Badge>
+                                        )}
                                         <div className="flex items-center gap-1">
                                             <MapPin className="h-3.5 w-3.5 text-orange-500" />
                                             <span className="truncate max-w-[200px]">{getLocationString(event)}</span>

@@ -362,7 +362,7 @@ export function CFPReviewMode({ eventSlug, onClose }: CFPReviewModeProps) {
                     </div>
                     <h2 className="text-lg font-semibold">All caught up</h2>
                     <p className="text-sm text-muted-foreground">
-                        You've reviewed all {progress.total} pending submissions.
+                        You&apos;ve reviewed all {progress.total} pending submissions.
                     </p>
                     <div className="flex gap-2 justify-center pt-1">
                         <Button variant="outline" size="sm" onClick={loadNext} className="gap-1.5">

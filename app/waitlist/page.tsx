@@ -74,7 +74,7 @@ export default function WaitlistPage() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      <Card className={`w-full max-w-md relative z-10 border shadow-2xl backdrop-blur-sm transform transition-all duration-700 ${
+      <Card className={`w-full max-w-md relative z-10 border shadow-sm transform transition-all duration-700 ${
         mounted ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
       }`}>
         <CardHeader className="text-center space-y-4">
@@ -85,7 +85,7 @@ export default function WaitlistPage() {
           </div>
           
           <div className="space-y-2">
-            <CardTitle className={`text-3xl font-bold bg-gradient-to-r from-orange-600 to-pink-600 bg-clip-text text-transparent transition-all duration-500 delay-200 ${
+            <CardTitle className={`text-3xl font-bold text-orange-700 dark:text-orange-400 transition-all duration-500 delay-200 ${
               mounted ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'
             }`}>
               SpeakWise
@@ -139,7 +139,7 @@ export default function WaitlistPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="pl-10 h-12 bg-background/50 backdrop-blur-sm border-2 focus:border-orange-500 transition-colors"
+                    className="pl-10 h-12 bg-background border-2 focus:border-orange-500 transition-colors"
                   />
                 </div>
               </div>

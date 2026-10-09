@@ -45,7 +45,7 @@ export function FeaturesSection() {
             </div>
             <h2 className="text-2xl font-bold tracking-tight sm:text-3xl md:text-4xl text-gray-900 dark:text-white">
               <span className="block">Everything You Need to</span>
-              <span className="block bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">Excel at Speaking</span>
+              <span className="block text-orange-600 dark:text-orange-400">Excel at Speaking</span>
             </h2>
             <p className="max-w-[700px] mx-auto text-base text-gray-600 dark:text-gray-300">
               SpeakWise provides a comprehensive platform for all conference stakeholders

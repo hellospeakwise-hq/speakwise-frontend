@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -372,9 +373,11 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
                     <div className="flex items-start space-x-4">
                       {eventData.event_image && (
                         <div className="w-16 h-16 rounded-lg overflow-hidden bg-orange-100 border border-orange-200 flex-shrink-0">
-                          <img
+                          <Image
                             src={eventData.event_image.startsWith('http') ? eventData.event_image : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${eventData.event_image}`}
                             alt={eventData.title}
+                            width={64}
+                            height={64}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -451,9 +454,11 @@ export default function FeedbackPage({ params }: FeedbackPageProps) {
                     <div className="flex items-start space-x-4">
                       <div className="w-16 h-16 rounded-full overflow-hidden bg-green-100 border-2 border-green-200 flex-shrink-0">
                         {speakerData.avatar ? (
-                          <img
+                          <Image
                             src={speakerData.avatar.startsWith('http') ? speakerData.avatar : `${process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000'}${speakerData.avatar}`}
                             alt={speakerData.full_name}
+                            width={64}
+                            height={64}
                             className="w-full h-full object-cover"
                           />
                         ) : (

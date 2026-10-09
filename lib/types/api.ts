@@ -15,6 +15,7 @@ export interface Event {
   website: string;
   location: string | null;
   country: string | null;
+  is_free: boolean | null;
   date: string | null;
   date_range: DateRange;
   start_date_time: string;

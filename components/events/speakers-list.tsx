@@ -1,4 +1,5 @@
 import Link from "next/link"
+import Image from "next/image"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -79,9 +80,11 @@ export function SpeakersList({ eventId }: SpeakersListProps) {
           <Card key={speaker.id} className="flex flex-col h-full hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-start gap-4">
               <div className="w-12 h-12 rounded-full overflow-hidden bg-orange-100 border border-orange-200">
-                <img
+                <Image
                   src={speaker.image || "/placeholder.svg"}
                   alt={speaker.name}
+                  width={48}
+                  height={48}
                   className="w-full h-full object-cover"
                 />
               </div>

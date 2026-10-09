@@ -59,7 +59,7 @@ export default function PricingPage() {
               Simple, Transparent Pricing
             </h1>
             <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-              Choose the plan that's right for you. Upgrade or downgrade at any time.
+              Choose the plan that&apos;s right for you. Upgrade or downgrade at any time.
             </p>
           </div>
 
@@ -115,7 +115,7 @@ export default function PricingPage() {
       {/* Overlay Message */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="text-center space-y-6 pointer-events-auto">
-          <div className="text-8xl animate-bounce">
+          <div className="text-8xl">
             😊
           </div>
           <h2 className="text-4xl md:text-6xl font-bold">

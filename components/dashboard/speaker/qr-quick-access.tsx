@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   QrCode,
@@ -403,10 +404,12 @@ export function QrQuickAccess() {
                     <span className="text-xs">Generating QR image...</span>
                   </div>
                 ) : previewBlobUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <Image
                     src={previewBlobUrl}
                     alt={`Feedback QR for ${previewExp.topic}`}
+                    width={224}
+                    height={224}
+                    unoptimized
                     className="h-56 w-56 object-contain"
                   />
                 ) : (

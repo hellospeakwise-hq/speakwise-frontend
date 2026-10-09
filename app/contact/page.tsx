@@ -12,7 +12,7 @@ export default function ContactPage() {
             Contact Us
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Have questions or feedback? We'd love to hear from you. Fill out the form below or reach out to us directly.
+            Have questions or feedback? We&apos;d love to hear from you. Fill out the form below or reach out to us directly.
           </p>
         </div>
 

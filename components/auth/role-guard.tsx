@@ -56,7 +56,7 @@ export function RoleGuard({
           <div className="text-center">
             <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
             <p className="text-gray-600 mb-4">
-              You don't have permission to access this page.
+              You don&apos;t have permission to access this page.
             </p>
             <p className="text-sm text-gray-500">
               Required roles: {allowedRoles.join(', ')}

@@ -82,9 +82,9 @@ export default function CookiesPage() {
               <h3 className="text-xl font-medium">Cookie Consent Banner</h3>
               <p className="text-muted-foreground">When you first visit our Service:</p>
               <ul className="space-y-2 text-muted-foreground ml-4">
-                <li>• You'll see a cookie consent banner</li>
+                <li>• You&apos;ll see a cookie consent banner</li>
                 <li>• You can accept all cookies or customize your preferences</li>
-                <li>• Essential cookies cannot be disabled as they're necessary for Service functionality</li>
+                <li>• Essential cookies cannot be disabled as they&apos;re necessary for Service functionality</li>
                 <li>• You can change your preferences at any time</li>
               </ul>
             </div>
@@ -98,7 +98,7 @@ export default function CookiesPage() {
                   <h4 className="font-medium">Google Chrome</h4>
                   <ol className="text-sm text-muted-foreground space-y-1">
                     <li>1. Click Menu → Settings → Privacy and security</li>
-                    <li>2. Click "Cookies and other site data"</li>
+                    <li>2. Click &quot;Cookies and other site data&quot;</li>
                     <li>3. Choose your preferred cookie setting</li>
                   </ol>
                 </div>
@@ -106,7 +106,7 @@ export default function CookiesPage() {
                   <h4 className="font-medium">Mozilla Firefox</h4>
                   <ol className="text-sm text-muted-foreground space-y-1">
                     <li>1. Click Menu → Settings → Privacy & Security</li>
-                    <li>2. Under "Cookies and Site Data"</li>
+                    <li>2. Under &quot;Cookies and Site Data&quot;</li>
                     <li>3. Choose your preferences</li>
                   </ol>
                 </div>
@@ -122,7 +122,7 @@ export default function CookiesPage() {
                   <h4 className="font-medium">Microsoft Edge</h4>
                   <ol className="text-sm text-muted-foreground space-y-1">
                     <li>1. Click Menu → Settings</li>
-                    <li>2. Click "Cookies and site permissions"</li>
+                    <li>2. Click &quot;Cookies and site permissions&quot;</li>
                     <li>3. Choose your cookie preferences</li>
                   </ol>
                 </div>

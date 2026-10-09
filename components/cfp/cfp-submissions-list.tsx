@@ -111,7 +111,7 @@ function SubmissionSheet({
                                             </span>
                                             {r.notes && (
                                                 <span className="text-[10px] text-muted-foreground/60 italic truncate max-w-[80px]" title={r.notes}>
-                                                    "{r.notes.slice(0, 20)}{r.notes.length > 20 ? '…' : ''}"
+                                                    &quot;{r.notes.slice(0, 20)}{r.notes.length > 20 ? '…' : ''}&quot;
                                                 </span>
                                             )}
                                             <span className="text-xs font-bold text-foreground shrink-0">{r.score}/5</span>

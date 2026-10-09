@@ -145,7 +145,7 @@ export default function TalkReviewPage() {
                 <XCircle className="h-12 w-12 text-muted-foreground" />
                 <h1 className="text-2xl font-bold">Talk not found</h1>
                 <p className="text-muted-foreground text-sm max-w-sm">
-                    This review link may have expired or the talk hasn't been made public yet.
+                    This review link may have expired or the talk hasn&apos;t been made public yet.
                 </p>
                 <Link href="/speakers">
                     <Button variant="outline" className="gap-2">

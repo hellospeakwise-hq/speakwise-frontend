@@ -3,8 +3,7 @@ import { test, expect } from '@playwright/test'
 test.describe('Events Listing Page', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/events')
-    // Wait until the "Loading events..." spinner is gone
-    await page.getByText(/loading events/i).waitFor({ state: 'detached', timeout: 30_000 }).catch(() => {})
+    await expect(page.getByText(/loading events/i)).toBeHidden({ timeout: 30_000 })
   })
 
   test('page renders with correct heading', async ({ page }) => {
@@ -90,6 +89,19 @@ test.describe('Events Listing Page', () => {
     await page.getByRole('button', { name: /cfp open only/i }).click()
     const countCfp = await cards.count()
     expect(countCfp).toBeLessThanOrEqual(countAll)
+  })
+
+  test('admission filters select free and ticketed states', async ({ page }) => {
+    const freeFilter = page.getByRole('button', { name: 'Free', exact: true })
+    const ticketedFilter = page.getByRole('button', { name: 'Ticketed', exact: true })
+
+    await freeFilter.click()
+    await expect(freeFilter).toHaveAttribute('aria-pressed', 'true')
+    await expect(ticketedFilter).toHaveAttribute('aria-pressed', 'false')
+
+    await ticketedFilter.click()
+    await expect(ticketedFilter).toHaveAttribute('aria-pressed', 'true')
+    await expect(freeFilter).toHaveAttribute('aria-pressed', 'false')
   })
 
   test('Clear all filters button appears when filters active', async ({ page }) => {

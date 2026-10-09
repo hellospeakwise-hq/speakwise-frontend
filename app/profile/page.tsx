@@ -1,6 +1,7 @@
 "use client"
 
 import { useAuth } from "@/contexts/auth-context"
+import NextImage from "next/image"
 import { ProtectedRoute } from "@/components/auth/protected-route"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -567,9 +568,12 @@ function ProfilePageContent() {
                                     <div className="flex items-center space-x-4">
                                         {/* Avatar preview with upload-progress overlay */}
                                         <div className="relative w-20 h-20 flex-shrink-0">
-                                            <img
+                                            <NextImage
                                                 src={getAvatarSrc()}
                                                 alt="Profile"
+                                                width={80}
+                                                height={80}
+                                                unoptimized
                                                 className={`w-20 h-20 rounded-full object-cover border-2 border-gray-200 transition-opacity duration-300 ${
                                                     isUploadingAvatar ? 'opacity-40' : 'opacity-100'
                                                 }`}
@@ -749,7 +753,7 @@ function ProfilePageContent() {
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <CardTitle>Organization Profile</CardTitle>
-                                        <CardDescription>Your organization's public listing details</CardDescription>
+                                        <CardDescription>Your organization&apos;s public listing details</CardDescription>
                                     </div>
                                     {!isEditingOrg ? (
                                         <Button size="sm" variant="outline" onClick={() => setIsEditingOrg(true)}>
@@ -783,7 +787,7 @@ function ProfilePageContent() {
                                             <div className="flex items-center gap-4">
                                                 <div className="w-20 h-20 rounded-2xl overflow-hidden bg-amber-500/10 border-2 border-amber-200/40 flex items-center justify-center flex-shrink-0">
                                                     {orgBrandingPreview ? (
-                                                        <img src={orgBrandingPreview} alt="Branding" className="w-full h-full object-cover" />
+                                                        <NextImage src={orgBrandingPreview} alt="Branding" width={80} height={80} unoptimized className="w-full h-full object-cover" />
                                                     ) : (
                                                         <span className="text-xl font-bold text-amber-600">
                                                             {(orgForm.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}

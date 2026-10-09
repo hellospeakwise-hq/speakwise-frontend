@@ -3,6 +3,10 @@ import withPWAInit from "@ducanh2912/next-pwa"
 
 const isProd = process.env.NODE_ENV === 'production';
 
+if (isProd && !process.env.NEXT_PUBLIC_API_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL must be set when building for production.');
+}
+
 const withPWA = withPWAInit({
   dest: "public",
   disable: true,             // ← disabled: workbox-build@7.x bug ('assignWith is not defined') in CI/Vercel
@@ -22,13 +26,10 @@ const nextConfig = {
   env: {
     MAINTENANCE_MODE: process.env.MAINTENANCE_MODE ?? 'false',
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: 'https',

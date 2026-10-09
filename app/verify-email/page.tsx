@@ -165,7 +165,7 @@ function VerifyEmailContent() {
       {/* Resend */}
       <div className="text-center space-y-2">
         <p className="text-sm text-muted-foreground">
-          Didn't receive the code?
+          Didn&apos;t receive the code?
         </p>
         <Button
           type="button"

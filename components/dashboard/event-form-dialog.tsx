@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import NextImage from "next/image"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -25,6 +26,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { toast } from "sonner"
 import { eventsApi, type CreateEventRequest } from "@/lib/api/events"
 import { type Event } from "@/lib/types/api"
@@ -43,6 +45,7 @@ const eventFormSchema = z.object({
   cfp_open_date: z.string().optional(),
   cfp_deadline: z.string().optional(),
   cfp_speaker_notification_date: z.string().optional(),
+  ticketingStatus: z.enum(["unspecified", "free", "ticketed"]),
 })
 
 interface EventFormDialogProps {
@@ -76,6 +79,7 @@ export function EventFormDialog({
       website: event?.website || "",
       location: typeof event?.location === "string" ? event.location : "",
       country: event?.country || "",
+      ticketingStatus: event?.is_free === true ? "free" : event?.is_free === false ? "ticketed" : "unspecified",
       start_date_time: toLocalDatetime(event?.start_date_time),
       end_date_time: toLocalDatetime(event?.end_date_time),
       cfp_open: event?.cfp_open || false,
@@ -95,6 +99,7 @@ export function EventFormDialog({
         website: event?.website || "",
         location: typeof event?.location === "string" ? event.location : "",
         country: event?.country || "",
+        ticketingStatus: event?.is_free === true ? "free" : event?.is_free === false ? "ticketed" : "unspecified",
         start_date_time: toLocalDatetime(event?.start_date_time),
         end_date_time: toLocalDatetime(event?.end_date_time),
         cfp_open: event?.cfp_open || false,
@@ -129,6 +134,14 @@ export function EventFormDialog({
   }
 
   const onSubmit = async (values: z.infer<typeof eventFormSchema>) => {
+    if (!event && values.ticketingStatus === "unspecified") {
+      form.setError("ticketingStatus", {
+        type: "required",
+        message: "Choose whether this event is free or ticketed.",
+      })
+      return
+    }
+
     setIsLoading(true)
     try {
       const eventData: CreateEventRequest = {
@@ -138,6 +151,7 @@ export function EventFormDialog({
         website: values.website,
         location: values.location,
         country: values.country,
+        is_free: values.ticketingStatus === "unspecified" ? null : values.ticketingStatus === "free",
         start_date_time: values.start_date_time,
         end_date_time: values.end_date_time,
         cfp_open: values.cfp_open,
@@ -199,7 +213,7 @@ export function EventFormDialog({
                 </div>
                 {imagePreview && (
                   <div className="w-16 h-16 rounded-lg overflow-hidden border flex-shrink-0">
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <NextImage src={imagePreview} alt="Preview" width={64} height={64} unoptimized className="w-full h-full object-cover" />
                   </div>
                 )}
               </div>
@@ -278,6 +292,48 @@ export function EventFormDialog({
                 </FormItem>
               )} />
             </div>
+
+            {/* Admission */}
+            <FormField control={form.control} name="ticketingStatus" render={({ field }) => (
+              <FormItem className="space-y-3">
+                <div>
+                  <FormLabel>Admission *</FormLabel>
+                  <FormDescription>
+                    Free means no payment is required. Registration may still be needed.
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <RadioGroup
+                    value={field.value}
+                    onValueChange={(value) => {
+                      field.onChange(value)
+                      form.clearErrors("ticketingStatus")
+                    }}
+                    className="grid gap-3 sm:grid-cols-2"
+                    aria-label="Event admission type"
+                  >
+                    {([
+                      ["free", "Free", "Attendees can register without paying."],
+                      ["ticketed", "Ticketed", "Attendees must buy a ticket to attend."],
+                      ...(event?.is_free === null ? [["unspecified", "Not specified", "Keep this existing listing unclassified."]] : []),
+                    ] as [string, string, string][]).map(([value, label, description]) => (
+                      <label
+                        key={value}
+                        htmlFor={`ticketing-${value}`}
+                        className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors hover:bg-muted/40"
+                      >
+                        <RadioGroupItem id={`ticketing-${value}`} value={value} className="mt-0.5" />
+                        <span className="space-y-1">
+                          <span className="block text-sm font-medium">{label}</span>
+                          <span className="block text-xs text-muted-foreground">{description}</span>
+                        </span>
+                      </label>
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )} />
 
             {/* CFP toggle */}
             <FormField control={form.control} name="cfp_open" render={({ field }) => (

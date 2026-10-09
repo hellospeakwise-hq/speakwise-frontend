@@ -32,7 +32,7 @@ export function AboutMission() {
               <h2 className="text-3xl font-bold mb-4">Speaking Careers Are Built on Guesswork</h2>
               <p className="text-muted-foreground text-lg">
                 Speakers rarely receive structured feedback, making improvement difficult. Organizers rely on reputation 
-                and social media presence rather than real performance data. There's no standardized way to measure 
+                and social media presence rather than real performance data. There&apos;s no standardized way to measure 
                 speaker quality or track growth over time.
               </p>
             </div>
@@ -40,8 +40,8 @@ export function AboutMission() {
             <div>
               <h2 className="text-3xl font-bold mb-4">The Perfect Time for Transparency</h2>
               <p className="text-muted-foreground text-lg">
-                Conferences and community events are growing globally, but speaker evaluation hasn't evolved. 
-                As events become more data-driven, there's increasing demand for transparency, measurable impact, 
+                Conferences and community events are growing globally, but speaker evaluation hasn&apos;t evolved. 
+                As events become more data-driven, there&apos;s increasing demand for transparency, measurable impact, 
                 and merit-based speaker discovery. The tools finally exist to build this infrastructure.
               </p>
             </div>
@@ -80,8 +80,8 @@ export function AboutMission() {
             <div className="space-y-4 text-muted-foreground text-lg">
               <p>
                 SpeakWise was born from a simple frustration: after giving dozens of conference talks, 
-                our founder realized they had almost no concrete data on what was working and what wasn't. 
-                The feedback was either generic praise ("great talk!") or completely absent.
+                our founder realized they had almost no concrete data on what was working and what wasn&apos;t. 
+                The feedback was either generic praise (&quot;great talk!&quot;) or completely absent.
               </p>
               <p>
                 Meanwhile, event organizers admitted they often booked speakers based on social media followers 
@@ -95,7 +95,7 @@ export function AboutMission() {
                 real performance data?
               </p>
               <p>
-                Launched in 2024, SpeakWise is building that future. We're creating the infrastructure for a 
+                Launched in 2024, SpeakWise is building that future. We&apos;re creating the infrastructure for a 
                 transparent, merit-based speaking ecosystem where growth is measurable and discovery is data-driven.
               </p>
             </div>
@@ -109,7 +109,7 @@ export function AboutMission() {
               <h3 className="text-2xl font-bold mb-4">The Global Standard for Speaking</h3>
               <p className="text-muted-foreground text-lg">
                 Our vision is to become the global standard for evaluating, growing, and discovering public speakers  
-                similar to how GitHub represents developers. We're building a transparent reputation layer that 
+                similar to how GitHub represents developers. We&apos;re building a transparent reputation layer that 
                 rewards merit, enables growth, and creates opportunities based on real performance, not just connections.
               </p>
             </div>

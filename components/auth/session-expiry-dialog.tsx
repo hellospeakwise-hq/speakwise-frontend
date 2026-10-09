@@ -68,7 +68,7 @@ export function SessionExpiryDialog({ open, onStayLoggedIn, onLoggedOut }: Sessi
         <DialogHeader>
           <DialogTitle>Are you still there?</DialogTitle>
           <DialogDescription>
-            Your session is about to expire due to inactivity. You'll be logged out in{" "}
+            Your session is about to expire due to inactivity. You&apos;ll be logged out in{" "}
             <span className="font-semibold text-foreground">{countdown}</span> seconds.
           </DialogDescription>
         </DialogHeader>

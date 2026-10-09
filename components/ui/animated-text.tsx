@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 
 interface AnimatedTextProps {
   staticText?: string;
@@ -23,10 +23,13 @@ function AnimatedText({
   interval = 2500,
 }: AnimatedTextProps) {
   const [wordIndex, setWordIndex] = useState(0);
+  const prefersReducedMotion = useReducedMotion();
 
   const words = useMemo(() => animatedWords, [animatedWords]);
 
   useEffect(() => {
+    if (prefersReducedMotion !== false) return;
+
     const timeoutId = setTimeout(() => {
       if (wordIndex === words.length - 1) {
         setWordIndex(0);
@@ -35,7 +38,7 @@ function AnimatedText({
       }
     }, interval);
     return () => clearTimeout(timeoutId);
-  }, [wordIndex, words, interval]);
+  }, [wordIndex, words, interval, prefersReducedMotion]);
 
   return (
     <h1
@@ -44,34 +47,26 @@ function AnimatedText({
       <span className="block sm:inline">{staticText}</span>
       <span className="relative flex w-full justify-center overflow-hidden text-center md:pb-4 md:pt-1 min-h-[1.4em]">
         &nbsp;
-        <AnimatePresence mode="popLayout">
-          {words.map((word, index) =>
-            wordIndex === index ? (
-              <motion.span
-                key={word}
-                className="absolute font-bold whitespace-nowrap"
-                initial={{ opacity: 0, y: 50, scale: 0.8 }}
-                animate={{
-                  y: 0,
-                  opacity: 1,
-                  scale: 1,
-                }}
-                exit={{
-                  y: -50,
-                  opacity: 0,
-                  scale: 0.8,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 100,
-                  damping: 15,
-                }}
-              >
-                {word}
-              </motion.span>
-            ) : null
-          )}
-        </AnimatePresence>
+        {prefersReducedMotion ? (
+          <span className="absolute font-bold whitespace-nowrap">{words[0]}</span>
+        ) : (
+          <AnimatePresence mode="popLayout">
+            {words.map((word, index) =>
+              wordIndex === index ? (
+                <motion.span
+                  key={word}
+                  className="absolute font-bold whitespace-nowrap"
+                  initial={{ opacity: 0, y: 50 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: -50, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {word}
+                </motion.span>
+              ) : null
+            )}
+          </AnimatePresence>
+        )}
       </span>
     </h1>
   );

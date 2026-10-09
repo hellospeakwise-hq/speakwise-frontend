@@ -198,9 +198,11 @@ export function MainNav() {
 
         {/* Mobile — hamburger */}
         <button
-          className="md:hidden flex items-center justify-center rounded-full border border-white/10 h-9 w-9 text-zinc-400 hover:text-white transition-colors"
+          className="md:hidden flex h-11 w-11 items-center justify-center rounded-full border border-white/10 text-zinc-400 transition-colors hover:text-white"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          aria-label="Toggle menu"
+          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+          aria-expanded={isMenuOpen}
+          aria-controls="mobile-navigation"
         >
           {isMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
         </button>
@@ -208,8 +210,8 @@ export function MainNav() {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden border-t border-white/5 bg-zinc-950 px-4 py-4">
-          <nav className="flex flex-col gap-1">
+        <div id="mobile-navigation" className="md:hidden border-t border-white/5 bg-zinc-950 px-4 py-4">
+          <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => {
               const active = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
               return (
@@ -217,7 +219,7 @@ export function MainNav() {
                   key={link.href}
                   href={link.href}
                   className={cn(
-                    "rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
+                    "flex min-h-11 items-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
                     active ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white"
                   )}
                   onClick={() => setIsMenuOpen(false)}
@@ -230,7 +232,7 @@ export function MainNav() {
               <Link
                 href={dashboardHref}
                 className={cn(
-                  "rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
+                  "flex min-h-11 items-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
                   pathname.startsWith("/dashboard") ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white"
                 )}
                 onClick={() => setIsMenuOpen(false)}
@@ -244,29 +246,35 @@ export function MainNav() {
             {mounted && isAuthenticated ? (
               <>
                 <p className="px-4 text-xs text-zinc-500">Signed in as <span className="text-zinc-300 font-medium">{displayName}</span></p>
-                <Link href="/profile" onClick={() => setIsMenuOpen(false)}>
-                  <button className="w-full rounded-xl border border-white/10 px-4 py-2.5 text-left text-sm font-medium text-zinc-300 hover:text-white transition-colors">
-                    Settings
-                  </button>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex min-h-11 items-center rounded-xl border border-white/10 px-4 py-2.5 text-left text-sm font-medium text-zinc-300 transition-colors hover:text-white"
+                >
+                  Settings
                 </Link>
                 <button
                   onClick={() => { logout(); setIsMenuOpen(false) }}
-                  className="w-full rounded-xl px-4 py-2.5 text-left text-sm font-medium text-red-400 hover:text-red-300 transition-colors"
+                  className="min-h-11 w-full rounded-xl px-4 py-2.5 text-left text-sm font-medium text-red-400 transition-colors hover:text-red-300"
                 >
                   Sign Out
                 </button>
               </>
             ) : mounted ? (
               <>
-                <Link href="/signin" onClick={() => setIsMenuOpen(false)}>
-                  <button className="w-full rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-zinc-300 hover:text-white transition-colors">
-                    Sign In
-                  </button>
+                <Link
+                  href="/signin"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex min-h-11 items-center rounded-xl border border-white/10 px-4 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:text-white"
+                >
+                  Sign In
                 </Link>
-                <Link href="/signup" onClick={() => setIsMenuOpen(false)}>
-                  <button className="w-full rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-zinc-900 hover:opacity-90 transition-opacity">
-                    Get Started
-                  </button>
+                <Link
+                  href="/signup"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex min-h-11 items-center rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-zinc-900 transition-opacity hover:opacity-90"
+                >
+                  Get Started
                 </Link>
               </>
             ) : null}

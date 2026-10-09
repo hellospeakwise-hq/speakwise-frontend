@@ -127,7 +127,7 @@ export function RecentFeedback({ limit }: RecentFeedbackProps) {
                       <span className="text-xs font-semibold text-blue-600 dark:text-blue-400 block mb-1">
                         Comments:
                       </span>
-                      <p className="text-sm text-muted-foreground italic">"{item.comments}"</p>
+                      <p className="text-sm text-muted-foreground italic">&quot;{item.comments}&quot;</p>
                     </div>
                   )}
 

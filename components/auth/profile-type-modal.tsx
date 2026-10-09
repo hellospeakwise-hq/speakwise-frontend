@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import NextImage from "next/image"
 import { motion, AnimatePresence } from "framer-motion"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -147,7 +148,7 @@ export function ProfileTypeModal({ open, onSpeakerChosen, onOrgChosen }: Profile
                                             Welcome to SpeakWise
                                         </h2>
                                         <p className="text-[13px] text-zinc-500 mt-1">
-                                            Choose how you'd like to get started
+                                            Choose how you&apos;d like to get started
                                         </p>
                                     </div>
                                     <button
@@ -320,7 +321,7 @@ export function ProfileTypeModal({ open, onSpeakerChosen, onOrgChosen }: Profile
                                         </Label>
                                         {brandingPreview ? (
                                             <div className="relative w-full h-24 rounded-xl overflow-hidden border border-zinc-200 bg-zinc-50">
-                                                <img src={brandingPreview} alt="branding preview" className="w-full h-full object-contain p-2" />
+                                                <NextImage src={brandingPreview} alt="Branding preview" width={480} height={96} unoptimized className="h-full w-full object-contain p-2" />
                                                 <button
                                                     type="button"
                                                     onClick={removeBranding}

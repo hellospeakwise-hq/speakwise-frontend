@@ -245,7 +245,7 @@ export default function SpeakerFeedbackPage() {
 
                   {/* Comment */}
                   {item.comments && (
-                    <p className="text-sm text-muted-foreground mb-3 italic">"{item.comments}"</p>
+                    <p className="text-sm text-muted-foreground mb-3 italic">&quot;{item.comments}&quot;</p>
                   )}
 
                   {/* High-score badges */}

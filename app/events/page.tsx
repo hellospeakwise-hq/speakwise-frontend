@@ -8,20 +8,23 @@ import { Calendar, Search, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 type Period = "all" | "upcoming" | "past"
+type AdmissionFilter = "all" | "free" | "ticketed"
 
 export default function EventsPage() {
   const [selectedCountries, setSelectedCountries] = useState<string[]>([])
   const [search, setSearch] = useState("")
   const [period, setPeriod] = useState<Period>("all")
   const [cfpOnly, setCfpOnly] = useState(false)
+  const [admission, setAdmission] = useState<AdmissionFilter>("all")
 
-  const hasActiveFilters = selectedCountries.length > 0 || search.trim() || period !== "all" || cfpOnly
+  const hasActiveFilters = selectedCountries.length > 0 || search.trim() || period !== "all" || cfpOnly || admission !== "all"
 
   const clearAll = () => {
     setSelectedCountries([])
     setSearch("")
     setPeriod("all")
     setCfpOnly(false)
+    setAdmission("all")
   }
 
   return (
@@ -65,6 +68,7 @@ export default function EventsPage() {
                   <button
                     key={p}
                     onClick={() => setPeriod(p)}
+                    aria-pressed={period === p}
                     className={cn(
                       "w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition-all border",
                       period === p
@@ -83,6 +87,7 @@ export default function EventsPage() {
               <h3 className="text-lg font-semibold">Call for Proposals</h3>
               <button
                 onClick={() => setCfpOnly(!cfpOnly)}
+                aria-pressed={cfpOnly}
                 className={cn(
                   "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
                   cfpOnly
@@ -93,6 +98,35 @@ export default function EventsPage() {
                 <Calendar className="h-4 w-4" />
                 CFP Open Only
               </button>
+            </div>
+
+            {/* Admission */}
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Admission</h3>
+              <div className="flex flex-col gap-1.5">
+                {([
+                  ["all", "All events"],
+                  ["free", "Free"],
+                  ["ticketed", "Ticketed"],
+                ] as const).map(([value, label]) => (
+                  <button
+                    key={value}
+                    onClick={() => setAdmission(value)}
+                    aria-pressed={admission === value}
+                    className={cn(
+                      "w-full rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors",
+                      admission === value
+                        ? "border-foreground bg-foreground text-background"
+                        : "border-border text-muted-foreground hover:border-foreground/40 hover:bg-muted/40 hover:text-foreground",
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Free events may still require registration.
+              </p>
             </div>
 
             {/* Country */}
@@ -119,6 +153,7 @@ export default function EventsPage() {
             search={search}
             period={period}
             cfpOnly={cfpOnly}
+            admission={admission}
           />
         </div>
       </div>

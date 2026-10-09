@@ -3,12 +3,12 @@ import { test, expect } from '@playwright/test'
 test.describe('Speakers Directory', () => {
   test('speakers page renders with heading', async ({ page }) => {
     await page.goto('/speakers')
-    await expect(page.getByRole('heading', { name: /speakers/i })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Speakers Directory' })).toBeVisible()
   })
 
   test('shows speaker cards or empty state', async ({ page }) => {
     await page.goto('/speakers')
-    await page.waitForTimeout(2000)
+    await expect(page.getByRole('heading', { level: 1, name: 'Speakers Directory' })).toBeVisible()
 
     const cards = page.locator('[href*="/speakers/"]').filter({ hasNot: page.locator('[href="/speakers"]') })
     const count = await cards.count()
@@ -25,7 +25,7 @@ test.describe('Speakers Directory', () => {
 
   test('clicking a speaker card navigates to speaker profile', async ({ page }) => {
     await page.goto('/speakers')
-    await page.waitForTimeout(2000)
+    await expect(page.getByRole('heading', { level: 1, name: 'Speakers Directory' })).toBeVisible()
 
     // Find speaker cards (exclude nav links)
     const cards = page.locator('a[href*="/speakers/"]').filter({ hasNot: page.locator('[href="/speakers"]') })

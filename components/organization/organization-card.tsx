@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { Globe, Calendar } from "lucide-react"
 import { Sparkle } from "@phosphor-icons/react"
 import { cn } from "@/lib/utils"
@@ -42,9 +43,11 @@ export function OrganizationCard({ org, className }: OrganizationCardProps) {
                 <div className="relative flex-shrink-0">
                     <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl overflow-hidden bg-muted/40 border border-white/10 group-hover:border-white/20 transition-colors flex items-center justify-center">
                         {org.branding ? (
-                            <img
+                            <Image
                                 src={org.branding}
                                 alt={org.name}
+                                width={96}
+                                height={96}
                                 className="w-full h-full object-cover"
                             />
                         ) : (

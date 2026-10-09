@@ -19,7 +19,7 @@ export default function TermsPage() {
           <section className="space-y-4">
             <h2 className="text-2xl font-semibold">📋 Acceptance of Terms</h2>
             <p className="text-muted-foreground leading-relaxed">
-              By accessing or using SpeakWise ("Service," "Platform," "we," "us," or "our"), you ("User," "you," or "your") agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, do not use the Service.
+              By accessing or using SpeakWise (&quot;Service,&quot; &quot;Platform,&quot; &quot;we,&quot; &quot;us,&quot; or &quot;our&quot;), you (&quot;User,&quot; &quot;you,&quot; or &quot;your&quot;) agree to be bound by these Terms of Service (&quot;Terms&quot;). If you do not agree to these Terms, do not use the Service.
             </p>
           </section>
 
@@ -128,7 +128,7 @@ export default function TermsPage() {
             <h2 className="text-2xl font-semibold">⚖️ Disclaimers and Limitations</h2>
             <div className="space-y-4">
               <h3 className="text-xl font-medium">Service Disclaimers</h3>
-              <p className="text-muted-foreground mb-3">The Service is provided "AS IS" without warranties of any kind, including:</p>
+              <p className="text-muted-foreground mb-3">The Service is provided &quot;AS IS&quot; without warranties of any kind, including:</p>
               <ul className="space-y-2 text-muted-foreground">
                 <li>• Accuracy or reliability of user-generated content</li>
                 <li>• Uninterrupted or error-free operation</li>

@@ -8,6 +8,7 @@ export interface CreateEventRequest {
   website?: string;
   location?: string;
   country?: string;
+  is_free?: boolean | null;
   start_date_time: string;
   end_date_time: string;
   cfp_open?: boolean;
@@ -41,6 +42,7 @@ export interface EventsParams {
   slug?: string;
   submitted_by?: string;
   is_active?: boolean;
+  is_free?: boolean;
   cfp_open?: boolean;
   cfp_open_date?: string;
   cfp_deadline?: string;
@@ -97,6 +99,7 @@ export const eventsApi = {
     if (data.website !== undefined) body.website = data.website;
     if (data.location !== undefined) body.location = data.location;
     if (data.country !== undefined) body.country = data.country;
+    if (data.is_free !== undefined) body.is_free = data.is_free;
     if (data.start_date_time !== undefined) body.start_date_time = data.start_date_time;
     if (data.end_date_time !== undefined) body.end_date_time = data.end_date_time;
     if (data.cfp_open !== undefined) body.cfp_open = data.cfp_open;

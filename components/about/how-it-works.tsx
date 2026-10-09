@@ -215,7 +215,7 @@ export function HowItWorks() {
             <p className="text-muted-foreground">
               Soon, SpeakWise will introduce the ability to send gifts to speakers you appreciate. This feature will
               allow attendees to show their gratitude for exceptional presentations by sending speakers digital gift
-              cards, donations to charities of their choice, or other tokens of appreciation. It's another way we're
+              cards, donations to charities of their choice, or other tokens of appreciation. It&apos;s another way we&apos;re
               working to create meaningful connections between speakers and their audiences.
             </p>
           </div>

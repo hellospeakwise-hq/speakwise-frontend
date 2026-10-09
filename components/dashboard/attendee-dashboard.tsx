@@ -51,7 +51,7 @@ export function AttendeeDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Upcoming Events</CardTitle>
-              <CardDescription>Events you're registered to attend</CardDescription>
+              <CardDescription>Events you&apos;re registered to attend</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -134,7 +134,7 @@ export function AttendeeDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>Past Events</CardTitle>
-              <CardDescription>Events you've attended</CardDescription>
+              <CardDescription>Events you&apos;ve attended</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -193,7 +193,7 @@ export function AttendeeDashboard() {
           <Card>
             <CardHeader>
               <CardTitle>My Feedback</CardTitle>
-              <CardDescription>Feedback you've provided to speakers</CardDescription>
+              <CardDescription>Feedback you&apos;ve provided to speakers</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -218,8 +218,8 @@ export function AttendeeDashboard() {
                   </div>
                   <div className="mt-2">
                     <p className="text-sm text-muted-foreground">
-                      "Dr. Johnson's presentation on generative AI was incredibly insightful and accessible. She has a
-                      unique ability to explain complex concepts in a way that everyone can understand."
+                      &quot;Dr. Johnson&apos;s presentation on generative AI was incredibly insightful and accessible. She has a
+                      unique ability to explain complex concepts in a way that everyone can understand.&quot;
                     </p>
                   </div>
                 </div>
@@ -245,8 +245,8 @@ export function AttendeeDashboard() {
                   </div>
                   <div className="mt-2">
                     <p className="text-sm text-muted-foreground">
-                      "Great presentation on microservices architecture. The real-world examples were very helpful.
-                      Would have liked more time for Q&A at the end."
+                      &quot;Great presentation on microservices architecture. The real-world examples were very helpful.
+                      Would have liked more time for Q&A at the end.&quot;
                     </p>
                   </div>
                 </div>
@@ -272,8 +272,8 @@ export function AttendeeDashboard() {
                   </div>
                   <div className="mt-2">
                     <p className="text-sm text-muted-foreground">
-                      "Priya's session on accessibility was eye-opening. The practical demonstrations and case studies
-                      were excellent. Definitely changed how I'll approach design in the future."
+                      &quot;Priya&apos;s session on accessibility was eye-opening. The practical demonstrations and case studies
+                      were excellent. Definitely changed how I&apos;ll approach design in the future.&quot;
                     </p>
                   </div>
                 </div>

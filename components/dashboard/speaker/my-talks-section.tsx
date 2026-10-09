@@ -395,7 +395,7 @@ function ShareModal({ talk, open, onClose }: { talk: Talk; open: boolean; onClos
                     <div className="bg-orange-500/5 border border-orange-500/20 rounded-lg p-3 space-y-1.5 text-xs text-muted-foreground">
                         <p className="flex items-center gap-2">
                             <span>🔒</span>
-                            <span>The URL contains a random suffix  it can't be guessed or scraped by bots.</span>
+                            <span>The URL contains a random suffix  it can&apos;t be guessed or scraped by bots.</span>
                         </p>
                         <p className="flex items-center gap-2">
                             <span>🔁</span>
@@ -549,7 +549,7 @@ function TalkCard({ talk, onToggle, onDelete }: {
             <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Delete "{talk.title}"?</AlertDialogTitle>
+                        <AlertDialogTitle>Delete &quot;{talk.title}&quot;?</AlertDialogTitle>
                         <AlertDialogDescription>
                             This will permanently delete the talk and all its reviews. This cannot be undone.
                         </AlertDialogDescription>

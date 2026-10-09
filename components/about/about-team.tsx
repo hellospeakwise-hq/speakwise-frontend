@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Github, Linkedin, Twitter, Instagram } from "lucide-react"
 import { fetchTeamMembers, TeamMember } from "@/lib/api/teamApi"
 
@@ -60,9 +61,11 @@ export function AboutTeam() {
           {teamMembers.map((member) => (
             <div key={member.id} className="rounded-lg border bg-background p-8 flex flex-col items-center text-center space-y-4 min-w-[280px]">
               <div className="w-24 h-24 rounded-full overflow-hidden bg-muted">
-                <img
+                <Image
                   src={member.avatar_url || "/placeholder.svg"}
                   alt={member.name}
+                  width={96}
+                  height={96}
                   className="w-full h-full object-cover"
                 />
               </div>

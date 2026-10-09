@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { CheckCircle2, Circle, ChevronDown, ChevronUp, User, Building2, FileText, MapPin, Image, Tags, Mic } from "lucide-react"
+import { CheckCircle2, Circle, ChevronDown, ChevronUp, User, Building2, FileText, MapPin, Image as ImageIcon, Tags, Mic } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { calculateProfileCompletion } from "@/lib/utils/profile-completion"
 
@@ -14,7 +14,7 @@ interface ProfileCompletionItem {
 }
 
 const ICONS: Record<string, React.ReactNode> = {
-    avatar: <Image className="h-3 w-3" />,
+    avatar: <ImageIcon className="h-3 w-3" />,
     name: <User className="h-3 w-3" />,
     username: <User className="h-3 w-3" />,
     organization: <Building2 className="h-3 w-3" />,
