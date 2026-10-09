@@ -89,10 +89,11 @@ export function EventFormDialog({
       cfp_speaker_notification_date: event?.cfp_speaker_notification_date || "",
     },
   })
+  const { reset } = form
 
   useEffect(() => {
     if (open) {
-      form.reset({
+      reset({
         title: event?.title || "",
         event_nickname: event?.event_nickname || "",
         description: event?.description || "",
@@ -111,7 +112,7 @@ export function EventFormDialog({
       setImagePreview(event?.event_image || null)
       setSelectedImage(null)
     }
-  }, [event, open])
+  }, [event, open, reset])
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

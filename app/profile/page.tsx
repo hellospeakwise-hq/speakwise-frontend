@@ -139,8 +139,19 @@ function ProfilePageContent() {
                 // Don't set skillTags here - we load them from /speakers/skills/ endpoint
             }
             
-            // Load skills after profile data is set
-            loadSkills()
+            const hasSpeakerProfile = Array.isArray(data.speaker)
+                ? data.speaker.length > 0
+                : Boolean(data.speaker)
+            if (hasSpeakerProfile) {
+                speakerApi.getSkills()
+                    .then((skills) => setSkillTags(Array.isArray(skills) ? skills : (skills as any)?.results || []))
+                    .catch((error) => {
+                        console.error('Failed to load skills:', error)
+                        setSkillTags([])
+                    })
+            } else {
+                setSkillTags([])
+            }
         }
     }, [profileData])
 
@@ -167,22 +178,6 @@ function ProfilePageContent() {
             toast.error("Failed to load profile")
         } finally {
             setIsLoadingProfile(false)
-        }
-    }
-
-    const loadSkills = async () => {
-        const speakerData = profileData && (profileData as any)?.speaker
-        if (!speakerData) {
-            setSkillTags([])
-            return
-        }
-
-        try {
-            const skills = await speakerApi.getSkills()
-            setSkillTags(Array.isArray(skills) ? skills : (skills as any)?.results || [])
-        } catch (error) {
-            console.error('Failed to load skills:', error)
-            setSkillTags([])
         }
     }
 

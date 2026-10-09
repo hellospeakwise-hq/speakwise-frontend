@@ -1,9 +1,87 @@
 import { test, expect } from '@playwright/test'
 
+const eventFixtures = [
+  {
+    id: 'event-upcoming-free',
+    slug: 'future-free-event',
+    title: 'Future Free Event',
+    event_nickname: '',
+    event_image: null,
+    description: 'An upcoming free conference.',
+    website: '',
+    location: 'Accra',
+    country: 'Ghana',
+    is_free: true,
+    date: null,
+    date_range: { start: null, end: null },
+    start_date_time: '2030-06-10T09:00:00Z',
+    end_date_time: '2030-06-10T17:00:00Z',
+    is_active: true,
+    submitted_by: null,
+    is_cfp_currently_open: true,
+    cfp_open: true,
+    cfp_link: '',
+    cfp_open_date: null,
+    cfp_deadline: null,
+    cfp_speaker_notification_date: null,
+  },
+  {
+    id: 'event-upcoming-ticketed',
+    slug: 'future-ticketed-event',
+    title: 'Future Ticketed Event',
+    event_nickname: '',
+    event_image: null,
+    description: 'An upcoming ticketed conference.',
+    website: '',
+    location: 'Nairobi',
+    country: 'Kenya',
+    is_free: false,
+    date: null,
+    date_range: { start: null, end: null },
+    start_date_time: '2030-07-10T09:00:00Z',
+    end_date_time: '2030-07-10T17:00:00Z',
+    is_active: true,
+    submitted_by: null,
+    is_cfp_currently_open: false,
+    cfp_open: false,
+    cfp_link: '',
+    cfp_open_date: null,
+    cfp_deadline: null,
+    cfp_speaker_notification_date: null,
+  },
+  {
+    id: 'event-past-unclassified',
+    slug: 'past-unclassified-event',
+    title: 'Past Unclassified Event',
+    event_nickname: '',
+    event_image: null,
+    description: 'A past event with no admission status.',
+    website: '',
+    location: 'Lagos',
+    country: 'Nigeria',
+    is_free: null,
+    date: null,
+    date_range: { start: null, end: null },
+    start_date_time: '2020-06-10T09:00:00Z',
+    end_date_time: '2020-06-10T17:00:00Z',
+    is_active: true,
+    submitted_by: null,
+    is_cfp_currently_open: false,
+    cfp_open: false,
+    cfp_link: '',
+    cfp_open_date: null,
+    cfp_deadline: null,
+    cfp_speaker_notification_date: null,
+  },
+]
+
 test.describe('Events Listing Page', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/events/**', async (route) => {
+      await route.fulfill({ json: { results: eventFixtures, count: eventFixtures.length } })
+    })
     await page.goto('/events')
-    await expect(page.getByText(/loading events/i)).toBeHidden({ timeout: 30_000 })
+    await expect(page.getByText(/showing \d+ of \d+ event/i)).toBeVisible()
   })
 
   test('page renders with correct heading', async ({ page }) => {
@@ -102,6 +180,8 @@ test.describe('Events Listing Page', () => {
     await ticketedFilter.click()
     await expect(ticketedFilter).toHaveAttribute('aria-pressed', 'true')
     await expect(freeFilter).toHaveAttribute('aria-pressed', 'false')
+    await expect(page.getByRole('link', { name: /future ticketed event/i })).toBeVisible()
+    await expect(page.getByRole('link', { name: /future free event/i })).toHaveCount(0)
   })
 
   test('Clear all filters button appears when filters active', async ({ page }) => {

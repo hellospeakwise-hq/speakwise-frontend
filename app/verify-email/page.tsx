@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState, useEffect, useRef } from "react"
+import { Suspense, useState, useEffect, useRef, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Icons } from "@/components/icons"
 import { Button } from "@/components/ui/button"
@@ -22,30 +22,7 @@ function VerifyEmailContent() {
   const [resendCooldown, setResendCooldown] = useState(0)
   const hasAutoSent = useRef(false)
 
-  useEffect(() => {
-    // Get email from URL params
-    const emailParam = searchParams.get('email')
-    if (emailParam) {
-      setEmail(emailParam)
-
-      // Auto-send OTP on first load
-      if (!hasAutoSent.current) {
-        hasAutoSent.current = true
-        handleResendOtp(emailParam)
-      }
-    }
-  }, [searchParams])
-
-  useEffect(() => {
-    if (resendCooldown > 0) {
-      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000)
-      return () => clearTimeout(timer)
-    } else {
-      setCanResend(true)
-    }
-  }, [resendCooldown])
-
-  const handleResendOtp = async (emailToUse?: string) => {
+  const handleResendOtp = useCallback(async (emailToUse?: string) => {
     const targetEmail = emailToUse || email
     if (!targetEmail.trim()) {
       toast.error("Please enter your email address")
@@ -66,7 +43,27 @@ function VerifyEmailContent() {
     } finally {
       setIsResending(false)
     }
-  }
+  }, [email])
+
+  useEffect(() => {
+    const emailParam = searchParams.get('email')
+    if (!emailParam) return
+
+    setEmail(emailParam)
+    if (!hasAutoSent.current) {
+      hasAutoSent.current = true
+      handleResendOtp(emailParam)
+    }
+  }, [handleResendOtp, searchParams])
+
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000)
+      return () => clearTimeout(timer)
+    } else {
+      setCanResend(true)
+    }
+  }, [resendCooldown])
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault()

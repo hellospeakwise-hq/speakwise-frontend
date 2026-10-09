@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { FileUp, Trash2, FileText, Loader2, Upload, AlertCircle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -201,7 +201,7 @@ export function SpeakerDecks({ events }: SpeakerDecksProps) {
   const [deleteTarget, setDeleteTarget] = useState<{ deck: SpeakerDeck; eventTitle: string } | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const uploadEnabledEvents: typeof events = []
+  const uploadEnabledEvents = useMemo(() => [] as typeof events, [])
 
   useEffect(() => {
     if (uploadEnabledEvents.length === 0) {
@@ -220,7 +220,7 @@ export function SpeakerDecks({ events }: SpeakerDecksProps) {
       })
       .catch(() => toast.error("Could not load decks"))
       .finally(() => setLoading(false))
-  }, [events])
+  }, [uploadEnabledEvents])
 
   function handleUploaded(eventId: string, deck: SpeakerDeck) {
     setDecksByEvent((prev) => ({

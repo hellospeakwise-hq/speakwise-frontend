@@ -2,18 +2,26 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import dynamic from "next/dynamic"
 import { motion, useReducedMotion } from "framer-motion"
 import { SpeakerStats } from "@/components/dashboard/speaker/speaker-stats"
 import { UpcomingEvents } from "@/components/dashboard/speaker/upcoming-events"
 import { RecentFeedback } from "@/components/dashboard/speaker/recent-feedback"
 import { FeedbackTrends } from "@/components/dashboard/speaker/feedback-trends"
 import { ProfileCompletionBanner } from "@/components/dashboard/speaker/profile-completion-banner"
-import { MyTalksSection } from "@/components/dashboard/speaker/my-talks-section"
-import { QrQuickAccess } from "@/components/dashboard/speaker/qr-quick-access"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Mic, FileText, Award, QrCode } from "lucide-react"
 import { Notifications } from "@/components/dashboard/speaker/notifications"
+
+const MyTalksSection = dynamic(
+  () => import("@/components/dashboard/speaker/my-talks-section").then((module) => module.MyTalksSection),
+  { loading: () => <div className="h-48 animate-pulse rounded-lg bg-muted" /> },
+)
+const QrQuickAccess = dynamic(
+  () => import("@/components/dashboard/speaker/qr-quick-access").then((module) => module.QrQuickAccess),
+  { loading: () => <div className="h-36 animate-pulse rounded-lg bg-muted" /> },
+)
 
 const TAB_CLASS = "rounded-none border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:text-foreground data-[state=active]:bg-transparent text-muted-foreground hover:text-foreground transition-colors px-3 pb-3 pt-1 text-sm font-medium"
 

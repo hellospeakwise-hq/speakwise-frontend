@@ -55,7 +55,7 @@ export function ExperiencesList({ speakerId, speakerSlug, onCountChange }: Exper
         }
 
         fetchExperiences()
-    }, [speakerId, speakerSlug])
+    }, [speakerId, speakerSlug, onCountChange])
 
     const formatDate = (dateString: string) => {
         try {

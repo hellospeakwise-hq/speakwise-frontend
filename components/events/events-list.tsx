@@ -138,7 +138,7 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
                                     <div className="relative h-52 w-full overflow-hidden rounded-2xl bg-zinc-100 dark:bg-zinc-800">
                                         {imageUrl ? (
                                             <Image
-                                                src={imageUrl}
+                                                src={imageUrl ?? "/fallback.jpg"}
                                                 alt={`${title} flyer`}
                                                 fill
                                                 sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"

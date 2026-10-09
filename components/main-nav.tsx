@@ -209,8 +209,7 @@ export function MainNav() {
       </div>
 
       {/* Mobile menu */}
-      {isMenuOpen && (
-        <div id="mobile-navigation" className="md:hidden border-t border-white/5 bg-zinc-950 px-4 py-4">
+        <div id="mobile-navigation" hidden={!isMenuOpen} className="md:hidden border-t border-white/5 bg-zinc-950 px-4 py-4">
           <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => {
               const active = pathname === link.href || (link.href !== "/" && pathname.startsWith(link.href))
@@ -280,7 +279,6 @@ export function MainNav() {
             ) : null}
           </div>
         </div>
-      )}
     </header>
   )
 }
