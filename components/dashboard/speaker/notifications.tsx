@@ -1,87 +1,152 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Bell, X } from "lucide-react"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { useCallback, useState, useEffect } from "react"
+import { Bell, Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { speakerApi, type SpeakerNotification } from "@/lib/api/speakerApi"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-interface Notification {
-  id: string
-  type: string
-  title: string
-  description: string
-  link: string
-  date: string
-}
+type NotificationView = "unread" | "read"
 
-export function Notifications() {
-  const [notifications, setNotifications] = useState<Notification[]>([])
+export function Notifications({
+  pageSize = 5,
+  showReadHistory = false,
+}: {
+  pageSize?: number
+  showReadHistory?: boolean
+}) {
+  const [notifications, setNotifications] = useState<SpeakerNotification[]>([])
+  const [view, setView] = useState<NotificationView>("unread")
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [markingRead, setMarkingRead] = useState<string | null>(null)
+
+  const loadNotifications = useCallback(async () => {
+    setLoading(true)
+    setError("")
+    try {
+      setNotifications(
+        await speakerApi.getNotifications(pageSize, showReadHistory && view === "read"),
+      )
+    } catch {
+      setError("We couldn't load your updates. Please try again.")
+    } finally {
+      setLoading(false)
+    }
+  }, [pageSize, showReadHistory, view])
 
   useEffect(() => {
-    // TODO: Fetch real notifications from API
-    const fetchNotifications = async () => {
-      try {
-        // const response = await fetch('/api/speakers/notifications')
-        // const data = await response.json()
-        // setNotifications(data)
-        
-        // For now, showing empty state
-        setNotifications([])
-      } catch (error) {
-        console.error('Error fetching notifications:', error)
-      } finally {
-        setLoading(false)
-      }
+    void loadNotifications()
+  }, [loadNotifications])
+
+  const markAsRead = async (notification: SpeakerNotification) => {
+    setMarkingRead(notification.id)
+    try {
+      await speakerApi.markNotificationRead(notification.id)
+      setNotifications((current) => current.filter((item) => item.id !== notification.id))
+      window.dispatchEvent(new Event("speakwise-notifications-updated"))
+    } catch {
+      setError("We couldn't update this notification. Please try again.")
+    } finally {
+      setMarkingRead(null)
     }
-
-    fetchNotifications()
-  }, [])
-
-  const dismissNotification = (id: string) => {
-    setNotifications(notifications.filter((notification) => notification.id !== id))
   }
 
-  if (loading || notifications.length === 0) return null
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 rounded-lg border px-4 py-3 text-sm text-muted-foreground" aria-live="polite">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading your updates
+      </div>
+    )
+  }
 
   return (
-    <div className="space-y-3">
-      {notifications.map((notification) => (
-        <Alert
-          key={notification.id}
-          className="bg-orange-50 border-orange-200 dark:bg-orange-900/10 dark:border-orange-900/30"
+    <section className="space-y-3" aria-label="Updates from speakers you follow">
+      <div className="flex items-center gap-2">
+        <Bell className="h-4 w-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold">Updates from speakers you follow</h2>
+      </div>
+      {showReadHistory && (
+        <Tabs
+          value={view}
+          onValueChange={(value) => setView(value as NotificationView)}
+          className="w-full"
         >
-          <div className="flex items-start justify-between">
-            <div className="flex">
-              <Bell className="h-4 w-4 text-orange-500 mt-0.5 mr-2" />
-              <div>
-                <AlertTitle className="text-orange-800 dark:text-orange-300">{notification.title}</AlertTitle>
-                <AlertDescription className="text-orange-700 dark:text-orange-400">
-                  {notification.description}
-                  <div className="mt-2 flex items-center justify-between">
-                    <Link href={notification.link}>
-                      <Button variant="link" className="p-0 h-auto text-orange-600 dark:text-orange-400">
-                        View Details
-                      </Button>
-                    </Link>
-                    <span className="text-xs text-orange-600/70 dark:text-orange-400/70">{notification.date}</span>
-                  </div>
-                </AlertDescription>
-              </div>
+          <TabsList aria-label="Filter notifications">
+            <TabsTrigger value="unread">Unread</TabsTrigger>
+            <TabsTrigger value="read">Read</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      )}
+      {error && (
+        <div className="flex items-center justify-between gap-3 rounded-lg border border-destructive/30 px-4 py-3 text-sm" role="alert">
+          <span>{error}</span>
+          <Button variant="outline" size="sm" onClick={() => void loadNotifications()}>
+            Try again
+          </Button>
+        </div>
+      )}
+      {!error && notifications.length === 0 && (
+        <p className="rounded-lg border border-dashed px-4 py-3 text-sm text-muted-foreground">
+          {view === "read"
+            ? "Notifications you have read will be kept here."
+            : "Follow speakers to see their new talks and upcoming event announcements here."}
+        </p>
+      )}
+      {notifications.map((notification) => (
+        <article
+          key={notification.id}
+          className="flex items-start justify-between gap-3 rounded-lg border bg-card px-4 py-3"
+        >
+          <div className="flex min-w-0 items-start gap-3">
+            <span
+              className={
+                view === "unread"
+                  ? "mt-0.5 h-2 w-2 shrink-0 rounded-full bg-primary"
+                  : "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground"
+              }
+              aria-label={view === "unread" ? "Unread" : "Read"}
+            >
+              {view === "read" && <Check className="h-3 w-3" aria-hidden="true" />}
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm">{notification.message}</p>
+              <time className="mt-1 block text-xs text-muted-foreground" dateTime={notification.created_at}>
+                {new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(notification.created_at))}
+              </time>
+              {notification.link && (
+                <Link
+                  href={notification.link}
+                  className="mt-2 inline-block text-sm font-medium text-primary underline-offset-4 hover:underline"
+                  onClick={() => void markAsRead(notification)}
+                >
+                  View update
+                </Link>
+              )}
             </div>
+          </div>
+          {view === "unread" ? (
             <Button
               variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-orange-700 dark:text-orange-400 hover:bg-orange-100 dark:hover:bg-orange-900/20"
-              onClick={() => dismissNotification(notification.id)}
+              size="sm"
+              className="shrink-0"
+              disabled={markingRead === notification.id}
+              onClick={() => void markAsRead(notification)}
+              aria-label="Mark notification as read"
             >
-              <X className="h-4 w-4" />
-              <span className="sr-only">Dismiss</span>
+              {markingRead === notification.id ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Check className="h-4 w-4" />
+              )}
             </Button>
-          </div>
-        </Alert>
+          ) : (
+            <span className="shrink-0 self-center text-xs text-muted-foreground">Read</span>
+          )}
+        </article>
       ))}
-    </div>
+    </section>
   )
 }
