@@ -210,6 +210,28 @@ function PresentationHeader({ info }: { info: ExperienceInfo | null; loading: bo
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
+// Mirrors the backend FEEDBACK_IP_COOLDOWN_MINUTES so a changed network
+// (wifi ↔ mobile data) can't be used to resubmit from the same device.
+const SUBMISSION_COOLDOWN_MS = 60 * 60 * 1000
+const submissionKey = (slug: string) => `feedback-submitted:${slug}`
+
+function hasRecentSubmission(slug: string): boolean {
+    try {
+        const stored = Number(localStorage.getItem(submissionKey(slug)))
+        return stored > 0 && Date.now() - stored < SUBMISSION_COOLDOWN_MS
+    } catch {
+        return false
+    }
+}
+
+function rememberSubmission(slug: string) {
+    try {
+        localStorage.setItem(submissionKey(slug), String(Date.now()))
+    } catch {
+        // Storage unavailable (private mode); the server-side check still applies.
+    }
+}
+
 export default function FeedbackPage() {
     const { slug } = useParams<{ slug: string }>()
 
@@ -230,6 +252,7 @@ export default function FeedbackPage() {
     // Fetch presentation info on mount — detect blocked state immediately
     useEffect(() => {
         if (!slug) return
+        if (hasRecentSubmission(slug)) setBlockedType('cooldown')
         feedbackAPI
             .getExperienceInfo(slug)
             .then((data) => {
@@ -268,10 +291,12 @@ export default function FeedbackPage() {
             }
             const submitted = await feedbackAPI.submitFeedback(slug, payload)
             setResult(submitted)
+            rememberSubmission(slug)
         } catch (err) {
             if (err instanceof FeedbackNotOpenError) {
                 setBlockedType(info?.feedback_enabled === false ? 'disabled' : 'date-gated')
             } else if (err instanceof FeedbackCooldownError) {
+                rememberSubmission(slug)
                 setBlockedType('cooldown')
             } else {
                 setSubmitError(
