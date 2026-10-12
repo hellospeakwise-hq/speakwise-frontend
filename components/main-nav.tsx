@@ -5,9 +5,10 @@ import Image from "next/image"
 import { useState, useMemo, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Menu, X, LogOut, User, ChevronDown } from "lucide-react"
+import { Menu, X, LogOut, User, ChevronDown, Bell } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { userApi } from "@/lib/api/userApi"
+import { speakerApi } from "@/lib/api/speakerApi"
 // import { OrganizationBadge } from "@/components/organization-badge"
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ export function MainNav() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [speakerSlug, setSpeakerSlug] = useState<string | null>(null)
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0)
   const { user, logout, isAuthenticated } = useAuth()
 
   useEffect(() => {
@@ -68,6 +70,32 @@ export function MainNav() {
     }
     if (mounted && isAuthenticated) fetchProfileData()
   }, [mounted, isAuthenticated])
+
+  useEffect(() => {
+    if (!mounted || !isAuthenticated) {
+      setUnreadNotificationCount(0)
+      return
+    }
+
+    let isCurrent = true
+    const checkNotifications = async () => {
+      try {
+        const count = await speakerApi.getUnreadNotificationCount()
+        if (isCurrent) setUnreadNotificationCount(count)
+      } catch (error) {
+        console.error("Failed to check for unread notifications:", error)
+      }
+    }
+
+    void checkNotifications()
+    const intervalId = window.setInterval(checkNotifications, 60_000)
+    window.addEventListener("speakwise-notifications-updated", checkNotifications)
+    return () => {
+      isCurrent = false
+      window.clearInterval(intervalId)
+      window.removeEventListener("speakwise-notifications-updated", checkNotifications)
+    }
+  }, [mounted, isAuthenticated, pathname])
 
   const dashboardHref = useMemo(() => {
     const storedProfileType = mounted ? localStorage.getItem('profile_type') : null
@@ -146,38 +174,60 @@ export function MainNav() {
           {/* {mounted && isAuthenticated && <OrganizationBadge />} */}
 
           {mounted && isAuthenticated ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-white/20 hover:text-white">
-                  <User className="h-3.5 w-3.5" />
-                  {displayName}
-                  <ChevronDown className="h-3.5 w-3.5 opacity-50" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-200">
-                <DropdownMenuLabel className="text-zinc-400">My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator className="bg-zinc-800" />
-                {speakerSlug && (
-                  <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">
-                    <Link href="/speakers/me" className="w-full">My Profile</Link>
-                  </DropdownMenuItem>
+            <>
+              <Link
+                href="/notifications"
+                aria-label={
+                  unreadNotificationCount > 0
+                    ? `Notifications, ${unreadNotificationCount} unread`
+                    : "Notifications"
+                }
+                title="Notifications"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-zinc-800/60 text-zinc-300 transition-colors hover:border-white/20 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
+              >
+                <Bell className="h-4 w-4" aria-hidden="true" />
+                {unreadNotificationCount > 0 && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-semibold leading-none text-white ring-2 ring-zinc-950"
+                  >
+                    {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                  </span>
                 )}
-                <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">
-                  <Link href={dashboardHref} className="w-full">Dashboard</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">
-                  <Link href="/profile" className="w-full">Settings</Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-zinc-800" />
-                <DropdownMenuItem
-                  onClick={logout}
-                  className="text-red-400 hover:bg-zinc-800 focus:bg-zinc-800 cursor-pointer"
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              </Link>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 rounded-full border border-white/10 bg-zinc-800/60 px-4 py-2 text-sm font-medium text-zinc-300 transition-colors hover:border-white/20 hover:text-white">
+                    <User className="h-3.5 w-3.5" />
+                    {displayName}
+                    <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800 text-zinc-200">
+                  <DropdownMenuLabel className="text-zinc-400">My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-zinc-800" />
+                  {speakerSlug && (
+                    <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">
+                      <Link href="/speakers/me" className="w-full">My Profile</Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">
+                    <Link href={dashboardHref} className="w-full">Dashboard</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">
+                    <Link href="/profile" className="w-full">Settings</Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-zinc-800" />
+                  <DropdownMenuItem
+                    onClick={logout}
+                    className="text-red-400 hover:bg-zinc-800 focus:bg-zinc-800 cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
           ) : mounted ? (
             <>
               <Link
@@ -237,6 +287,29 @@ export function MainNav() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Dashboard
+              </Link>
+            )}
+            {mounted && isAuthenticated && (
+              <Link
+                href="/notifications"
+                className={cn(
+                  "flex min-h-11 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors",
+                  pathname.startsWith("/notifications") ? "bg-zinc-800 text-white" : "text-zinc-400 hover:text-white"
+                )}
+                onClick={() => setIsMenuOpen(false)}
+                aria-label={
+                  unreadNotificationCount > 0
+                    ? `Updates, ${unreadNotificationCount} unread`
+                    : "Updates"
+                }
+              >
+                <Bell className="h-4 w-4" />
+                Updates
+                {unreadNotificationCount > 0 && (
+                  <span className="ml-auto rounded-full bg-red-500 px-2 py-0.5 text-xs font-medium text-white">
+                    {unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}
+                  </span>
+                )}
               </Link>
             )}
           </nav>

@@ -69,6 +69,14 @@ export interface FollowActionResponse {
     following_count: number;
 }
 
+export interface SpeakerNotification {
+    id: string;
+    message: string;
+    link: string;
+    is_read: boolean;
+    created_at: string;
+}
+
 export interface FollowPerson {
     id: string;
     username: string;
@@ -122,6 +130,30 @@ export interface SpeakerDeck {
 }
 
 export const speakerApi = {
+    async getNotifications(
+        pageSize = 5,
+        isRead = false,
+    ): Promise<SpeakerNotification[]> {
+        const response = await apiClient.get<{ results?: SpeakerNotification[] } | SpeakerNotification[]>(
+            '/notifications/',
+            { params: { is_read: isRead, page_size: pageSize } },
+        );
+        return Array.isArray(response.data) ? response.data : (response.data.results ?? []);
+    },
+
+    async getUnreadNotificationCount(): Promise<number> {
+        const response = await apiClient.get<
+            { count?: number; results?: SpeakerNotification[] } | SpeakerNotification[]
+        >('/notifications/', { params: { is_read: false, page_size: 1 } });
+        if (Array.isArray(response.data)) return response.data.length;
+        return response.data.count ?? response.data.results?.length ?? 0;
+    },
+
+    async markNotificationRead(id: string): Promise<SpeakerNotification> {
+        const response = await apiClient.patch<SpeakerNotification>(`/notifications/${id}/read/`);
+        return response.data;
+    },
+
     // --- Speaker Deck endpoints ---
 
     async getDecks(eventId: string): Promise<SpeakerDeck[]> {
