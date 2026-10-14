@@ -25,7 +25,7 @@ interface AuthContextType {
     setUser: (user: User | null) => void;
     loading: boolean;
     login: (email: string, password: string) => Promise<string>;
-    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string) => Promise<string>;
+    register: (firstName: string, lastName: string, nationality: string, username: string, email: string, password: string, turnstileToken?: string) => Promise<string>;
     verifyOtp: (email: string, otp: string) => Promise<void>;
     resendOtp: (email: string) => Promise<void>;
     logout: () => void;
@@ -297,7 +297,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         nationality: string,
         username: string,
         email: string,
-        password: string
+        password: string,
+        turnstileToken?: string
     ): Promise<string> => {
         setLoading(true);
         try {
@@ -308,7 +309,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 nationality,
                 username,
                 email,
-                password
+                password,
+                turnstile_token: turnstileToken
             });
 
             // Return the email so the sign-up form can pass it to the OTP screen

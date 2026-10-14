@@ -117,6 +117,7 @@ export interface UpdateSpeakerProfileData {
     long_bio?: string;
     country?: string;
     skill_tags?: string[];
+    social_links?: Pick<SocialLink, 'name' | 'link'>[];
 }
 
 export interface SpeakerDeck {

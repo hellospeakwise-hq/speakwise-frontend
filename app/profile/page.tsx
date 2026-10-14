@@ -14,7 +14,7 @@ import { useState, useEffect, Suspense } from "react"
 import { toast } from "sonner"
 import { userApi, UserProfileResponse } from "@/lib/api/userApi"
 import { speakerApi, SkillTag } from "@/lib/api/speakerApi"
-import { Upload, X, ArrowRight, Award, Sparkles, Loader2, Pencil, Check } from "lucide-react"
+import { Upload, X, ArrowRight, Award, Sparkles, Loader2, Pencil, Check, Link2 } from "lucide-react"
 // import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
 import { organizationApi, type OrganizationProfile, type CreateOrganizationData } from "@/lib/api/organizationApi"
 import Link from "next/link"
@@ -29,6 +29,25 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { getDefaultAvatar, getAvatarUrl } from "@/lib/utils"
 import { AvatarCropDialog } from "@/components/profile/avatar-crop-dialog"
 import { getApiErrorMessage, getApiFieldErrors } from "@/lib/utils/api-errors"
+
+// Platforms shown on the Contact tab of a speaker's public profile
+const SOCIAL_PLATFORMS = [
+    { name: "LinkedIn", placeholder: "https://linkedin.com/in/your-name" },
+    { name: "Twitter", placeholder: "https://x.com/your-handle" },
+    { name: "GitHub", placeholder: "https://github.com/your-username" },
+    { name: "Instagram", placeholder: "https://instagram.com/your-handle" },
+    { name: "YouTube", placeholder: "https://youtube.com/@your-channel" },
+    { name: "Website", placeholder: "https://your-website.com" },
+] as const
+
+const isValidUrl = (value: string) => {
+    try {
+        const { protocol } = new URL(value)
+        return protocol === "http:" || protocol === "https:"
+    } catch {
+        return false
+    }
+}
 
 function ProfilePageContent() {
     const { user } = useAuth()
@@ -90,6 +109,7 @@ function ProfilePageContent() {
     const [shortBio, setShortBio] = useState("")
     const [longBio, setLongBio] = useState("")
     const [country, setCountry] = useState("")
+    const [socialLinks, setSocialLinks] = useState<Record<string, string>>({})
     const [skillTags, setSkillTags] = useState<SkillTag[]>([])
     const [avatarKey, setAvatarKey] = useState(Date.now()) // Cache buster for avatar image
 
@@ -136,6 +156,11 @@ function ProfilePageContent() {
                 setShortBio(speakerData.short_bio || "")
                 setLongBio(speakerData.long_bio || "")
                 setCountry(speakerData.country || "")
+                setSocialLinks(
+                    Object.fromEntries(
+                        ((speakerData.social_links || []) as { name: string; link: string }[]).map((l) => [l.name, l.link]),
+                    ),
+                )
                 // Don't set skillTags here - we load them from /speakers/skills/ endpoint
             }
             
@@ -266,6 +291,15 @@ function ProfilePageContent() {
             return
         }
 
+        const socialEntries = Object.entries(socialLinks)
+            .map(([name, link]) => [name, link.trim()] as const)
+            .filter(([, link]) => link)
+        const invalidLink = socialEntries.find(([, link]) => !isValidUrl(link))
+        if (invalidLink) {
+            toast.error(`Enter a full URL starting with https:// for ${invalidLink[0]}`)
+            return
+        }
+
         setAccountFieldErrors({})
         setIsSaving(true)
         try {
@@ -286,6 +320,7 @@ function ProfilePageContent() {
                     short_bio: shortBio,
                     long_bio: longBio,
                     country: country,
+                    social_links: socialEntries.map(([name, link]) => ({ name, link })),
                 })
             }
 
@@ -921,6 +956,41 @@ function ProfilePageContent() {
                                         rows={6}
                                     />
                                 </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    )}
+
+                    {/* Contact & social links — hidden for org users */}
+                    {!isOrgUser && (
+                    <Card data-tour="contact-links">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Link2 className="h-5 w-5" />
+                                Contact &amp; Social Links
+                            </CardTitle>
+                            <CardDescription>
+                                Shown on the Contact tab of your public profile. Leave a field empty to hide it.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {SOCIAL_PLATFORMS.map(({ name, placeholder }) => (
+                                    <div key={name} className="space-y-2">
+                                        <Label htmlFor={`social-${name}`}>{name}</Label>
+                                        <Input
+                                            id={`social-${name}`}
+                                            type="url"
+                                            inputMode="url"
+                                            value={socialLinks[name] || ""}
+                                            onChange={(e) =>
+                                                setSocialLinks((prev) => ({ ...prev, [name]: e.target.value }))
+                                            }
+                                            disabled={!isEditing}
+                                            placeholder={placeholder}
+                                        />
+                                    </div>
+                                ))}
                             </div>
                         </CardContent>
                     </Card>

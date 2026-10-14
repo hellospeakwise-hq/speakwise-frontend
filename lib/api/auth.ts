@@ -11,6 +11,7 @@ export interface RegisterRequest {
   nationality: string;
   username: string;
   password: string;
+  turnstile_token?: string;
 }
 
 export interface VerifyOtpRequest {
@@ -81,7 +82,8 @@ export const authApi = {
       email: data.email,
       nationality: data.nationality,
       username: data.username,
-      password: data.password
+      password: data.password,
+      turnstile_token: data.turnstile_token,
     };
 
     console.log('Registration request:', { ...payload, password: '[HIDDEN]' });

@@ -1,7 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useRef, useState } from "react"
+import { Turnstile, type TurnstileInstance } from "@marsidev/react-turnstile"
 import Link from "next/link"
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
@@ -12,6 +13,8 @@ import { toast } from "sonner"
 import { useAuth } from "@/contexts/auth-context"
 import { initiateOAuthLogin } from "@/lib/utils/oauth"
 import { OtpVerificationForm } from "@/components/auth/otp-verification-form"
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY
 
 export function SignUpForm() {
   const { register } = useAuth()
@@ -26,6 +29,8 @@ export function SignUpForm() {
   const [lastName, setLastName] = useState("")
   const [nationality, setNationality] = useState("")
   const [username, setUsername] = useState("")
+  const [turnstileToken, setTurnstileToken] = useState("")
+  const turnstileRef = useRef<TurnstileInstance>(null)
 
   /** After a successful registration the email is stored here to drive the OTP step */
   const [registeredEmail, setRegisteredEmail] = useState<string | null>(null)
@@ -94,6 +99,11 @@ export function SignUpForm() {
     if (!validateForm()) {
       return
     }
+    if (TURNSTILE_SITE_KEY && !turnstileToken) {
+      setError("Please complete the bot check")
+      toast.error("Please complete the bot check")
+      return
+    }
     setIsLoading(true)
     try {
       toast.loading("Creating your account…", { id: "registration" })
@@ -105,7 +115,8 @@ export function SignUpForm() {
         nationality,
         username,
         email,
-        password
+        password,
+        turnstileToken
       )
 
       toast.success("🎉 Account created! Please verify your email to continue.", {
@@ -116,6 +127,9 @@ export function SignUpForm() {
       // Switch to OTP verification step
       setRegisteredEmail(confirmedEmail)
     } catch (error: any) {
+      // Turnstile tokens are single-use, so fetch a fresh one for the retry
+      turnstileRef.current?.reset()
+      setTurnstileToken("")
       console.error("Registration error:", error)
       const errorMessage = error.message || "Failed to create account. Please try again."
       setError(errorMessage)
@@ -282,6 +296,16 @@ export function SignUpForm() {
               </button>
             </div>
           </div>
+
+          {TURNSTILE_SITE_KEY && (
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={TURNSTILE_SITE_KEY}
+              onSuccess={setTurnstileToken}
+              onExpire={() => setTurnstileToken("")}
+              onError={() => setTurnstileToken("")}
+            />
+          )}
 
           {error && (
             <p className="px-1 text-xs text-red-600">{error}</p>

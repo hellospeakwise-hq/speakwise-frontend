@@ -628,7 +628,19 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-sm text-muted-foreground italic">No social links added yet.</p>
+                    <p className="text-sm text-muted-foreground italic">
+                      {isOwnProfile ? (
+                        <>
+                          You haven&apos;t added any contact links yet.{' '}
+                          <Link href="/profile" className="text-orange-500 hover:underline not-italic">
+                            Add them in your settings
+                          </Link>
+                          .
+                        </>
+                      ) : (
+                        'No contact links added yet.'
+                      )}
+                    </p>
                   )}
                 </div>
 
