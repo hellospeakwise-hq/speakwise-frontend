@@ -1,224 +1,155 @@
-import { LogIn, Search, MapPin, Calendar, MessageSquare, BarChart } from "lucide-react"
+import { QrCode, Star, LineChart, CalendarPlus, Users, Bell } from "lucide-react"
+
+const flows = [
+  {
+    audience: "Attendees",
+    summary: "Give a speaker honest feedback in under a minute. No account needed.",
+    steps: [
+      {
+        icon: <QrCode className="h-5 w-5" />,
+        title: "Scan the QR code or open the link",
+        description: "Speakers share a QR code or link for each talk, so you land straight on that talk's feedback form.",
+      },
+      {
+        icon: <Star className="h-5 w-5" />,
+        title: "Rate the talk",
+        description: "Score the talk from 1 to 10 on the criteria below and add an optional comment and name.",
+      },
+    ],
+  },
+  {
+    audience: "Speakers",
+    summary: "Turn every talk into data you can learn from.",
+    steps: [
+      {
+        icon: <Users className="h-5 w-5" />,
+        title: "Build your profile",
+        description: "Create an account, set up your speaker profile and add your talks and speaking experience.",
+      },
+      {
+        icon: <QrCode className="h-5 w-5" />,
+        title: "Share your feedback link",
+        description: "Generate a QR code or link for each talk and show it at the end of your session.",
+      },
+      {
+        icon: <LineChart className="h-5 w-5" />,
+        title: "Track your growth",
+        description: "Follow your ratings and feedback trends over time, talk by talk.",
+      },
+    ],
+  },
+  {
+    audience: "Organizers",
+    summary: "List your events and find speakers.",
+    steps: [
+      {
+        icon: <CalendarPlus className="h-5 w-5" />,
+        title: "Register your organization",
+        description: "Create an organization account. Our team reviews it, and you get an email once it's approved.",
+      },
+      {
+        icon: <Bell className="h-5 w-5" />,
+        title: "Publish events and a CFP link",
+        description: "Add your events. If your call for proposals is open, link to where speakers should submit.",
+      },
+    ],
+  },
+]
+
+const criteria = [
+  { name: "Overall", description: "Your overall impression of the talk" },
+  { name: "Engagement", description: "How well the speaker kept the audience's interest" },
+  { name: "Clarity", description: "How clear and understandable the presentation was" },
+  { name: "Content depth", description: "The depth and quality of the material covered" },
+  { name: "Speaker knowledge", description: "How knowledgeable the speaker seemed about the topic" },
+  { name: "Practical relevance", description: "How applicable the content is to real-world work" },
+]
 
 export function HowItWorks() {
-  const steps = [
-    {
-      icon: <LogIn className="h-10 w-10" />,
-      title: "1. Log in to SpeakWise",
-      description: "Create an account or sign in to access the platform's features.",
-    },
-    {
-      icon: <Search className="h-10 w-10" />,
-      title: "2. Visit All Events",
-      description: "Browse through our comprehensive list of tech conferences and events.",
-    },
-    {
-      icon: <MapPin className="h-10 w-10" />,
-      title: "3. Choose Region & Country",
-      description: "Filter events by geographic location to find those relevant to you.",
-    },
-    {
-      icon: <Calendar className="h-10 w-10" />,
-      title: "4. Select an Event",
-      description: "Choose the specific event you attended to see all speakers and sessions.",
-    },
-    {
-      icon: <MessageSquare className="h-10 w-10" />,
-      title: "5. Provide Speaker Feedback",
-      description: "Rate speakers on multiple criteria and leave constructive comments.",
-    },
-    {
-      icon: <BarChart className="h-10 w-10" />,
-      title: "6. Track Your Contributions",
-      description: "View your feedback history and the impact you've made on speakers' development.",
-    },
-  ]
-
   return (
     <section className="container px-4 space-y-6 py-8 md:py-12 lg:py-24 border-t">
       <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
-        <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
-          How SpeakWise Works
-        </h2>
+        <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">How SpeakWise Works</h2>
         <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-          Our platform connects conference attendees, speakers, and organizers in a seamless feedback loop
+          Attendees, speakers and organizers all take part in one feedback loop.
         </p>
       </div>
 
-      <div className="mx-auto grid justify-center gap-6 md:max-w-[64rem]">
-        {steps.map((step, index) => (
-          <div key={index} className="relative overflow-hidden rounded-lg border bg-background p-8">
-            <div className="flex flex-col md:flex-row gap-6 items-start">
-              <div className="flex-shrink-0">
-                <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">{step.icon}</div>
-              </div>
-              <div className="flex-1 space-y-2">
-                <h3 className="font-bold text-xl">{step.title}</h3>
-                <p className="text-muted-foreground">{step.description}</p>
-              </div>
+      <div className="mx-auto grid gap-6 md:max-w-[64rem] md:grid-cols-3">
+        {flows.map((flow) => (
+          <div key={flow.audience} className="rounded-lg border bg-background p-6 space-y-5">
+            <div className="space-y-1">
+              <h3 className="text-xl font-bold">{flow.audience}</h3>
+              <p className="text-sm text-muted-foreground">{flow.summary}</p>
             </div>
+            <ol className="space-y-4">
+              {flow.steps.map((step) => (
+                <li key={step.title} className="flex gap-3">
+                  <div className="h-9 w-9 shrink-0 rounded-full bg-muted flex items-center justify-center">
+                    {step.icon}
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium leading-tight">{step.title}</p>
+                    <p className="text-sm text-muted-foreground">{step.description}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
           </div>
         ))}
       </div>
 
       <div className="space-y-8 mt-12">
-        <h3 className="text-2xl font-bold text-center">The Feedback Process</h3>
+        <h3 className="text-2xl font-bold text-center">The Feedback Form</h3>
 
-        <div className="rounded-lg border bg-muted/50 p-6 md:p-8 lg:p-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <h4 className="text-xl font-bold mb-4">Comprehensive Speaker Evaluation</h4>
-              <p className="text-muted-foreground mb-4">
-                Our feedback form is designed to provide speakers with actionable insights across multiple dimensions
-                of their presentation:
-              </p>
-              <ul className="space-y-2">
-                <li className="flex items-start">
-                  <span className="bg-muted text-foreground rounded-full w-5 h-5 flex items-center justify-center mr-2 shrink-0 mt-0.5 text-xs font-medium">
-                    1
-                  </span>
-                  <div>
-                    <span className="font-medium">Engagement</span>
-                    <p className="text-sm text-muted-foreground">How well the speaker maintained audience interest</p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-muted text-foreground rounded-full w-5 h-5 flex items-center justify-center mr-2 shrink-0 mt-0.5 text-xs font-medium">
-                    2
-                  </span>
-                  <div>
-                    <span className="font-medium">Clarity</span>
-                    <p className="text-sm text-muted-foreground">How clear and understandable the presentation was</p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-muted text-foreground rounded-full w-5 h-5 flex items-center justify-center mr-2 shrink-0 mt-0.5 text-xs font-medium">
-                    3
-                  </span>
-                  <div>
-                    <span className="font-medium">Content Depth</span>
-                    <p className="text-sm text-muted-foreground">The depth and quality of the material covered</p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-muted text-foreground rounded-full w-5 h-5 flex items-center justify-center mr-2 shrink-0 mt-0.5 text-xs font-medium">
-                    4
-                  </span>
-                  <div>
-                    <span className="font-medium">Speaker Knowledge</span>
-                    <p className="text-sm text-muted-foreground">
-                      How knowledgeable the speaker seemed about the topic
-                    </p>
-                  </div>
-                </li>
-                <li className="flex items-start">
-                  <span className="bg-muted text-foreground rounded-full w-5 h-5 flex items-center justify-center mr-2 shrink-0 mt-0.5 text-xs font-medium">
-                    5
-                  </span>
-                  <div>
-                    <span className="font-medium">Practical Relevance</span>
-                    <p className="text-sm text-muted-foreground">
-                      How applicable the content is to real-world scenarios
-                    </p>
-                  </div>
-                </li>
-              </ul>
-            </div>
-
-            <div className="relative w-full aspect-[4/3] rounded-lg overflow-hidden bg-gradient-to-b from-slate-900 via-purple-900/20 to-orange-900/30 dark:from-slate-950 dark:via-purple-950/40 dark:to-orange-950/50">
-              {/* Stars Background */}
-              <div className="absolute inset-0">
-                {[...Array(50)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-                    style={{
-                      top: `${Math.random() * 100}%`,
-                      left: `${Math.random() * 100}%`,
-                      animationDelay: `${Math.random() * 3}s`,
-                      opacity: Math.random() * 0.7 + 0.3
-                    }}
-                  ></div>
-                ))}
-              </div>
-              
-              {/* 3D Rocket */}
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="relative transform hover:scale-110 transition-transform duration-500">
-                  {/* Rocket Body */}
-                  <div className="relative z-10">
-                    {/* Rocket Tip */}
-                    <div className="w-0 h-0 mx-auto border-l-[30px] border-l-transparent border-r-[30px] border-r-transparent border-b-[40px] border-b-red-500"></div>
-                    
-                    {/* Main Body */}
-                    <div className="w-[60px] h-[120px] bg-gradient-to-r from-gray-300 via-white to-gray-300 dark:from-gray-600 dark:via-gray-400 dark:to-gray-600 relative shadow-2xl">
-                      {/* Window */}
-                      <div className="absolute top-4 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-cyan-300 border-4 border-gray-400"></div>
-                      
-                      {/* Details */}
-                      <div className="absolute top-16 left-1/2 -translate-x-1/2 w-10 h-1 bg-orange-500"></div>
-                      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-10 h-1 bg-orange-500"></div>
-                    </div>
-                    
-                    {/* Wings */}
-                    <div className="absolute bottom-0 -left-6 w-0 h-0 border-t-[40px] border-t-red-600 border-r-[24px] border-r-transparent"></div>
-                    <div className="absolute bottom-0 -right-6 w-0 h-0 border-t-[40px] border-t-red-600 border-l-[24px] border-l-transparent"></div>
-                  </div>
-                  
-                  {/* Fire/Exhaust */}
-                  <div className="absolute -bottom-20 left-1/2 -translate-x-1/2 w-16 z-0">
-                    {/* Main Flame */}
-                    <div className="relative animate-bounce">
-                      <div className="w-0 h-0 mx-auto border-l-[32px] border-l-transparent border-r-[32px] border-r-transparent border-t-[60px] border-t-orange-500 animate-pulse"></div>
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[24px] border-l-transparent border-r-[24px] border-r-transparent border-t-[50px] border-t-yellow-400 animate-pulse" style={{ animationDelay: '0.1s' }}></div>
-                      <div className="absolute top-2 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[16px] border-l-transparent border-r-[16px] border-r-transparent border-t-[40px] border-t-white animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                    </div>
-                    
-                    {/* Smoke/Trail */}
-                    <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-40">
-                      <div className="w-6 h-6 rounded-full bg-gray-400 animate-ping"></div>
-                      <div className="w-8 h-8 rounded-full bg-gray-500 animate-ping" style={{ animationDelay: '0.3s' }}></div>
-                      <div className="w-10 h-10 rounded-full bg-gray-600 animate-ping" style={{ animationDelay: '0.6s' }}></div>
-                    </div>
-                  </div>
-                  
-                  {/* Growth Metrics - Floating */}
-                  <div className="absolute -right-20 top-10 bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border animate-pulse">
-                    <div className="text-2xl font-bold text-green-500">↑ 156%</div>
-                    <div className="text-xs text-muted-foreground">Growth</div>
-                  </div>
-                  
-                  <div className="absolute -left-24 top-32 bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border animate-pulse" style={{ animationDelay: '0.5s' }}>
-                    <div className="text-2xl font-bold text-orange-500">4.8★</div>
-                    <div className="text-xs text-muted-foreground">Rating</div>
-                  </div>
+        <div className="mx-auto max-w-[58rem] rounded-lg border bg-muted/50 p-6 md:p-8">
+          <p className="text-muted-foreground mb-6">
+            Every talk is rated from 1 to 10 on six criteria, so speakers get specific, comparable feedback instead of
+            a generic &quot;great talk!&quot;.
+          </p>
+          <ul className="grid gap-4 sm:grid-cols-2">
+            {criteria.map((item, index) => (
+              <li key={item.name} className="flex items-start gap-3">
+                <span className="bg-muted text-foreground rounded-full w-6 h-6 flex items-center justify-center shrink-0 text-xs font-medium">
+                  {index + 1}
+                </span>
+                <div>
+                  <span className="font-medium">{item.name}</span>
+                  <p className="text-sm text-muted-foreground">{item.description}</p>
                 </div>
-              </div>
-              
-              {/* Glow Effect */}
-              <div className="absolute bottom-20 left-1/2 -translate-x-1/2 w-32 h-32 bg-orange-500/30 rounded-full blur-3xl"></div>
-            </div>
-          </div>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-          <div className="max-w-[800px] mx-auto text-center mt-12 border-t pt-8">
-            <h4 className="text-xl font-bold mb-4">Verified Feedback You Can Trust</h4>
-            <p className="text-muted-foreground">
-              SpeakWise ensures all feedback comes from actual event attendees through our verification system.
-              Organizers upload attendee lists, and users must verify their attendance before providing feedback. This
-              creates a trusted ecosystem where speakers can be confident that the feedback they receive is legitimate
-              and valuable.
-            </p>
-          </div>
+        <div className="max-w-[800px] mx-auto text-center border-t pt-8">
+          <h4 className="text-xl font-bold mb-4">Keeping Feedback Fair</h4>
+          <p className="text-muted-foreground">
+            Feedback is private to the speaker. Nobody else can browse individual responses, and names are optional.
+            To protect speakers from spam and rating manipulation, each device or network can only rate a talk once.
+          </p>
+        </div>
 
-          <div className="max-w-[800px] mx-auto text-center mt-12 border-t pt-8">
-            <h4 className="text-xl font-bold mb-4">Gift Speaker Feature - Coming Soon</h4>
-            <p className="text-muted-foreground">
-              Soon, SpeakWise will introduce the ability to send gifts to speakers you appreciate. This feature will
-              allow attendees to show their gratitude for exceptional presentations by sending speakers digital gift
-              cards, donations to charities of their choice, or other tokens of appreciation. It&apos;s another way we&apos;re
-              working to create meaningful connections between speakers and their audiences.
-            </p>
-          </div>
+        <div className="max-w-[800px] mx-auto text-center border-t pt-8 space-y-4">
+          <h4 className="text-xl font-bold">Gift a Speaker: Coming Soon</h4>
+          <p className="text-muted-foreground">
+            Loved a talk? Soon you&apos;ll be able to say thanks with a gift sent directly to the speaker. Gifts will
+            run on-chain on the Stellar network, so they&apos;re sent in XLM, Stellar&apos;s native currency, and go
+            straight to the speaker&apos;s own wallet. Transfers settle in seconds and cost a fraction of a cent.
+          </p>
+          <ul className="text-left text-muted-foreground space-y-2 max-w-[640px] mx-auto">
+            <li>
+              <span className="font-medium text-foreground">Speakers:</span> add your Stellar (XLM) wallet address
+              to your profile to be ready to receive gifts. You stay in control of your own wallet and funds.
+            </li>
+            <li>
+              <span className="font-medium text-foreground">Supporters:</span> you&apos;ll need an XLM wallet to
+              send a gift. Gifts are transparent and can be verified on the Stellar network.
+            </li>
+          </ul>
+          <p className="text-sm text-muted-foreground">
+            This feature is still in development, and details may change before launch.
+          </p>
         </div>
       </div>
     </section>

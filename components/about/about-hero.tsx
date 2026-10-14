@@ -19,21 +19,15 @@ export function AboutHero() {
           </p>
         </div>
         
-        {/* Stats */}
         <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 mt-8 text-sm text-muted-foreground">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            <span className="whitespace-nowrap">100+ active speakers</span>
-          </div>
-          <div className="hidden sm:block h-4 w-px bg-border" />
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4" />
-            <span className="whitespace-nowrap">10K+ feedback points</span>
+            <span className="whitespace-nowrap">Structured feedback for every talk</span>
           </div>
           <div className="hidden sm:block h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
             <Globe className="h-4 w-4" />
-            <span className="whitespace-nowrap">15+ countries</span>
+            <span className="whitespace-nowrap">Free to use, for now</span>
           </div>
         </div>
       </div>

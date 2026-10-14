@@ -367,7 +367,7 @@ export default function FeedbackPage() {
                     <BlockedView
                         icon={AlertTriangle}
                         title="Already submitted"
-                        body="You've already submitted feedback for this presentation recently. Only one submission per attendee is allowed within the cooldown window."
+                        body="Thanks! Feedback has already been submitted for this presentation from this device or network. To prevent spam, each can only rate a talk once."
                     />
                 ) : (
                     <form onSubmit={handleSubmit} className="space-y-8">

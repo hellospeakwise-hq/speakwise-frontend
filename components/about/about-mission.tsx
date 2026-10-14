@@ -95,7 +95,7 @@ export function AboutMission() {
                 real performance data?
               </p>
               <p>
-                Launched in 2024, SpeakWise is building that future. We&apos;re creating the infrastructure for a 
+                SpeakWise is building that future. We&apos;re creating the infrastructure for a 
                 transparent, merit-based speaking ecosystem where growth is measurable and discovery is data-driven.
               </p>
             </div>

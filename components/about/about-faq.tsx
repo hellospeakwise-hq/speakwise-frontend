@@ -3,34 +3,39 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 export function AboutFAQ() {
   const faqs = [
     {
-      question: "How does SpeakWise ensure feedback is from actual attendees?",
+      question: "Do I need an account to give feedback?",
       answer:
-        "Event organizers upload attendee lists to SpeakWise. When an attendee wants to provide feedback, they must verify their attendance by entering the email address they used for registration. For in-person events, we also offer QR code verification at the venue.",
+        "No. Scan the QR code or open the link a speaker shares for their talk, rate it, and optionally add your name and a comment. To protect speakers from spam and rating manipulation, each device or network can only rate a talk once.",
     },
     {
-      question: "Is my feedback truly anonymous?",
+      question: "Is my feedback anonymous?",
       answer:
-        "Yes, all feedback is completely anonymous to speakers. While we verify that you attended the event, your identity is never revealed to the speaker. This allows for honest, constructive feedback without concerns about potential awkwardness in future interactions.",
+        "Your name is optional. Feedback is only visible to the speaker it is about. We keep a one-way hash of your network address purely to limit duplicate submissions; it isn't shown to speakers.",
     },
     {
-      question: "As a speaker, how do I claim my profile?",
+      question: "As a speaker, how do I get started?",
       answer:
-        "You can claim your speaker profile by creating an account and verifying your identity. Once verified, you'll have access to all feedback from your past presentations and can customize your public profile with your bio, areas of expertise, and speaking history.",
+        "Create an account, set up your speaker profile and add your talks. For each talk you can generate a QR code or link to share with your audience, then follow your ratings and trends from your dashboard.",
     },
     {
       question: "Can event organizers see individual feedback?",
       answer:
-        "Organizers can see aggregated feedback data and statistics for all speakers at their event, but they cannot see individual feedback submissions. This maintains the anonymity of the feedback while still providing valuable insights for future event planning.",
+        "No. Individual feedback is only visible to the speaker who received it.",
     },
     {
       question: "How can I add my event to SpeakWise?",
       answer:
-        "Event organizers can create an account and submit their event details through our organizer dashboard. Once approved, you can upload your speaker list, attendee information, and event schedule to enable the feedback system.",
+        "Create an organization account. Our team reviews new organizations, and you'll receive an email once yours is approved. After that you can add your events from the organizer dashboard, including a link to your call for proposals if it's open.",
+    },
+    {
+      question: "How do I submit a talk to an event's CFP?",
+      answer:
+        "SpeakWise doesn't collect proposals itself. When an event has an open call for proposals, the Submit CFP button takes you to the organizer's own submission page.",
     },
     {
       question: "Is there a cost to use SpeakWise?",
       answer:
-        "SpeakWise offers both free and premium tiers. Basic feedback functionality is free for all users. Premium features, such as advanced analytics for speakers and comprehensive event management tools for organizers, are available through our subscription plans.",
+        "SpeakWise is free for now. This may change in the future, and we'll let users know before anything does.",
     },
   ]
 
