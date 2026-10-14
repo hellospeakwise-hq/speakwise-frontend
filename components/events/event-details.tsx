@@ -1,6 +1,6 @@
 'use client'
 
-import { Calendar, MapPin, Clock, Globe, Send, ArrowLeft, ArrowUpRight, ExternalLink, TicketCheck } from "lucide-react"
+import { Calendar, MapPin, Clock, Globe, ArrowLeft, ArrowUpRight, ExternalLink, TicketCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState, useEffect } from "react"
 import { motion, useReducedMotion } from "framer-motion"
@@ -163,15 +163,15 @@ if (loading) return <LoadingSkeleton />
       >
         <div className="absolute inset-0 bg-black/45" />
 
-        {/* CFP button in hero */}
-        {event.cfp_open && (
+        {/* CFP button in hero — proposals are submitted on the organizer's own site */}
+        {event.cfp_open && event.cfp_link && (
           <div className="absolute top-4 right-4">
-            <Link href={`/events/${id}/cfp`}>
+            <a href={event.cfp_link} target="_blank" rel="noopener noreferrer">
               <button className="h-8 px-4 text-sm font-semibold bg-white text-slate-900 hover:bg-white/90 transition-colors rounded-md flex items-center gap-1.5">
-                <Send className="h-3.5 w-3.5" />
+                <ExternalLink className="h-3.5 w-3.5" />
                 Submit CFP
               </button>
-            </Link>
+            </a>
           </div>
         )}
 
@@ -270,7 +270,7 @@ if (loading) return <LoadingSkeleton />
                   <h2 id="cfp-heading" className="font-semibold">Call for proposals</h2>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {event.is_cfp_currently_open
-                      ? "Share a talk idea with the event organizers."
+                      ? "Proposals are submitted on the organizer's CFP page."
                       : "This event isn't accepting proposals right now."}
                   </p>
                 </div>
@@ -288,12 +288,12 @@ if (loading) return <LoadingSkeleton />
                   <span className="font-medium">{getDateString(event.cfp_deadline)}</span>
                 </p>
               )}
-              {event.is_cfp_currently_open && (
+              {event.is_cfp_currently_open && event.cfp_link && (
                 <Button asChild className="mt-5 w-full gap-2">
-                  <Link href={`/events/${id}/cfp`}>
-                    <Send className="h-4 w-4" />
+                  <a href={event.cfp_link} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="h-4 w-4" />
                     Submit a proposal
-                  </Link>
+                  </a>
                 </Button>
               )}
             </section>

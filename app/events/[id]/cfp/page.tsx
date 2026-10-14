@@ -58,9 +58,19 @@ export default function CFPLandingPage() {
 
   useEffect(() => {
     eventsApi.getEvent(slug)
-      .then(setEvent)
-      .catch(() => router.push(`/events/${slug}`))
-      .finally(() => setLoading(false))
+      .then((data) => {
+        // Proposals are collected on the organizer's own site, not on SpeakWise.
+        if (data.cfp_open && data.cfp_link) {
+          window.location.replace(data.cfp_link)
+          return
+        }
+        setEvent(data)
+        setLoading(false)
+      })
+      .catch(() => {
+        router.push(`/events/${slug}`)
+        setLoading(false)
+      })
   }, [slug, router])
 
   const handleSubmitClick = () => {

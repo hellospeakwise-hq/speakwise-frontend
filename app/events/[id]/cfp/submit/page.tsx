@@ -52,17 +52,27 @@ export default function SubmitCFPPage() {
     const [form, setForm] = useState<CreateCFPData>(EMPTY_FORM)
 
     useEffect(() => {
-        if (!isAuthenticated) {
-            if (typeof window !== 'undefined') {
-                sessionStorage.setItem('redirectAfterLogin', `/events/${slug}/cfp/submit`)
-            }
-            router.push('/signin')
-            return
-        }
         eventsApi.getEvent(slug)
-            .then(setEvent)
-            .catch(() => router.push(`/events/${slug}/cfp`))
-            .finally(() => setLoadingEvent(false))
+            .then((data) => {
+                // Proposals are collected on the organizer's own site, not on SpeakWise.
+                if (data.cfp_open && data.cfp_link) {
+                    window.location.replace(data.cfp_link)
+                    return
+                }
+                if (!isAuthenticated) {
+                    if (typeof window !== 'undefined') {
+                        sessionStorage.setItem('redirectAfterLogin', `/events/${slug}/cfp/submit`)
+                    }
+                    router.push('/signin')
+                    return
+                }
+                setEvent(data)
+                setLoadingEvent(false)
+            })
+            .catch(() => {
+                router.push(`/events/${slug}/cfp`)
+                setLoadingEvent(false)
+            })
     }, [slug, isAuthenticated, router])
 
     const set = (field: keyof CreateCFPData, value: string) =>
