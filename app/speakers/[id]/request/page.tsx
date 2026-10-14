@@ -19,7 +19,7 @@ import { getAvatarUrl } from "@/lib/utils"
 export default function RequestSpeakerPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
-  const { isAuthenticated, loading: authLoading } = useAuth()
+  const { isAuthenticated, loading: authLoading, user } = useAuth()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -42,6 +42,11 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       try {
         setLoading(true)
         const speakerData = await speakerApi.getSpeakerById(id)
+        if (user?.id && speakerData.user_account === user.id) {
+          toast.error("You can't send a request to yourself")
+          router.replace(`/speakers/${id}`)
+          return
+        }
         setSpeaker(speakerData)
       } catch {
         toast.error("Failed to load speaker data")
@@ -50,7 +55,7 @@ export default function RequestSpeakerPage({ params }: { params: Promise<{ id: s
       }
     }
     loadData()
-  }, [id, authLoading, isAuthenticated])
+  }, [id, authLoading, isAuthenticated, user?.id, router])
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

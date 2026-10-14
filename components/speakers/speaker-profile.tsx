@@ -304,7 +304,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
               </Button>
 
               {/* Request as speaker */}
-              {isAuthenticated ? (
+              {isOwnProfile ? null : isAuthenticated ? (
                 <Link href={`/speakers/${id}/request`} className="block mt-2">
                   <Button className="w-full h-8 text-sm font-medium rounded-md bg-foreground text-background hover:bg-foreground/90 border-0 gap-1.5">
                     <Mic className="h-3.5 w-3.5" />
@@ -633,7 +633,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                 </div>
 
                 {/* Request to speak */}
-                {isAuthenticated ? (
+                {isOwnProfile ? null : isAuthenticated ? (
                   <Link href={`/speakers/${id}/request`}>
                     <div className="bg-card border border-border rounded-lg p-5 flex items-center justify-between hover:border-foreground/40 transition-colors cursor-pointer group">
                       <div>

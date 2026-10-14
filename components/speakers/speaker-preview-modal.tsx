@@ -7,6 +7,7 @@ import { X, Calendar, Plus } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getAvatarUrl } from '@/lib/utils'
+import { useAuth } from '@/contexts/auth-context'
 
 interface SpeakerPreviewModalProps {
     speaker: Speaker | null
@@ -15,6 +16,7 @@ interface SpeakerPreviewModalProps {
 }
 
 export function SpeakerPreviewModal({ speaker, isOpen, onClose }: Readonly<SpeakerPreviewModalProps>) {
+    const { user } = useAuth()
     const [mounted, setMounted] = useState(false)
 
     useEffect(() => {
@@ -139,6 +141,7 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: Readonly<Speak
                             </div>
 
                             {/* Request Speaker Link */}
+                            {speaker.user_account !== user?.id && (
                             <div className="pt-1 text-center">
                                 <Link
                                     href={`/speakers/${getSpeakerSlug(speaker)}/request`}
@@ -147,6 +150,7 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: Readonly<Speak
                                     Request This speaker →
                                 </Link>
                             </div>
+                            )}
                         </div>
                     </div>
                 </div>
