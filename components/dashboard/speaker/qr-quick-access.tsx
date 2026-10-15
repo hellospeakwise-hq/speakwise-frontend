@@ -245,7 +245,7 @@ export function QrQuickAccess() {
                         title="Preview QR Code"
                       >
                         <Eye className="h-3 w-3" />
-                        Preview
+                        Preview QR
                       </Button>
 
                       <div className="flex items-center gap-1">

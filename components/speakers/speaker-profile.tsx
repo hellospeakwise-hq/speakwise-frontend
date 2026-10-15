@@ -453,14 +453,14 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
             {/* Stats strip */}
             <div className="grid grid-cols-3 gap-3">
               {[
-                { icon: Users, label: 'Followers',          value: followersCount, clickable: true },
-                { icon: Mic,   label: 'Talk Presentations', value: totalTalks,     clickable: false },
-                { icon: Star,  label: 'Rating',             value: '—',            clickable: false },
-              ].map(({ icon: Icon, label, value, clickable }) => (
+                { icon: Users, label: 'Followers',          value: followersCount, onClick: () => showFollowList('followers') },
+                { icon: Mic,   label: 'Talk Presentations', value: totalTalks,     onClick: () => setActiveTab('talks') },
+                { icon: Star,  label: 'Rating',             value: '—',            onClick: undefined },
+              ].map(({ icon: Icon, label, value, onClick }) => (
                 <div
                   key={label}
-                  onClick={clickable ? () => showFollowList('followers') : undefined}
-                  className={`bg-card border border-border rounded-lg p-4 flex flex-col gap-1 ${clickable ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}`}
+                  onClick={onClick}
+                  className={`bg-card border border-border rounded-lg p-4 flex flex-col gap-1 ${onClick ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}`}
                 >
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Icon className="h-3.5 w-3.5 text-muted-foreground" />
@@ -590,6 +590,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                 <ExperiencesList
                   speakerSlug={speaker?.slug || id}
                   speakerId={speaker?.id}
+                  speakerName={speakerName}
                   onCountChange={setTotalTalks}
                 />
               </div>

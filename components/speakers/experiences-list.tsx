@@ -18,10 +18,11 @@ import { TalkCoverImage } from "@/components/ui/talk-cover-image"
 interface ExperiencesListProps {
     speakerId?: string
     speakerSlug?: string
+    speakerName?: string
     onCountChange?: (count: number) => void
 }
 
-export function ExperiencesList({ speakerId, speakerSlug, onCountChange }: ExperiencesListProps) {
+export function ExperiencesList({ speakerId, speakerSlug, speakerName, onCountChange }: ExperiencesListProps) {
     const [experiences, setExperiences] = useState<SpeakerExperience[]>([])
     const [loading, setLoading] = useState(true)
     const [selectedExperience, setSelectedExperience] = useState<SpeakerExperience | null>(null)
@@ -203,6 +204,8 @@ export function ExperiencesList({ speakerId, speakerSlug, onCountChange }: Exper
             {selectedExperience && (
                 <ExperienceDetailModal
                     experience={selectedExperience}
+                    speakerSlug={speakerSlug}
+                    speakerName={speakerName}
                     open={!!selectedExperience}
                     onOpenChange={(open) => !open && setSelectedExperience(null)}
                 />

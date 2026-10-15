@@ -10,14 +10,22 @@ import {
 } from "@/components/ui/dialog"
 import { type SpeakerExperience } from "@/lib/api/experiencesApi"
 import { format } from "date-fns"
+import { ShareTalk } from "./share-talk"
 
 interface ExperienceDetailModalProps {
     experience: SpeakerExperience
     open: boolean
     onOpenChange: (open: boolean) => void
+    speakerSlug?: string
+    speakerName?: string
 }
 
-export function ExperienceDetailModal({ experience, open, onOpenChange }: ExperienceDetailModalProps) {
+export function ExperienceDetailModal({ experience, open, onOpenChange, speakerSlug, speakerName }: ExperienceDetailModalProps) {
+    const shareUrl =
+        typeof window !== "undefined"
+            ? `${window.location.origin}${speakerSlug ? `/speakers/${speakerSlug}` : window.location.pathname}`
+            : ""
+
     const formatDate = (dateString: string) => {
         try {
             const date = new Date(dateString)
@@ -95,6 +103,14 @@ export function ExperienceDetailModal({ experience, open, onOpenChange }: Experi
                                 )}
                             </div>
                         </div>
+                    )}
+
+                    {shareUrl && (
+                        <ShareTalk
+                            url={shareUrl}
+                            title={`${experience.topic} - ${experience.event_name}`}
+                            message={`Check out "${experience.topic}"${speakerName ? ` by ${speakerName}` : ""}, presented at ${experience.event_name}. See the talk and speaking history on SpeakWise:`}
+                        />
                     )}
                 </div>
             </DialogContent>
