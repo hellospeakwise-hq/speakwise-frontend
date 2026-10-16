@@ -26,10 +26,13 @@ const fontHeading = localFont({
 })
 
 export const metadata = {
-  title: "SpeakWise - GitHub for Speakers | Showcase Your Talks & Get Feedback",
+  metadataBase: new URL("https://speakwise.live"),
+  title: {
+    default: "SpeakWise | Speaker Profiles & Talk Feedback",
+    template: "%s | SpeakWise",
+  },
   manifest: "/manifest.json",
-  description:
-    "The GitHub for speakers. Build your speaking portfolio, showcase your conference talks, and receive anonymous feedback from attendees. The ultimate platform for speakers to grow and event organizers to manage.",
+  description: "Build your speaker profile, showcase talks, and collect anonymous audience feedback. SpeakWise helps speakers and event organizers grow.",
   icons: {
     icon: "/logo-black.png",
   },
@@ -54,16 +57,26 @@ export const metadata = {
     type: "website",
     locale: "en_US",
     url: "https://speakwise.live",
-    title: "SpeakWise - GitHub for Speakers",
-    description:
-      "Build your speaking portfolio, showcase your conference talks, and get anonymous feedback from attendees. The GitHub for speakers.",
+    title: "SpeakWise | Speaker Profiles & Talk Feedback",
+    description: "Build your speaker profile, showcase talks, and collect anonymous audience feedback. SpeakWise helps speakers and event organizers grow.",
     siteName: "SpeakWise",
+    images: [
+      {
+        url: "/speakwise-intro.png",
+        alt: "SpeakWise — the future of speaker management",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SpeakWise - GitHub for Speakers",
-    description:
-      "Build your speaking portfolio, showcase your conference talks, and get anonymous feedback from attendees.",
+    title: "SpeakWise | Speaker Profiles & Talk Feedback",
+    description: "Build your speaker profile, showcase talks, and collect anonymous audience feedback. SpeakWise helps speakers and event organizers grow.",
+    images: [
+      {
+        url: "/speakwise-intro.png",
+        alt: "SpeakWise — the future of speaker management",
+      },
+    ],
   },
   robots: {
     index: true,
