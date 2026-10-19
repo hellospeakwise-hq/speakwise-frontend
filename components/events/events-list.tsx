@@ -59,6 +59,27 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
 
     const getLocationString = (event: Event) => event.location || 'Location TBD'
 
+    const getCardStatus = (event: Event) => {
+        if (isEventPast(event)) {
+            return {
+                label: 'Past',
+                className: 'bg-zinc-800/80 text-white',
+            }
+        }
+
+        if (event.is_active) {
+            return {
+                label: 'Active',
+                className: 'bg-black/40 text-white',
+            }
+        }
+
+        return {
+            label: 'Inactive',
+            className: 'bg-muted text-muted-foreground',
+        }
+    }
+
     const getDateRangeString = (event: Event) => {
         if (event.date_range) {
             return `${getDateString(event.date_range.start)} - ${getDateString(event.date_range.end)}`
@@ -126,6 +147,7 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
                         const dateStr = getDateRangeString(event)
                         const location = getLocationString(event)
                         const imageUrl = event.event_image ? getEventImageUrl(event.event_image) : null
+                        const status = getCardStatus(event)
 
                         return (
                             <Link
@@ -150,10 +172,9 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
                                             </div>
                                         )}
 
-                                        {/* Active pill — top right of image */}
-                                        {event.is_active && (
-                                            <span className="absolute top-3 right-3 rounded-full bg-black/40 px-2.5 py-1 text-[10px] font-medium text-white backdrop-blur-sm">
-                                                Active
+                                        {(event.is_active || status.label === 'Past') && (
+                                            <span className={`absolute top-3 right-3 rounded-full px-2.5 py-1 text-[10px] font-medium backdrop-blur-sm ${status.className}`}>
+                                                {status.label}
                                             </span>
                                         )}
 
@@ -192,12 +213,15 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
             ) : (
                 /* ========== LIST VIEW ========== */
                 <div className="space-y-3">
-                    {filteredEvents.map((event) => (
-                        <Link
-                            key={event.id}
-                            href={`/events/${event.slug}`}
-                            className="block group"
-                        >
+                    {filteredEvents.map((event) => {
+                        const status = getCardStatus(event)
+
+                        return (
+                            <Link
+                                key={event.id}
+                                href={`/events/${event.slug}`}
+                                className="block group"
+                            >
                             <div className="flex items-stretch rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-all hover:border-orange-200 dark:hover:border-orange-800 overflow-hidden">
                                 {/* Image thumbnail */}
                                 <div className="relative w-32 sm:w-44 shrink-0 bg-gray-100 dark:bg-gray-800">
@@ -227,11 +251,8 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
                                                 {event.description || 'No description available.'}
                                             </p>
                                         </div>
-                                        <Badge
-                                            variant={event.is_active ? "default" : "secondary"}
-                                            className={`shrink-0 text-[10px] ${event.is_active ? "bg-green-100 text-green-700 hover:bg-green-100 dark:bg-green-900/30 dark:text-green-400" : ""}`}
-                                        >
-                                            {event.is_active ? 'Active' : 'Inactive'}
+                                        <Badge variant="secondary" className={`shrink-0 text-[10px] ${status.className}`}>
+                                            {status.label}
                                         </Badge>
                                     </div>
 
@@ -253,8 +274,9 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
 
                                 </div>
                             </div>
-                        </Link>
-                    ))}
+                            </Link>
+                        )
+                    })}
                 </div>
             )}
         </div>
