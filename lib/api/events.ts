@@ -17,6 +17,30 @@ export interface CreateEventRequest {
   cfp_deadline?: string | null;
   cfp_speaker_notification_date?: string | null;
   event_image?: File;
+  /** Opaque token returned by the import-preview endpoint. Used to attach a scraped image without re-downloading it. */
+  event_image_token?: string;
+}
+
+export interface EventImportDraft {
+  title: string | null;
+  description: string | null;
+  website: string | null;
+  start_date_time: string | null;
+  end_date_time: string | null;
+  location: string | null;
+  country: string | null;
+  is_free: boolean | null;
+  event_image_url: string | null;
+}
+
+export interface EventImportPreview {
+  source_url: string;
+  platform: string;
+  fetched_at: string;
+  draft: EventImportDraft;
+  missing_fields: string[];
+  warnings: { code: string; message: string }[];
+  event_image_token: string | null;
 }
 
 export interface EventsResponse {
@@ -107,8 +131,19 @@ export const eventsApi = {
     if (data.cfp_open_date !== undefined) body.cfp_open_date = data.cfp_open_date || null;
     if (data.cfp_deadline !== undefined) body.cfp_deadline = data.cfp_deadline || null;
     if (data.cfp_speaker_notification_date !== undefined) body.cfp_speaker_notification_date = data.cfp_speaker_notification_date || null;
+    // Pass the import token so the backend can attach the scraped image server-side.
+    if (data.event_image_token) body.event_image_token = data.event_image_token;
 
     return body;
+  },
+
+  /**
+   * Scrape a public event page and return a prefilled draft for review.
+   * POST /events/import/preview/
+   */
+  async importPreview(url: string): Promise<EventImportPreview> {
+    const response = await apiClient.post<EventImportPreview>('/events/import/preview/', { url });
+    return response.data;
   },
 
   /**

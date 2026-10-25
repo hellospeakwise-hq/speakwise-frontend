@@ -28,7 +28,9 @@ import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { toast } from "sonner"
+import { Globe } from "lucide-react"
 import { eventsApi, type CreateEventRequest } from "@/lib/api/events"
+import { type EventImportPreview } from "@/lib/api/events"
 import { type Event } from "@/lib/types/api"
 
 const eventFormSchema = z.object({
@@ -53,6 +55,8 @@ interface EventFormDialogProps {
   onOpenChange: (open: boolean) => void
   event?: Event | null
   onEventSaved: (event: Event) => void
+  /** Prefill the form from an import preview */
+  initialDraft?: EventImportPreview | null
 }
 
 export function EventFormDialog({
@@ -60,10 +64,13 @@ export function EventFormDialog({
   onOpenChange,
   event = null,
   onEventSaved,
+  initialDraft = null,
 }: EventFormDialogProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(event?.event_image || null)
+  // Holds the opaque token from import-preview so the backend can attach the scraped image.
+  const [imageToken, setImageToken] = useState<string | null>(null)
 
   const toLocalDatetime = (iso: string | null | undefined) => {
     if (!iso) return ""
@@ -73,15 +80,18 @@ export function EventFormDialog({
   const form = useForm<z.infer<typeof eventFormSchema>>({
     resolver: zodResolver(eventFormSchema),
     defaultValues: {
-      title: event?.title || "",
+      title: initialDraft?.draft.title || event?.title || "",
       event_nickname: event?.event_nickname || "",
-      description: event?.description || "",
-      website: event?.website || "",
-      location: typeof event?.location === "string" ? event.location : "",
-      country: event?.country || "",
-      ticketingStatus: event?.is_free === true ? "free" : event?.is_free === false ? "ticketed" : "unspecified",
-      start_date_time: toLocalDatetime(event?.start_date_time),
-      end_date_time: toLocalDatetime(event?.end_date_time),
+      description: initialDraft?.draft.description || event?.description || "",
+      website: initialDraft?.draft.website || event?.website || "",
+      location: initialDraft?.draft.location || (typeof event?.location === "string" ? event.location : ""),
+      country: initialDraft?.draft.country || event?.country || "",
+      ticketingStatus:
+        initialDraft?.draft.is_free != null
+          ? initialDraft.draft.is_free ? "free" : "ticketed"
+          : event?.is_free === true ? "free" : event?.is_free === false ? "ticketed" : "unspecified",
+      start_date_time: toLocalDatetime(initialDraft?.draft.start_date_time || event?.start_date_time),
+      end_date_time: toLocalDatetime(initialDraft?.draft.end_date_time || event?.end_date_time),
       cfp_open: event?.cfp_open || false,
       cfp_link: event?.cfp_link || "",
       cfp_open_date: toLocalDatetime(event?.cfp_open_date),
@@ -93,26 +103,32 @@ export function EventFormDialog({
 
   useEffect(() => {
     if (open) {
+      const draft = initialDraft?.draft
       reset({
-        title: event?.title || "",
+        title: draft?.title || event?.title || "",
         event_nickname: event?.event_nickname || "",
-        description: event?.description || "",
-        website: event?.website || "",
-        location: typeof event?.location === "string" ? event.location : "",
-        country: event?.country || "",
-        ticketingStatus: event?.is_free === true ? "free" : event?.is_free === false ? "ticketed" : "unspecified",
-        start_date_time: toLocalDatetime(event?.start_date_time),
-        end_date_time: toLocalDatetime(event?.end_date_time),
+        description: draft?.description || event?.description || "",
+        website: draft?.website || event?.website || "",
+        location: draft?.location || (typeof event?.location === "string" ? event.location : ""),
+        country: draft?.country || event?.country || "",
+        ticketingStatus:
+          draft?.is_free != null
+            ? draft.is_free ? "free" : "ticketed"
+            : event?.is_free === true ? "free" : event?.is_free === false ? "ticketed" : "unspecified",
+        start_date_time: toLocalDatetime(draft?.start_date_time || event?.start_date_time),
+        end_date_time: toLocalDatetime(draft?.end_date_time || event?.end_date_time),
         cfp_open: event?.cfp_open || false,
         cfp_link: event?.cfp_link || "",
         cfp_open_date: toLocalDatetime(event?.cfp_open_date),
         cfp_deadline: toLocalDatetime(event?.cfp_deadline),
         cfp_speaker_notification_date: event?.cfp_speaker_notification_date || "",
       })
-      setImagePreview(event?.event_image || null)
+      // Carry the image token from the import so backend can attach the scraped image.
+      setImageToken(initialDraft?.event_image_token ?? null)
+      setImagePreview(draft?.event_image_url || event?.event_image || null)
       setSelectedImage(null)
     }
-  }, [event, open, reset])
+  }, [event, open, reset, initialDraft])
 
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -161,6 +177,8 @@ export function EventFormDialog({
         cfp_deadline: values.cfp_deadline || null,
         cfp_speaker_notification_date: values.cfp_speaker_notification_date || null,
         event_image: selectedImage || undefined,
+        // Include the import token when the user hasn't picked a new image.
+        event_image_token: !selectedImage && imageToken ? imageToken : undefined,
       }
 
       let savedEvent: Event
@@ -196,6 +214,15 @@ export function EventFormDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {/* Import banner */}
+        {initialDraft && !event && (
+          <div className="flex items-center gap-2 rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-primary">
+            <Globe className="h-4 w-4 shrink-0" />
+            <span>
+              Prefilled from <span className="font-medium capitalize">{initialDraft.platform}</span>, review and edit before submitting.
+            </span>
+          </div>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
 

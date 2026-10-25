@@ -31,12 +31,15 @@ import {
   Calendar,
   MapPin,
   Clock,
-  Plus
+  Plus,
+  Globe
 } from "lucide-react"
 import Link from "next/link"
 import { eventsApi } from "@/lib/api/events"
+import { type EventImportPreview } from "@/lib/api/events"
 import { type Event } from "@/lib/types/api"
 import { EventFormDialog } from "@/components/dashboard/event-form-dialog"
+import { EventImportDialog } from "@/components/dashboard/event-import-dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -76,6 +79,8 @@ export function EventManagementTable({
 }: EventManagementTableProps) {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
   const [showEventDialog, setShowEventDialog] = useState(false)
+  const [showImportDialog, setShowImportDialog] = useState(false)
+  const [importDraft, setImportDraft] = useState<EventImportPreview | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [eventToDelete, setEventToDelete] = useState<Event | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -87,6 +92,13 @@ export function EventManagementTable({
 
   const handleCreateEvent = () => {
     setSelectedEvent(null)
+    setImportDraft(null)
+    setShowEventDialog(true)
+  }
+
+  const handleImportEvent = (preview: EventImportPreview) => {
+    setSelectedEvent(null)
+    setImportDraft(preview)
     setShowEventDialog(true)
   }
 
@@ -151,10 +163,21 @@ export function EventManagementTable({
       <Card data-tour="event-table">
         <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <CardTitle className="text-lg sm:text-xl">Event Management</CardTitle>
-          <Button onClick={handleCreateEvent} className="flex items-center gap-2 w-full sm:w-auto" size="sm" data-tour="create-event-button">
-            <Plus className="h-4 w-4" />
-            Create Event
-          </Button>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              variant="outline"
+              onClick={() => setShowImportDialog(true)}
+              className="flex items-center gap-2 flex-1 sm:flex-none"
+              size="sm"
+            >
+              <Globe className="h-4 w-4" />
+              Import from URL
+            </Button>
+            <Button onClick={handleCreateEvent} className="flex items-center gap-2 flex-1 sm:flex-none" size="sm" data-tour="create-event-button">
+              <Plus className="h-4 w-4" />
+              Create Event
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {events.length === 0 ? (
@@ -425,9 +448,19 @@ export function EventManagementTable({
 
       <EventFormDialog
         open={showEventDialog}
-        onOpenChange={setShowEventDialog}
+        onOpenChange={(v) => {
+          setShowEventDialog(v)
+          if (!v) setImportDraft(null)
+        }}
         event={selectedEvent}
         onEventSaved={handleEventSaved}
+        initialDraft={importDraft}
+      />
+
+      <EventImportDialog
+        open={showImportDialog}
+        onOpenChange={setShowImportDialog}
+        onImported={handleImportEvent}
       />
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
