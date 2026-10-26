@@ -7,6 +7,7 @@ import { MainNav } from "@/components/main-nav"
 import { Footer } from "@/components/footer"
 import { Toaster } from "@/components/ui/sonner"
 import { AuthProvider } from "@/contexts/auth-context"
+import { Web3Provider } from "@/components/providers/web3-provider"
 import { IdleTimeoutModal } from "@/components/idle-timeout-modal"
 import { DisableConsole } from "@/components/disable-console"
 import { CookieConsent } from "@/components/cookie-consent"
@@ -119,7 +120,38 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
 
-        {/* Chatwoot - Disabled for now */}
+        {/* Polyfill crypto.randomUUID for non-secure LAN HTTP on mobile browsers */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                if (typeof window !== 'undefined') {
+                  if (!window.crypto) { window.crypto = {}; }
+                  if (!window.crypto.randomUUID) {
+                    window.crypto.randomUUID = function() {
+                      try {
+                        var arr = new Uint8Array(1);
+                        return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, function(c) {
+                          return (c ^ (window.crypto.getRandomValues(arr)[0] & (15 >> (c / 4)))).toString(16);
+                        });
+                      } catch (e) {
+                        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+                          var r = (Math.random() * 16) | 0;
+                          var v = c === 'x' ? r : (r & 0x3) | 0x8;
+                          return v.toString(16);
+                        });
+                      }
+                    };
+                  }
+                  if (typeof globalThis !== 'undefined' && globalThis.crypto && !globalThis.crypto.randomUUID) {
+                    globalThis.crypto.randomUUID = window.crypto.randomUUID;
+                  }
+                }
+              })();
+            `,
+          }}
+        />
+
         {/* Mastodon Verification */}
         <link rel="me" href="https://mastodon.social/@speakwise" />
       </head>
@@ -133,18 +165,20 @@ export default function RootLayout({
       >
         <DisableConsole />
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <AuthProvider>
-            <div className="flex min-h-screen flex-col">
-              <Toaster />
-              <SponsorBanner />
-              <MainNav />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-            <CookieConsent />
-            <PWAInstallPrompt />
-            <IdleTimeoutModal />
-          </AuthProvider>
+          <Web3Provider>
+            <AuthProvider>
+              <div className="flex min-h-screen flex-col">
+                <Toaster />
+                <SponsorBanner />
+                <MainNav />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </div>
+              <CookieConsent />
+              <PWAInstallPrompt />
+              <IdleTimeoutModal />
+            </AuthProvider>
+          </Web3Provider>
         </ThemeProvider>
       </body>
     </html>

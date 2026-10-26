@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Mic, FileText, Award, QrCode } from "lucide-react"
 import { Notifications } from "@/components/dashboard/speaker/notifications"
+import { BadgesGallery } from "@/components/badges/badges-gallery"
 
 const MyTalksSection = dynamic(
   () => import("@/components/dashboard/speaker/my-talks-section").then((module) => module.MyTalksSection),
@@ -39,22 +40,28 @@ export function SpeakerDashboardView() {
     <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-20 space-y-6">
 
       {/* Header */}
-      <motion.div {...fadeUp(0)} className="flex items-start justify-between gap-4">
+      <motion.div {...fadeUp(0)} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight">Speaker Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Track your engagements and performance</p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Button asChild variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none w-full sm:w-auto">
+          <Button asChild variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-muted-foreground hover:text-foreground shrink-0">
             <Link href="/dashboard/speaker/cfp">
               <FileText className="h-3.5 w-3.5" />
               My CFPs
             </Link>
           </Button>
-          <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+          <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1.5 shrink-0">
             <Link href="/dashboard/speaker/experiences">
               <QrCode className="h-3.5 w-3.5" />
               Get QR Code
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="sm" className="h-8 text-xs gap-1.5 border-amber-500/30 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400 shrink-0">
+            <Link href="/badges">
+              <Award className="h-3.5 w-3.5" />
+              My Badges
             </Link>
           </Button>
         </div>
@@ -71,13 +78,17 @@ export function SpeakerDashboardView() {
       {/* Tabs */}
       <motion.div {...fadeUp(0.1)}>
         <Tabs defaultValue="overview" value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full justify-start overflow-x-auto bg-transparent border-b border-border rounded-none p-0 h-auto gap-0 flex-nowrap">
+          <TabsList className="w-full justify-start overflow-x-auto scrollbar-none bg-transparent border-b border-border rounded-none p-0 h-auto gap-0 flex-nowrap">
             <TabsTrigger value="overview"      className={TAB_CLASS}>Overview</TabsTrigger>
             <TabsTrigger value="upcoming"      className={TAB_CLASS}>Upcoming Events</TabsTrigger>
             <TabsTrigger value="feedback"      className={TAB_CLASS}>Feedback</TabsTrigger>
             <TabsTrigger value="talks"         className={`${TAB_CLASS} inline-flex items-center gap-1.5`}>
               <Mic className="h-3.5 w-3.5" />
               My Talks
+            </TabsTrigger>
+            <TabsTrigger value="badges"        className={`${TAB_CLASS} inline-flex items-center gap-1.5`}>
+              <Award className="h-3.5 w-3.5 text-amber-500" />
+              Web3 Badges
             </TabsTrigger>
           </TabsList>
 
@@ -101,6 +112,10 @@ export function SpeakerDashboardView() {
 
           <TabsContent value="talks" className="mt-6">
             <MyTalksSection />
+          </TabsContent>
+
+          <TabsContent value="badges" className="mt-6">
+            <BadgesGallery isOwner={true} />
           </TabsContent>
         </Tabs>
       </motion.div>
