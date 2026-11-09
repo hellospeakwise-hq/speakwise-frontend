@@ -285,7 +285,14 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   }
 
   const speakerName = speaker.speaker_name || `Speaker ${speaker.id}`;
-  const isOwnProfile = speaker.user_account === user?.id;
+  const isOwnProfile = Boolean(
+    isAuthenticated &&
+      user &&
+      (speaker.user_account === user.id ||
+        String(speaker.user_account) === String(user.id) ||
+        (speaker.slug && (user as any).slug && speaker.slug === (user as any).slug) ||
+        (speaker.username && user.email && speaker.username.toLowerCase() === user.email.split('@')[0].toLowerCase()))
+  );
   const twitter  = getSocial('twitter');
   const linkedin = getSocial('linkedin');
   const github   = getSocial('github');

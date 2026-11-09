@@ -286,7 +286,7 @@ export function BadgeCard({
           )}
 
           {/* Only the profile OWNER can claim an unlocked badge! */}
-          {isReadyToClaim && (
+          {isOwner && isReadyToClaim && (
             <div className="pt-1" onClick={(e) => e.stopPropagation()}>
               <Button 
                 size="sm" 
@@ -306,6 +306,14 @@ export function BadgeCard({
                   </>
                 )}
               </Button>
+            </div>
+          )}
+
+          {!isOwner && isReadyToClaim && (
+            <div className="py-1.5 text-center">
+              <span className="text-[11px] text-amber-400 font-medium">
+                Milestone achieved
+              </span>
             </div>
           )}
 

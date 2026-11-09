@@ -305,14 +305,14 @@ export function BadgesGallery({
           )}
         </div>
 
-        {/* Right side: Wallet Connect & Verification */}
+        {/* Right side: Wallet Connect (Only for profile owner) & Verification */}
         <div className="flex items-center gap-2.5">
-          <WalletConnectButton />
+          {isOwner && <WalletConnectButton />}
 
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="cursor-help hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-muted/40 border border-border/50 text-xs text-muted-foreground font-medium hover:text-foreground transition-colors">
+                <div className="cursor-help inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-muted/40 border border-border/50 text-xs text-muted-foreground font-medium hover:text-foreground transition-colors">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                   <span>Base Soulbound</span>
                   <Info className="w-3 h-3 text-muted-foreground/70" />
