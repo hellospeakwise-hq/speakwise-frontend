@@ -89,9 +89,22 @@ export function EventsList({ countryFilter, search = '', period = 'all', cfpOnly
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center p-8">
-                <Loader2 className="h-8 w-8 animate-spin text-orange-500" />
-                <span className="ml-2 text-muted-foreground">Loading events...</span>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <div className="h-4 w-36 bg-muted rounded animate-pulse" />
+                    <div className="h-10 w-24 bg-muted rounded-xl animate-pulse" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="rounded-3xl border bg-card p-3 shadow-xs space-y-3 animate-pulse">
+                            <div className="h-52 w-full rounded-2xl bg-muted" />
+                            <div className="p-2 space-y-2.5">
+                                <div className="h-5 w-4/5 bg-muted rounded-md" />
+                                <div className="h-3.5 w-1/2 bg-muted rounded-md" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         )
     }

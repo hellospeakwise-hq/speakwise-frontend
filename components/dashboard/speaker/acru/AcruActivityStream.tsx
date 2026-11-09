@@ -1,21 +1,26 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Link from "next/link"
-import { ChevronDown, Star, ArrowUpRight, Check } from "lucide-react"
+import { ChevronDown, ArrowUpRight, Check, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { feedbackAPI, type Feedback } from "@/lib/api/feedbackApi"
+import { experiencesApi, type SpeakerExperience } from "@/lib/api/experiencesApi"
 
 interface StreamItem {
   id: string
+  slug: string
   topic: string
   event: string
   date: string
   initials: string
   badgeBg: string
   logoUrl?: string
-  rating: string
+  avgRating: number
+  ratingDisplay: string
   isHigh: boolean
-  comments: string
+  reviewCount: number
+  lastActivityTimestamp: number
 }
 
 function StreamLogoAvatar({ item }: { item: StreamItem }) {
@@ -41,66 +46,181 @@ function StreamLogoAvatar({ item }: { item: StreamItem }) {
 }
 
 export function AcruActivityStream() {
-  const [streamFilter, setStreamFilter] = useState<"7d" | "30d" | "all">("7d")
+  const [streamFilter, setStreamFilter] = useState<"7d" | "30d" | "all">("all")
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [activities, setActivities] = useState<StreamItem[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const activities: StreamItem[] = [
-    {
-      id: "1",
-      topic: "Architecting Scalable Microservices",
-      event: "DevFest Accra 2026",
-      date: "Oct 27, 2026",
-      initials: "DF",
-      badgeBg: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-      logoUrl: "https://www.google.com/s2/favicons?domain=developers.google.com&sz=128",
-      rating: "10/10",
-      isHigh: true,
-      comments: "Phenomenal speaker. Answered Q&A with extreme authority.",
-    },
-    {
-      id: "2",
-      topic: "Building a URL Shortener with Django & AWS",
-      event: "PyCon Togo 2026",
-      date: "Aug 27, 2026",
-      initials: "PY",
-      badgeBg: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-      logoUrl: "https://www.google.com/s2/favicons?domain=python.org&sz=128",
-      rating: "9.2/10",
-      isHigh: true,
-      comments: "Super practical live coding demos. Very clear pacing.",
-    },
-    {
-      id: "3",
-      topic: "Event-Driven Systems with Apache Kafka",
-      event: "Tech In Ghana Summit",
-      date: "Jul 14, 2026",
-      initials: "TG",
-      badgeBg: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-      logoUrl: "https://www.google.com/s2/favicons?domain=techinghana.com&sz=128",
-      rating: "8.8/10",
-      isHigh: true,
-      comments: "Clear breakdown of decoupling patterns for high load.",
-    },
-    {
-      id: "4",
-      topic: "Web3 Smart Contract Verification",
-      event: "ETH Accra Workshop",
-      date: "Jun 02, 2026",
-      initials: "EA",
-      badgeBg: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-      logoUrl: "https://www.google.com/s2/favicons?domain=ethereum.org&sz=128",
-      rating: "8.5/10",
-      isHigh: false,
-      comments: "Great intro to soulbound tokens and attendee reputation.",
-    },
-  ]
+  useEffect(() => {
+    Promise.allSettled([
+      feedbackAPI.getCurrentSpeakerFeedback(),
+      experiencesApi.getMyExperiences(),
+    ]).then(([feedResult, expResult]) => {
+      const feedbacks = feedResult.status === "fulfilled" ? feedResult.value : []
+      const experiences = expResult.status === "fulfilled" ? expResult.value : []
 
-  const displayedActivities =
-    streamFilter === "7d"
-      ? activities.slice(0, 2)
-      : streamFilter === "30d"
-      ? activities.slice(0, 3)
-      : activities
+      const map = new Map<string, StreamItem>()
+
+      // 1. Group by speaker's actual registered presentations
+      experiences.forEach((exp) => {
+        const slug = exp.feedback_slug || exp.id || `exp-${exp.event_name}`
+        const eventName = exp.event_name || "Speaking Engagement"
+        const topic = exp.topic || "Presentation"
+        const isGoogle = eventName.toLowerCase().includes("devfest")
+        const isPython = eventName.toLowerCase().includes("pycon")
+        const initial =
+          eventName
+            .split(" ")
+            .map((w: string) => w[0])
+            .join("")
+            .slice(0, 2)
+            .toUpperCase() || "EV"
+
+        let formattedDate = ""
+        try {
+          formattedDate = exp.event_date
+            ? new Date(exp.event_date).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })
+            : ""
+        } catch {
+          formattedDate = exp.event_date || ""
+        }
+
+        map.set(slug, {
+          id: slug,
+          slug,
+          topic,
+          event: eventName,
+          date: formattedDate,
+          initials: initial,
+          badgeBg: isGoogle
+            ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+            : isPython
+            ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+            : "bg-primary/10 text-primary border-primary/20",
+          logoUrl: isGoogle
+            ? "https://www.google.com/s2/favicons?domain=developers.google.com&sz=128"
+            : isPython
+            ? "https://www.google.com/s2/favicons?domain=python.org&sz=128"
+            : undefined,
+          avgRating: 0,
+          ratingDisplay: "—",
+          isHigh: false,
+          reviewCount: 0,
+          lastActivityTimestamp: 0,
+        })
+      })
+
+      // 2. Also register any talks found in feedbacks not yet in map
+      feedbacks.forEach((f) => {
+        let slug = f.experience?.feedback_slug
+        if (!slug) {
+          const match = experiences.find(
+            (e) =>
+              e.event_name &&
+              f.experience?.event_name &&
+              e.event_name.toLowerCase().trim() === f.experience.event_name.toLowerCase().trim()
+          )
+          slug = match?.feedback_slug || match?.id || f.experience?.event_name || "talk"
+        }
+
+        if (!map.has(slug)) {
+          const eventName = f.experience?.event_name || "Speaking Engagement"
+          const topic = f.experience?.topic || "Presentation"
+          const isGoogle = eventName.toLowerCase().includes("devfest")
+          const isPython = eventName.toLowerCase().includes("pycon")
+          const initial =
+            eventName
+              .split(" ")
+              .map((w: string) => w[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase() || "EV"
+
+          map.set(slug, {
+            id: slug,
+            slug,
+            topic,
+            event: eventName,
+            date: "Recent",
+            initials: initial,
+            badgeBg: isGoogle
+              ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+              : isPython
+              ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+              : "bg-primary/10 text-primary border-primary/20",
+            logoUrl: isGoogle
+              ? "https://www.google.com/s2/favicons?domain=developers.google.com&sz=128"
+              : isPython
+              ? "https://www.google.com/s2/favicons?domain=python.org&sz=128"
+              : undefined,
+            avgRating: 0,
+            ratingDisplay: "—",
+            isHigh: false,
+            reviewCount: 0,
+            lastActivityTimestamp: 0,
+          })
+        }
+      })
+
+      // 3. Compute aggregate scores and review counts per talk
+      map.forEach((item, slug) => {
+        const talkFeedbacks = feedbacks.filter((f) => {
+          if (f.experience?.feedback_slug && f.experience.feedback_slug === item.slug) return true
+          if (
+            f.experience?.event_name &&
+            item.event &&
+            f.experience.event_name.toLowerCase().trim() === item.event.toLowerCase().trim()
+          ) {
+            return true
+          }
+          return false
+        })
+
+        if (talkFeedbacks.length > 0) {
+          const sum = talkFeedbacks.reduce((s, f) => s + f.overall_rating, 0)
+          const avg = sum / talkFeedbacks.length
+          item.reviewCount = talkFeedbacks.length
+          item.avgRating = avg
+          item.ratingDisplay = `${avg.toFixed(1)}/10`
+          item.isHigh = avg >= 8.5
+
+          // Find newest feedback timestamp
+          let maxTs = 0
+          talkFeedbacks.forEach((tf) => {
+            if (tf.created_at) {
+              try {
+                const ts = new Date(tf.created_at).getTime()
+                if (ts > maxTs) maxTs = ts
+              } catch {}
+            }
+          })
+          item.lastActivityTimestamp = maxTs
+        }
+      })
+
+      // Sort talks: talks with reviews first, then by rating
+      const sorted = Array.from(map.values()).sort((a, b) => {
+        if (b.reviewCount !== a.reviewCount) return b.reviewCount - a.reviewCount
+        return b.avgRating - a.avgRating
+      })
+
+      setActivities(sorted)
+      setLoading(false)
+    })
+  }, [])
+
+  const now = Date.now()
+  const displayedActivities = activities.filter((act) => {
+    if (streamFilter === "all" || !act.lastActivityTimestamp) return true
+    const ageMs = now - act.lastActivityTimestamp
+    if (streamFilter === "7d") return ageMs <= 7 * 86400 * 1000
+    if (streamFilter === "30d") return ageMs <= 30 * 86400 * 1000
+    return true
+  }).slice(0, 5) // Cap at 5 presentations so the card never stretches excessively
 
   return (
     <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-xs space-y-4 relative">
@@ -168,34 +288,59 @@ export function AcruActivityStream() {
 
       {/* Stream list */}
       <div className="divide-y divide-border/50">
-        {displayedActivities.map((item) => (
-          <div key={item.id} className="py-3 first:pt-1 last:pb-1 flex items-center justify-between gap-3 group">
-            <div className="flex items-center gap-2.5 min-w-0">
-              {/* Soft rounded logo avatar with image or initial fallback */}
-              <StreamLogoAvatar item={item} />
-
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                  {item.topic}
-                </p>
-                <p className="text-[11px] text-muted-foreground truncate">
-                  {item.event} · {item.date}
-                </p>
-              </div>
-            </div>
-
-            {/* Score rating badge */}
-            <div className="shrink-0 text-right">
-              <span
-                className={`inline-flex items-center gap-0.5 text-xs font-mono font-bold ${
-                  item.isHigh ? "text-[#72A847]" : "text-amber-500"
-                }`}
-              >
-                ★ {item.rating}
-              </span>
-            </div>
+        {loading ? (
+          <div className="py-8 flex items-center justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-        ))}
+        ) : displayedActivities.length === 0 ? (
+          <div className="py-8 text-center text-xs text-muted-foreground">
+            No attendee reviews found for this timeframe.
+          </div>
+        ) : (
+          displayedActivities.map((item) => (
+            <Link
+              key={item.id}
+              href={`/dashboard/speaker/feedback-by-talks?slug=${encodeURIComponent(item.slug)}`}
+              className="py-3 first:pt-1 last:pb-1 flex items-center justify-between gap-3 group hover:bg-muted/30 px-1 -mx-1 rounded-lg transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                {/* Soft rounded logo avatar with image or initial fallback */}
+                <StreamLogoAvatar item={item} />
+
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                    {item.topic}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    {item.event}{item.date ? ` · ${item.date}` : ""}
+                  </p>
+                </div>
+              </div>
+
+              {/* Score rating badge */}
+              <div className="shrink-0 text-right">
+                {item.reviewCount > 0 ? (
+                  <div className="flex flex-col items-end">
+                    <span
+                      className={`inline-flex items-center gap-0.5 text-xs font-mono font-bold ${
+                        item.isHigh ? "text-[#72A847]" : "text-amber-500"
+                      }`}
+                    >
+                      ★ {item.ratingDisplay}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      {item.reviewCount} {item.reviewCount === 1 ? "review" : "reviews"}
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-[11px] font-mono text-muted-foreground">
+                    No reviews
+                  </span>
+                )}
+              </div>
+            </Link>
+          ))
+        )}
       </div>
 
       <div className="pt-1 text-center">

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useMemo } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { eventsApi } from '@/lib/api/events'
 import { type Event } from '@/lib/types/api'
 
@@ -13,64 +14,37 @@ interface UseEventsReturn {
     refetch: () => void
 }
 
+const extractCountries = (evs: Event[]) => {
+    const seen = new Set<string>()
+    return evs
+        .filter(e => e.country)
+        .map(e => e.country!)
+        .filter(c => { if (seen.has(c)) return false; seen.add(c); return true })
+        .sort()
+        .map(c => ({ id: c, name: c, code: c }))
+}
+
 export function useEvents(): UseEventsReturn {
-    const [events, setEvents] = useState<Event[]>([])
-    const [countries, setCountries] = useState<{ id: string; name: string; code: string }[]>([])
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-
-    const extractCountries = (evs: Event[]) => {
-        const seen = new Set<string>()
-        return evs
-            .filter(e => e.country)
-            .map(e => e.country!)
-            .filter(c => { if (seen.has(c)) return false; seen.add(c); return true })
-            .sort()
-            .map(c => ({ id: c, name: c, code: c }))
-    }
-
-    useEffect(() => {
-        const fetchAllData = async () => {
-            setLoading(true)
-            setError(null)
-            try {
-                const eventsResponse = await eventsApi.getEvents()
-                const evs = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || [])
-                setEvents(evs)
-                setCountries(extractCountries(evs))
-            } catch (err) {
-                console.error('Error fetching data:', err)
-                setError(err instanceof Error ? err.message : 'Failed to load events. Please check if the backend is running.')
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        fetchAllData()
-    }, [])
-
-    const refetch = useCallback(async () => {
-        setLoading(true)
-        setError(null)
-        try {
+    const { data, isLoading, error, refetch } = useQuery({
+        queryKey: ['events', 'public-catalog'],
+        queryFn: async () => {
             const eventsResponse = await eventsApi.getEvents()
-            const evs = Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || [])
-            setEvents(evs)
-            setCountries(extractCountries(evs))
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load events.')
-        } finally {
-            setLoading(false)
-        }
-    }, [])
+            return Array.isArray(eventsResponse) ? eventsResponse : (eventsResponse.results || [])
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes cache
+        gcTime: 30 * 60 * 1000,   // Keep in cache for 30 minutes
+    })
+
+    const events = data || []
+    const countries = useMemo(() => extractCountries(events), [events])
 
     return {
         events,
         countries,
         tags: [],
-        loading,
-        error,
-        refetch
+        loading: isLoading,
+        error: error instanceof Error ? error.message : error ? 'Failed to load events.' : null,
+        refetch: () => { refetch() }
     }
 }
 
@@ -82,36 +56,20 @@ interface UseEventReturn {
 }
 
 export function useEvent(id: string): UseEventReturn {
-    const [event, setEvent] = useState<Event | null>(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState<string | null>(null)
-
-    const fetchEventData = useCallback(async () => {
-        setLoading(true)
-        setError(null)
-
-        try {
-            const data = await eventsApi.getEvent(id)
-            setEvent(data)
-        } catch (err) {
-            console.error('Error fetching event:', err)
-            setEvent(null)
-            setError('Failed to load event. Please check if the backend is running.')
-        } finally {
-            setLoading(false)
-        }
-    }, [id])
-
-    useEffect(() => {
-        if (id) {
-            fetchEventData()
-        }
-    }, [id, fetchEventData])
+    const { data: event, isLoading, error, refetch } = useQuery({
+        queryKey: ['event', id],
+        queryFn: async () => {
+            if (!id) return null
+            return await eventsApi.getEvent(id)
+        },
+        enabled: Boolean(id),
+        staleTime: 5 * 60 * 1000,
+    })
 
     return {
-        event,
-        loading,
-        error,
-        refetch: () => { fetchEventData() }
+        event: event || null,
+        loading: isLoading,
+        error: error instanceof Error ? error.message : error ? 'Failed to load event.' : null,
+        refetch: () => { refetch() }
     }
 }

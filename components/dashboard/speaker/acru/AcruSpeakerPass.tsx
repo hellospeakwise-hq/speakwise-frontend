@@ -43,45 +43,6 @@ interface PartnerEvent {
   logoUrl?: string | null
 }
 
-const DEFAULT_PARTNERS: PartnerEvent[] = [
-  {
-    name: "DevFest",
-    initial: "DF",
-    bg: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-    logoUrl: "https://www.google.com/s2/favicons?domain=developers.google.com&sz=128",
-  },
-  {
-    name: "PyCon",
-    initial: "PY",
-    bg: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    logoUrl: "https://www.google.com/s2/favicons?domain=python.org&sz=128",
-  },
-  {
-    name: "AccraJS",
-    initial: "JS",
-    bg: "bg-yellow-500/10 text-yellow-500 border-yellow-500/20",
-    logoUrl: "https://www.google.com/s2/favicons?domain=javascript.info&sz=128",
-  },
-  {
-    name: "AWS Meetup",
-    initial: "AWS",
-    bg: "bg-amber-600/10 text-amber-600 border-amber-600/20",
-    logoUrl: "https://www.google.com/s2/favicons?domain=aws.amazon.com&sz=128",
-  },
-  {
-    name: "ETH Accra",
-    initial: "ETH",
-    bg: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-    logoUrl: "https://www.google.com/s2/favicons?domain=ethereum.org&sz=128",
-  },
-  {
-    name: "DeafFest",
-    initial: "DF",
-    bg: "bg-rose-500/10 text-rose-500 border-rose-500/20",
-    logoUrl: "https://www.google.com/s2/favicons?domain=deaffest.co.uk&sz=128",
-  },
-]
-
 /**
  * Resolves a high-res logo URL for a conference using:
  * 1. Uploaded event image from database if available
@@ -169,7 +130,7 @@ export function AcruSpeakerPass({
   onOpenQr,
 }: AcruSpeakerPassProps) {
   const [copied, setCopied] = useState(false)
-  const [partners, setPartners] = useState<PartnerEvent[]>(DEFAULT_PARTNERS)
+  const [partners, setPartners] = useState<PartnerEvent[]>([])
   const [isQrModalOpen, setIsQrModalOpen] = useState(false)
   const [latestExperience, setLatestExperience] = useState<SpeakerExperience | null>(null)
   const [qrBlobUrl, setQrBlobUrl] = useState<string | null>(null)
@@ -244,16 +205,10 @@ export function AcruSpeakerPass({
           }
         })
 
-        // If speaker has experiences, show their real conferences; pad with defaults if fewer than 4
-        if (dynamicPartners.length > 0) {
-          const combined = [
-            ...dynamicPartners,
-            ...DEFAULT_PARTNERS.filter(
-              (def) => !dynamicPartners.some((p) => p.name.toLowerCase() === def.name.toLowerCase())
-            ),
-          ].slice(0, 6)
-          setPartners(combined)
-        }
+        // Only show conferences the speaker has actually spoken at
+        setPartners(dynamicPartners)
+      } else {
+        setPartners([])
       }
     })
   }, [])
@@ -300,7 +255,7 @@ export function AcruSpeakerPass({
               Verified Speaker
             </span>
             <p className="mt-1.5 text-xs text-white/90 font-medium tracking-wide">
-              SpeakWise Pro
+              SpeakWise Basic
             </p>
           </div>
           {/* Hologram / Brand Mark */}
@@ -454,34 +409,36 @@ export function AcruSpeakerPass({
       </div>
 
       {/* ── Frequent Event Partners (With High-Res Conference Logos) ────────── */}
-      <div className="pt-3 border-t border-border/60 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-foreground tracking-tight">
-            Frequent Event Partners
-          </span>
-          <span className="text-[11px] text-muted-foreground">Recent</span>
-        </div>
+      {partners.length > 0 && (
+        <div className="pt-3 border-t border-border/60 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-foreground tracking-tight">
+              Frequent Event Partners
+            </span>
+            <span className="text-[11px] text-muted-foreground">Recent</span>
+          </div>
 
-        <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
-          {partners.map((partner) => (
-            <div
-              key={partner.name}
-              className="flex flex-col items-center gap-1.5 shrink-0 min-w-[54px] group cursor-pointer"
-            >
-              {/* Conference Logo Avatar with live image and fallback */}
-              <ConferenceLogoAvatar
-                name={partner.name}
-                logoUrl={partner.logoUrl}
-                initial={partner.initial}
-                bgClass={partner.bg}
-              />
-              <span className="text-[11px] text-muted-foreground group-hover:text-foreground font-medium text-center truncate w-full transition-colors">
-                {partner.name}
-              </span>
-            </div>
-          ))}
+          <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none">
+            {partners.map((partner) => (
+              <div
+                key={partner.name}
+                className="flex flex-col items-center gap-1.5 shrink-0 min-w-[54px] group cursor-pointer"
+              >
+                {/* Conference Logo Avatar with live image and fallback */}
+                <ConferenceLogoAvatar
+                  name={partner.name}
+                  logoUrl={partner.logoUrl}
+                  initial={partner.initial}
+                  bgClass={partner.bg}
+                />
+                <span className="text-[11px] text-muted-foreground group-hover:text-foreground font-medium text-center truncate w-full transition-colors">
+                  {partner.name}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Speaker QR Pass Dialog Modal ────────────────────────────────────── */}
       <Dialog open={isQrModalOpen} onOpenChange={setIsQrModalOpen}>

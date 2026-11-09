@@ -1,4 +1,5 @@
 import type React from "react"
+import type { Viewport } from "next"
 import Script from "next/script"
 import { Inter } from "next/font/google"
 import localFont from "next/font/local"
@@ -25,6 +26,13 @@ const fontHeading = localFont({
   src: "../assets/fonts/CalSans-SemiBold.woff2",
   variable: "--font-heading",
 })
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+}
 
 export const metadata = {
   metadataBase: new URL("https://speakwise.live"),

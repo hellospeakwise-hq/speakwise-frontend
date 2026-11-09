@@ -221,6 +221,7 @@ function FeedbackByTalksContent() {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const detailPanelRef = useRef<HTMLDivElement>(null)
+  const lastParamRef = useRef<string | null>(null)
 
   const ITEMS_PER_PAGE = 10
 
@@ -262,7 +263,23 @@ function FeedbackByTalksContent() {
 
     // 2. Populate and merge actual feedback submissions
     feedback.forEach((f) => {
-      const slug = f.experience?.feedback_slug ?? "__unknown__"
+      let slug = f.experience?.feedback_slug
+      // If no direct slug match, merge into matching experience by event name or topic
+      if (!slug || !map.has(slug)) {
+        const found = Array.from(map.values()).find(
+          (g) =>
+            (f.experience?.event_name &&
+              g.eventName.toLowerCase().trim() === f.experience.event_name.toLowerCase().trim()) ||
+            (f.experience?.topic &&
+              g.topic.toLowerCase().trim() === f.experience.topic.toLowerCase().trim())
+        )
+        if (found) {
+          slug = found.feedbackSlug
+        } else {
+          slug = slug || f.experience?.event_name || "talk"
+        }
+      }
+
       if (!map.has(slug)) {
         map.set(slug, {
           feedbackSlug: slug,
@@ -280,55 +297,16 @@ function FeedbackByTalksContent() {
       g.averageRating = avg(g.items)
     })
 
-    // 3. Fallback demo presentations matching ACRU Hero Chart if account has no talks yet
-    if (map.size === 0) {
-      const demoPresentations: ExperienceGroup[] = [
-        {
-          feedbackSlug: "devfest-accra-2026",
-          topic: "Architecting Scalable Microservices with Event-Driven Architecture",
-          eventName: "DevFest Accra 2026",
-          eventDate: "Oct 27, 2026",
-          feedbackCount: 12,
-          averageRating: 9.0,
-          items: [],
-        },
-        {
-          feedbackSlug: "pycon-togo-2026",
-          topic: "Building High-Throughput URL Shorteners with Django & AWS",
-          eventName: "PyCon Togo 2026",
-          eventDate: "Aug 27, 2026",
-          feedbackCount: 8,
-          averageRating: 8.5,
-          items: [],
-        },
-        {
-          feedbackSlug: "tech-in-ghana-2026",
-          topic: "Fintech Resiliency in Sub-Saharan Africa",
-          eventName: "Tech In Ghana Summit",
-          eventDate: "Jul 14, 2026",
-          feedbackCount: 6,
-          averageRating: 8.3,
-          items: [],
-        },
-        {
-          feedbackSlug: "accrajs-web-meetup",
-          topic: "Next.js 15 Server Components in Production",
-          eventName: "AccraJS Web Meetup",
-          eventDate: "Jun 02, 2026",
-          feedbackCount: 9,
-          averageRating: 9.1,
-          items: [],
-        },
-      ]
-      demoPresentations.forEach((dp) => map.set(dp.feedbackSlug, dp))
-    }
-
     return Array.from(map.values()).sort((a, b) => b.averageRating - a.averageRating)
   }, [feedback, experiences])
 
-  // Select presentation matching URL talk/event param or default to first
+  // Automatically select presentation: on URL param change or initial load only
   useEffect(() => {
-    if (talkParam && groups.length > 0) {
+    if (groups.length === 0) return
+
+    // Only process URL parameter if it's different from the last processed param
+    if (talkParam && talkParam !== lastParamRef.current) {
+      lastParamRef.current = talkParam
       const q = talkParam.toLowerCase().trim()
       const match = groups.find((g) => {
         const topicLower = g.topic.toLowerCase()
@@ -347,19 +325,37 @@ function FeedbackByTalksContent() {
 
       if (match) {
         setSelectedSlug(match.feedbackSlug)
-        // Scroll to detail on mobile
         if (detailPanelRef.current && window.innerWidth < 1024) {
           setTimeout(() => {
             detailPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
           }, 150)
         }
-      } else if (selectedSlug === null) {
-        setSelectedSlug(groups[0].feedbackSlug)
+        return
       }
-    } else if (groups.length > 0 && selectedSlug === null) {
+    }
+
+    // Default to the first presentation on initial load if none selected yet
+    if (!selectedSlug) {
+      setSelectedSlug(groups[0].feedbackSlug)
+    } else if (!groups.some((g) => g.feedbackSlug === selectedSlug)) {
+      // Fallback only if the currently selected slug no longer exists in groups
       setSelectedSlug(groups[0].feedbackSlug)
     }
   }, [groups, talkParam, selectedSlug])
+
+  const handleSelectTalk = (slug: string) => {
+    setSelectedSlug(slug)
+    lastParamRef.current = slug
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.set("slug", slug)
+      window.history.replaceState({}, "", url.toString())
+    } catch {}
+    if (detailPanelRef.current && window.innerWidth < 1024) {
+      const top = detailPanelRef.current.getBoundingClientRect().top + window.scrollY - 80
+      window.scrollTo({ top, behavior: "smooth" })
+    }
+  }
 
   const filteredGroups = useMemo(() => {
     if (!searchQuery.trim()) return groups
@@ -388,7 +384,13 @@ function FeedbackByTalksContent() {
     setCurrentPage(1)
   }, [selectedSlug])
 
-  const selectedGroup = groups.find((g) => g.feedbackSlug === selectedSlug) ?? null
+  // Always compute effective selected slug so dropdown and panel never show blank
+  const currentSlug =
+    selectedSlug && groups.some((g) => g.feedbackSlug === selectedSlug)
+      ? selectedSlug
+      : groups[0]?.feedbackSlug ?? null
+
+  const selectedGroup = groups.find((g) => g.feedbackSlug === currentSlug) ?? null
 
   const totalFeedback = feedback.length
   const overallAvg =
@@ -529,14 +531,8 @@ function FeedbackByTalksContent() {
             </div>
 
             <Select
-              value={selectedSlug ?? ""}
-              onValueChange={(val) => {
-                setSelectedSlug(val)
-                if (detailPanelRef.current) {
-                  const top = detailPanelRef.current.getBoundingClientRect().top + window.scrollY - 80
-                  window.scrollTo({ top, behavior: "smooth" })
-                }
-              }}
+              value={currentSlug ?? undefined}
+              onValueChange={handleSelectTalk}
             >
               <SelectTrigger className="w-full max-w-full h-auto py-2.5 px-3 bg-card border-border/70 text-left overflow-hidden">
                 {selectedGroup ? (
@@ -635,8 +631,8 @@ function FeedbackByTalksContent() {
                 <ExperienceListItem
                   key={group.feedbackSlug}
                   group={group}
-                  isSelected={selectedSlug === group.feedbackSlug}
-                  onSelect={() => setSelectedSlug(group.feedbackSlug)}
+                  isSelected={currentSlug === group.feedbackSlug}
+                  onSelect={() => handleSelectTalk(group.feedbackSlug)}
                 />
               ))}
               {filteredGroups.length === 0 && (
