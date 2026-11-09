@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -14,8 +14,11 @@ import {
 } from 'lucide-react';
 import { speakerApi, type Speaker, type FollowPerson } from '@/lib/api/speakerApi';
 import { experiencesApi } from '@/lib/api/experiencesApi';
+import { badgesApi, type BackendSpeakerBadge } from '@/lib/api/badgesApi';
 import { useAuth } from '@/contexts/auth-context';
 import { ExperiencesList } from './experiences-list';
+import { BadgesGallery, type UserBadgeState } from '@/components/badges/badges-gallery';
+import { AwardBadgeIcon } from '@/components/badges/award-badge-icon';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
 
@@ -24,26 +27,111 @@ interface SpeakerProfileProps {
   initialData?: Speaker | null;
 }
 
-const PLACEHOLDER_ACHIEVEMENTS = [
-  { emoji: '🎤', label: 'Speaker' },
-  { emoji: '⭐', label: 'Rising Star' },
-  { emoji: '🌍', label: 'Global Voice' },
-  { emoji: '🔥', label: 'Trending' },
-];
-
 export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   const { isAuthenticated, user } = useAuth();
   const [speaker, setSpeaker] = useState<Speaker | null>(initialData || null);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'talks' | 'contact' | 'followers' | 'following'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'talks' | 'badges' | 'contact' | 'followers' | 'following'>('overview');
   const [totalTalks, setTotalTalks] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const [followLoading, setFollowLoading] = useState(false);
 
+  // Sync tab with URL query param if present
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get('tab');
+      if (tab && ['overview', 'talks', 'badges', 'contact', 'followers', 'following'].includes(tab)) {
+        setActiveTab(tab as any);
+      }
+    }
+  }, []);
+
   const prefersReduced = useReducedMotion();
+  const [liveSpeakerBadges, setLiveSpeakerBadges] = useState<BackendSpeakerBadge[]>([]);
+
+  // Fetch real speaker badges from backend
+  useEffect(() => {
+    const slug = speaker?.slug || id;
+    if (!slug) return;
+    badgesApi
+      .getSpeakerBadges(slug)
+      .then((items) => {
+        if (items && Array.isArray(items)) {
+          setLiveSpeakerBadges(items);
+        }
+      })
+      .catch(() => {});
+  }, [speaker?.slug, id]);
+
+  // Dynamic badges state derived from live on-chain/backend records
+  const dynamicBadgesState: Record<number, UserBadgeState> = useMemo(() => {
+    if (!liveSpeakerBadges.length) {
+      return {
+        1: { badgeId: 1, status: totalTalks >= 1 ? 'minted' : 'locked' },
+        2: { badgeId: 2, status: 'locked' },
+        3: { badgeId: 3, status: 'locked' },
+        4: { badgeId: 4, status: totalTalks >= 3 ? 'minted' : 'locked' },
+        5: { badgeId: 5, status: 'locked' },
+        6: { badgeId: 6, status: 'locked' },
+      };
+    }
+    const map: Record<number, UserBadgeState> = {};
+    liveSpeakerBadges.forEach((b) => {
+      map[b.badge.token_id] = {
+        badgeId: b.badge.token_id,
+        status: b.status === 'claimed' ? 'minted' : b.status === 'eligible' ? 'eligible' : 'locked',
+        txHash: b.tx_hash || undefined,
+        claimedAt: b.claimed_at || undefined,
+      };
+    });
+    return map;
+  }, [liveSpeakerBadges, totalTalks]);
+
+  const claimedBadgesCount = useMemo(() => {
+    return liveSpeakerBadges.filter((b) => b.status === 'claimed').length;
+  }, [liveSpeakerBadges]);
+
+  const eligibleBadgesCount = useMemo(() => {
+    return liveSpeakerBadges.filter((b) => b.status === 'eligible').length;
+  }, [liveSpeakerBadges]);
+
+  // Dynamic achievements based on speaker activity
+  const achievements = [
+    {
+      emoji: '🎤',
+      label: 'Speaker',
+      hint: totalTalks >= 1 ? 'Speaker (1 Talk Presentation - Achieved!)' : 'Speaker (Deliver 1 talk to achieve)',
+      unlocked: totalTalks >= 1,
+      colorClass: 'bg-amber-500/15 border-amber-500/50 text-amber-300 ring-1 ring-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.25)]',
+    },
+    {
+      emoji: '⭐',
+      label: 'Rising Star',
+      hint: followersCount >= 1 || totalTalks >= 2 ? 'Rising Star (Achieved!)' : 'Rising Star (Get 1 follower or 2 talks)',
+      unlocked: followersCount >= 1 || totalTalks >= 2,
+      colorClass: 'bg-yellow-500/15 border-yellow-500/50 text-yellow-300 ring-1 ring-yellow-500/30 shadow-[0_0_12px_rgba(234,179,8,0.25)]',
+    },
+    {
+      emoji: '🌍',
+      label: 'Global Voice',
+      hint: totalTalks >= 3 ? 'Global Voice (3+ Talks - Achieved!)' : 'Global Voice (Speak at 3+ events to achieve)',
+      unlocked: totalTalks >= 3,
+      colorClass: 'bg-sky-500/15 border-sky-500/50 text-sky-300 ring-1 ring-sky-500/30 shadow-[0_0_12px_rgba(14,165,233,0.25)]',
+    },
+    {
+      emoji: '🔥',
+      label: 'Trending',
+      hint: totalTalks >= 5 ? 'Trending (5+ Talks - Achieved!)' : 'Trending (Speak at 5+ events to achieve)',
+      unlocked: totalTalks >= 5,
+      colorClass: 'bg-orange-500/15 border-orange-500/50 text-orange-400 ring-1 ring-orange-500/30 shadow-[0_0_12px_rgba(249,115,22,0.25)]',
+    },
+  ];
+
+  const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
   // Followers / following list
   const [followList, setFollowList] = useState<FollowPerson[]>([]);
@@ -256,6 +344,16 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                 {speaker.organization && (
                   <p className="text-sm text-muted-foreground mt-1">{speaker.organization}</p>
                 )}
+                {claimedBadgesCount > 0 && (
+                  <button
+                    onClick={() => setActiveTab('badges')}
+                    className="inline-flex items-center gap-1.5 mt-2.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/25 hover:bg-amber-500/20 transition-all hover:scale-105"
+                    title="View on-chain verified badges on Base"
+                  >
+                    <Award className="w-3.5 h-3.5 text-amber-500" />
+                    <span>{claimedBadgesCount} Verified Soulbound Badge{claimedBadgesCount > 1 ? 's' : ''} on Base</span>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -415,27 +513,74 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
             {/* Achievements */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Achievements</p>
-                <span className="text-[10px] text-muted-foreground border border-border bg-muted px-1.5 py-0.5 rounded-full flex items-center gap-1">
-                  <Zap className="h-2.5 w-2.5" /> Web3 Soon
-                </span>
+                <div className="flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Achievements</p>
+                  <span className="text-[10px] text-amber-500 font-semibold bg-amber-500/10 border border-amber-500/25 px-1.5 py-0.5 rounded-full">
+                    {liveSpeakerBadges.length > 0 
+                      ? `${claimedBadgesCount + (isOwnProfile ? eligibleBadgesCount : 0)}/${liveSpeakerBadges.length}`
+                      : `${unlockedCount}/${achievements.length}`}
+                  </span>
+                </div>
+                <button 
+                  onClick={() => setActiveTab('badges')}
+                  className="text-[10px] text-amber-500 hover:text-amber-400 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 px-2 py-0.5 rounded-full flex items-center gap-1 transition-colors"
+                >
+                  <Award className="h-2.5 w-2.5" /> View Badges
+                </button>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {PLACEHOLDER_ACHIEVEMENTS.map((a) => (
-                  <div
-                    key={a.label}
-                    title={a.label}
-                    className="relative w-10 h-10 rounded-full bg-muted flex items-center justify-center text-lg cursor-pointer hover:scale-110 transition-transform"
-                  >
-                    {a.emoji}
-                  </div>
-                ))}
-                <div className="w-10 h-10 rounded-full border-2 border-dashed border-border flex items-center justify-center text-muted-foreground hover:border-foreground/40 transition-colors cursor-pointer" title="More coming with Web3">
+              <div 
+                onClick={() => setActiveTab('badges')}
+                className="flex flex-wrap gap-2 cursor-pointer group"
+                title="View on-chain badges on Base"
+              >
+                {liveSpeakerBadges.length > 0 ? (
+                  liveSpeakerBadges.map((b) => {
+                    const isClaimed = b.status === 'claimed';
+                    const isEligible = b.status === 'eligible';
+                    return (
+                      <div
+                        key={b.badge.token_id}
+                        title={`${b.badge.name} (${isClaimed ? 'Verified on Base' : isEligible ? 'Eligible to Claim' : 'Locked'})`}
+                        className={`relative w-10 h-10 rounded-full border flex items-center justify-center p-0.5 hover:scale-110 transition-all ${
+                          isClaimed
+                            ? 'bg-amber-500/15 border-amber-500/50 shadow-[0_0_12px_rgba(245,158,11,0.25)]'
+                            : isEligible
+                            ? 'bg-blue-500/15 border-blue-500/50 shadow-[0_0_10px_rgba(59,130,246,0.25)]'
+                            : 'bg-muted/30 border-border/40 opacity-30 grayscale hover:opacity-50'
+                        }`}
+                      >
+                        <AwardBadgeIcon
+                          badgeId={b.badge.token_id}
+                          tier={b.badge.tier}
+                          isLocked={!isClaimed && !isEligible}
+                          size={28}
+                        />
+                      </div>
+                    );
+                  })
+                ) : (
+                  achievements.map((a) => (
+                    <div
+                      key={a.label}
+                      title={a.hint}
+                      className={`relative w-10 h-10 rounded-full border flex items-center justify-center text-lg hover:scale-110 transition-all ${
+                        a.unlocked
+                          ? a.colorClass
+                          : 'bg-muted/30 border-border/40 opacity-30 grayscale hover:opacity-50'
+                      }`}
+                    >
+                      {a.emoji}
+                    </div>
+                  ))
+                )}
+                <div className="w-10 h-10 rounded-full border-2 border-dashed border-border group-hover:border-amber-500/60 flex items-center justify-center text-muted-foreground group-hover:text-amber-500 transition-colors" title="View all badges">
                   <span className="text-xs font-bold">+</span>
                 </div>
               </div>
               <p className="text-[11px] text-muted-foreground leading-snug">
-                Earn on-chain badges for speaking milestones - coming soon with Web3.
+                {claimedBadgesCount > 0
+                  ? `Earned ${claimedBadgesCount} verified on-chain badge${claimedBadgesCount > 1 ? 's' : ''} on Base. Click to view.`
+                  : 'Earn verifiable on-chain Soulbound badges for speaking milestones on Base. Click to view.'}
               </p>
             </div>
           </motion.aside>
@@ -473,17 +618,31 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
 
             {/* Tab bar */}
             <div className="border-b border-border flex gap-0 overflow-x-auto">
-              {(['overview', 'talks', 'contact'] as const).map((tab) => (
+              {(['overview', 'talks', 'badges', 'contact'] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-all whitespace-nowrap ${
+                  className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 ${
                     activeTab === tab
                       ? 'border-foreground text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
                   }`}
                 >
-                  {tab === 'overview' ? 'Overview' : tab === 'talks' ? 'Speaking History' : 'Contact'}
+                  {tab === 'overview' ? (
+                    'Overview'
+                  ) : tab === 'talks' ? (
+                    'Speaking History'
+                  ) : tab === 'badges' ? (
+                    <>
+                      <Award className="h-4 w-4 text-amber-500" />
+                      <span>Badges</span>
+                      <span className="text-[10px] bg-amber-500/15 text-amber-500 border border-amber-500/30 px-1.5 py-0.2 rounded-full font-bold ml-0.5">
+                        Web3
+                      </span>
+                    </>
+                  ) : (
+                    'Contact'
+                  )}
                 </button>
               ))}
             </div>
@@ -552,29 +711,42 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                   </div>
                 )}
 
-                {/* Web3 Earnings teaser */}
-                <div className="bg-muted/40 border border-border rounded-lg p-5">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                      <Zap className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-semibold">
-                        Web3 Earnings - Coming Soon
-                      </h3>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Speakers on SpeakWise will soon be able to earn crypto tokens for every talk they give,
-                        unlock on-chain achievement badges, and receive on-chain tips from event organizers.
-                        Like GitHub sponsorships, but on the blockchain.
-                      </p>
-                      <div className="flex flex-wrap gap-2 mt-3">
-                        {['🪙 Token Rewards', '🏅 On-chain Badges', '💸 Instant Payouts', '🔗 NFT Certificates'].map((t) => (
-                          <span key={t} className="text-[10px] text-muted-foreground border border-border bg-muted/50 px-2 py-0.5 rounded-full">
-                            {t}
+                {/* Web3 Achievements & Badges Card */}
+                <div className="bg-card border border-primary/20 bg-gradient-to-r from-card via-card to-primary/5 rounded-xl p-5 shadow-sm">
+                  <div className="flex items-start justify-between flex-wrap gap-4">
+                    <div className="flex items-start gap-3 max-w-xl">
+                      <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 text-primary">
+                        <Award className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-sm font-semibold text-foreground">
+                            Web3 Badges & On-Chain Reputation
+                          </h3>
+                          <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium">
+                            Live on Base
                           </span>
-                        ))}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                          Speakers earn permanent, non-transferable Soulbound tokens for stage milestones and audience reviews. Share your verified credentials directly to LinkedIn and X.
+                        </p>
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {['🏅 Soulbound Tokens', '⚡ Base L2', '⭐ Audience Proofs', '🔗 LinkedIn Verifiable'].map((t) => (
+                            <span key={t} className="text-[10px] text-muted-foreground border border-border bg-muted/50 px-2 py-0.5 rounded-full">
+                              {t}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => setActiveTab('badges')}
+                      className="text-xs h-8 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30"
+                      variant="outline"
+                    >
+                      View Badges →
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -592,6 +764,18 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                   speakerId={speaker?.id}
                   speakerName={speakerName}
                   onCountChange={setTotalTalks}
+                />
+              </div>
+            )}
+
+            {/* ── BADGES TAB ────────────────────────────────────────────────── */}
+            {activeTab === 'badges' && (
+              <div className="space-y-4">
+                <BadgesGallery 
+                  userBadges={dynamicBadgesState}
+                  speakerSlug={speaker?.slug || id}
+                  isOwner={isOwnProfile}
+                  compact={true}
                 />
               </div>
             )}

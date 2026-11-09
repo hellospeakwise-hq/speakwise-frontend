@@ -10,37 +10,57 @@ import { speakerApi } from "@/lib/api/speakerApi"
 import { cn } from "@/lib/utils"
 import { calculateProfileCompletion } from "@/lib/utils/profile-completion"
 
-// Fun messages based on completion percentage
 const getMotivationalMessage = (percentage: number, missingFields: string[]) => {
   if (percentage < 30) {
     return {
       emoji: "🚀",
       title: "Let's launch your speaker journey!",
       subtitle: "Your profile is just getting started. Add some details to help organizers discover you!",
-      mascotMood: "excited"
     }
   } else if (percentage < 50) {
     return {
       emoji: "🌱",
       title: "Growing nicely!",
       subtitle: "You're making progress! A few more details and you'll be on fire!",
-      mascotMood: "happy"
     }
   } else if (percentage < 70) {
     return {
       emoji: "⚡",
       title: "Almost there, superstar!",
       subtitle: `Just add your ${missingFields.slice(0, 2).join(" and ").toLowerCase()} to level up!`,
-      mascotMood: "encouraging"
     }
   } else {
     return {
       emoji: "🎯",
       title: "So close to 100%!",
       subtitle: "You're nearly there! Complete your profile to maximize your visibility!",
-      mascotMood: "cheering"
     }
   }
+}
+
+/** Dribbble-style segmented pill bar: filled blocks + dashed empty blocks */
+function SegmentedProgress({ percentage }: { percentage: number }) {
+  const totalSegments = 10
+  const filledSegments = Math.round((percentage / 100) * totalSegments)
+
+  return (
+    <div className="flex items-center gap-1" role="progressbar" aria-valuenow={percentage} aria-valuemin={0} aria-valuemax={100}>
+      {Array.from({ length: totalSegments }).map((_, i) => (
+        <div
+          key={i}
+          className={cn(
+            "h-2 flex-1 rounded-full transition-all duration-500",
+            i < filledSegments
+              ? "bg-primary"
+              : "bg-muted border border-dashed border-border"
+          )}
+          style={{
+            transitionDelay: `${i * 40}ms`,
+          }}
+        />
+      ))}
+    </div>
+  )
 }
 
 export function ProfileCompletionBanner() {
@@ -49,12 +69,10 @@ export function ProfileCompletionBanner() {
   const [dismissed, setDismissed] = useState(false)
   const [completionPercentage, setCompletionPercentage] = useState(0)
   const [missingFields, setMissingFields] = useState<string[]>([])
-  const [isAnimating, setIsAnimating] = useState(false)
 
   useEffect(() => {
     let mounted = true
 
-    // Check if banner was dismissed in this session
     const isDismissed = sessionStorage.getItem("profile-banner-dismissed")
     if (isDismissed) {
       setDismissed(true)
@@ -64,12 +82,8 @@ export function ProfileCompletionBanner() {
 
     const fetchSpeakerProfile = async () => {
       try {
-        // Use the same source as the profile page so completion matches exactly
         const profile = await userApi.refreshUserProfile() as any
-
-        // Handle user data - could be nested under 'user' or at root level
         const profileUser = profile?.user || profile
-
         const speakerData = await speakerApi.getProfile()
 
         if (mounted && profileUser && speakerData) {
@@ -78,9 +92,7 @@ export function ProfileCompletionBanner() {
       } catch (error) {
         console.error("Error fetching speaker profile:", error)
       } finally {
-        if (mounted) {
-          setLoading(false)
-        }
+        if (mounted) setLoading(false)
       }
     }
 
@@ -90,21 +102,8 @@ export function ProfileCompletionBanner() {
       setLoading(false)
     }
 
-    return () => {
-      mounted = false
-    }
+    return () => { mounted = false }
   }, [user])
-
-  // Trigger animation periodically
-  useEffect(() => {
-    if (!loading && !dismissed && completionPercentage < 80) {
-      const interval = setInterval(() => {
-        setIsAnimating(true)
-        setTimeout(() => setIsAnimating(false), 1000)
-      }, 5000)
-      return () => clearInterval(interval)
-    }
-  }, [loading, dismissed, completionPercentage])
 
   const calculateCompletion = (profileUser: User, speaker: SpeakerProfile) => {
     const { percentage, missingFields: missing } = calculateProfileCompletion({
@@ -115,7 +114,6 @@ export function ProfileCompletionBanner() {
       },
       speaker,
     })
-
     setCompletionPercentage(percentage)
     setMissingFields(missing.map((field) => field.label))
   }
@@ -125,101 +123,73 @@ export function ProfileCompletionBanner() {
     sessionStorage.setItem("profile-banner-dismissed", "true")
   }
 
-  // Don't show if loading, dismissed, or profile is complete (>= 80%)
-  if (loading || dismissed || completionPercentage >= 80) {
-    return null
-  }
+  if (loading || dismissed || completionPercentage >= 80) return null
 
   const message = getMotivationalMessage(completionPercentage, missingFields)
 
   return (
-    <div className="relative overflow-hidden rounded-xl border bg-card shadow-sm">
-      <div className="p-4 sm:p-6">
-        {/* Dismiss button - absolute positioned */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute top-2 right-2 h-8 w-8 text-muted-foreground hover:text-foreground rounded-full"
-          onClick={handleDismiss}
-        >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Dismiss</span>
-        </Button>
+    <div className="relative overflow-hidden rounded-2xl border bg-card">
+      {/* Dismiss */}
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-3 right-3 h-7 w-7 text-muted-foreground hover:text-foreground rounded-full z-10"
+        onClick={handleDismiss}
+      >
+        <X className="h-3.5 w-3.5" />
+        <span className="sr-only">Dismiss</span>
+      </Button>
 
-        {/* Header with emoji and title */}
-        <div className="flex items-center gap-3 pr-8">
-          <div className={cn(
-            "flex-shrink-0 text-3xl transition-transform duration-500",
-            isAnimating ? "scale-110 -rotate-6" : "scale-100 rotate-0"
-          )}>
-            <span className="animate-bounce inline-block" style={{ animationDuration: "2s" }}>
-              {message.emoji}
-            </span>
-          </div>
-          <div>
-            <h3 className="text-base sm:text-lg font-bold text-foreground flex items-center gap-1.5 flex-wrap">
-              {message.title}
-              <span className={cn(
-                "inline-block transition-transform text-sm",
-                isAnimating && "animate-ping"
-              )}>
-                ✨
-              </span>
-            </h3>
-          </div>
+      <div className="p-5 sm:p-6 pr-12">
+        {/* Emoji + title row */}
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-2xl leading-none select-none" aria-hidden>
+            {message.emoji}
+          </span>
+          <h3 className="text-sm sm:text-base font-semibold text-foreground leading-snug">
+            {message.title}
+          </h3>
         </div>
 
         {/* Subtitle */}
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="text-xs sm:text-sm text-muted-foreground mb-4 leading-relaxed">
           {message.subtitle}
         </p>
 
-        {/* Progress bar */}
-        <div className="mt-4">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-xs font-medium text-muted-foreground">
-              Profile Completion
-            </span>
-            <span className="text-sm font-bold text-foreground">
-              {completionPercentage}%
-            </span>
+        {/* Segmented progress */}
+        <div className="mb-3">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-muted-foreground">Profile Completion</span>
+            <span className="text-xs font-bold text-foreground tabular-nums">{completionPercentage}%</span>
           </div>
-          
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-1000 ease-out relative bg-primary"
-              style={{ width: `${completionPercentage}%` }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
-            </div>
-          </div>
-
-          {/* Missing fields - horizontal scroll on mobile */}
-          {missingFields.length > 0 && (
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
-              {missingFields.slice(0, 3).map((field) => (
-                <span
-                  key={field}
-                  className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground whitespace-nowrap"
-                >
-                  <span className="mr-1">📝</span>
-                  {field}
-                </span>
-              ))}
-              {missingFields.length > 3 && (
-                <span className="inline-flex items-center px-2 py-1 text-xs text-muted-foreground whitespace-nowrap">
-                  +{missingFields.length - 3} more
-                </span>
-              )}
-            </div>
-          )}
+          <SegmentedProgress percentage={completionPercentage} />
         </div>
 
-        {/* CTA Button - full width on mobile */}
-        <Link href="/profile" className="block mt-4">
-          <Button className="w-full sm:w-auto group">
-            <span>Complete My Profile</span>
-            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+        {/* Missing field pills — horizontally scrollable */}
+        {missingFields.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-1 mb-4 scrollbar-none">
+            {missingFields.slice(0, 4).map((field) => (
+              <span
+                key={field}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-muted text-muted-foreground whitespace-nowrap border border-border/60"
+              >
+                <span aria-hidden>📝</span>
+                {field}
+              </span>
+            ))}
+            {missingFields.length > 4 && (
+              <span className="inline-flex items-center px-2.5 py-1 text-[11px] text-muted-foreground whitespace-nowrap">
+                +{missingFields.length - 4} more
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* CTA */}
+        <Link href="/profile">
+          <Button size="sm" className="h-8 text-xs rounded-full gap-1.5 group">
+            Complete My Profile
+            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
           </Button>
         </Link>
       </div>

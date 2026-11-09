@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@coinbase/wallet-sdk':
+        specifier: ^4.4.0
+        version: 4.4.0(typescript@5.0.2)(zod@3.24.1)
       '@ducanh2912/next-pwa':
         specifier: ^10.2.9
         version: 10.2.9(next@15.2.7(@babel/core@7.29.0)(@playwright/test@1.63.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(webpack@5.105.2)
@@ -107,6 +110,9 @@ importers:
       '@react-email/components':
         specifier: ^1.0.12
         version: 1.0.12(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      '@tanstack/react-query':
+        specifier: ^5.104.5
+        version: 5.104.5(@types/react@19.0.0)(react@19.0.0)
       '@tiptap/extension-image':
         specifier: ^3.13.0
         version: 3.13.0(@tiptap/core@3.13.0(@tiptap/pm@3.13.0))
@@ -128,6 +134,9 @@ importers:
       axios:
         specifier: ^1.12.2
         version: 1.12.2
+      canvas-confetti:
+        specifier: ^1.9.4
+        version: 1.9.4
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -212,6 +221,12 @@ importers:
       vaul:
         specifier: ^0.9.6
         version: 0.9.6(@types/react-dom@19.0.0)(@types/react@19.0.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      viem:
+        specifier: ^2.57.11
+        version: 2.57.11(typescript@5.0.2)(zod@3.24.1)
+      wagmi:
+        specifier: ^3.7.9
+        version: 3.7.9(@coinbase/wallet-sdk@4.4.0(typescript@5.0.2)(zod@3.24.1))(@tanstack/query-core@5.104.5)(@tanstack/react-query@5.104.5(@types/react@19.0.0)(react@19.0.0))(@types/react@19.0.0)(react@19.0.0)(typescript@5.0.2)(viem@2.57.11(typescript@5.0.2)(zod@3.24.1))
       zod:
         specifier: ^3.24.1
         version: 3.24.1
@@ -225,6 +240,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.19
         version: 0.5.19(tailwindcss@3.4.17)
+      '@types/canvas-confetti':
+        specifier: ^1.9.0
+        version: 1.9.0
       '@types/lodash':
         specifier: ^4.17.24
         version: 4.17.24
@@ -260,6 +278,9 @@ importers:
         version: 5.0.2
 
 packages:
+
+  '@adraffy/ens-normalize@1.11.1':
+    resolution: {integrity: sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ==}
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -774,6 +795,9 @@ packages:
   '@babel/types@7.29.0':
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
+
+  '@coinbase/wallet-sdk@4.4.0':
+    resolution: {integrity: sha512-smqgHEefN+ERH+WJ5W4BpnHSKydmoyM441PkzmeKEpPVaVHYHIwt2JnHEL+2ZDIEuEvNaCqBf5xq/pBAmZ2Rhg==}
 
   '@ducanh2912/next-pwa@10.2.9':
     resolution: {integrity: sha512-Wtu823+0Ga1owqSu1I4HqKgeRYarduCCKwsh1EJmJiJqgbt+gvVf5cFwFH8NigxYyyEvriAro4hzm0pMSrXdRQ==}
@@ -1392,6 +1416,18 @@ packages:
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [win32]
+
+  '@noble/ciphers@1.3.0':
+    resolution: {integrity: sha512-2I0gnIVPtfnMw9ee9h1dJG7tp81+8Ob3OJb3Mv37rx5L40/b0i7djjCVvGOVqc9AEIQyvyu1i6ypKdFw8R8gQw==}
+    engines: {node: ^14.21.3 || >=16}
+
+  '@noble/curves@1.9.1':
+    resolution: {integrity: sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA==}
+    engines: {node: ^14.21.3 || >=16}
+
+  '@noble/hashes@1.8.0':
+    resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
+    engines: {node: ^14.21.3 || >=16}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -2328,6 +2364,15 @@ packages:
   '@rushstack/eslint-patch@1.12.0':
     resolution: {integrity: sha512-5EwMtOqvJMMa3HbmxLlF74e+3/HhwBTMcvt3nqVJgGCozO6hzIPOBlwm8mGVNR9SN2IJpxSnlxczyDjcn7qIyw==}
 
+  '@scure/base@1.2.6':
+    resolution: {integrity: sha512-g/nm5FgUa//MCj1gV09zTJTaM6KBAHqLN907YVQqf7zC49+DcO4B1so4ZX07Ef10Twr6nuqYEH9GEggFXA4Fmg==}
+
+  '@scure/bip32@1.7.0':
+    resolution: {integrity: sha512-E4FFX/N3f4B80AKWp5dP6ow+flD1LQZo/w8UnLGYZO674jS6YnYeepycOOksv+vLPSpgN35wgKgy+ybfTb2SMw==}
+
+  '@scure/bip39@1.6.0':
+    resolution: {integrity: sha512-+lF0BbLiJNwVlev4eKelw1WWLaiKXw7sSl8T6FvBlWkdX+94aGJ4o8XjUdlyhTCjd8c+B3KT3JfS8P0bLRNU6A==}
+
   '@selderee/plugin-htmlparser2@0.11.0':
     resolution: {integrity: sha512-P33hHGdldxGabLFjPPpaTxVolMrzrcegejx+0GxjrIb9Zv48D8yAIA/QTDR2dFl7Uz7urX8aX6+5bCZslr+gWQ==}
 
@@ -2347,6 +2392,18 @@ packages:
     resolution: {integrity: sha512-w31dd8HOx3k9vPtcQh5QHP9GwKcgbMp87j58qi6xgiBnFFtKEAgCWnDw4qUT8aHwkCp8bKvb/KGKWWHedP0AAg==}
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
+
+  '@tanstack/query-core@5.104.5':
+    resolution: {integrity: sha512-Q94gI8Opd+CbdVNOdj8ZCyV8WqLYitrDq1t96Xc8WZT6lY0r5iRnJLXYDxMex7EEf2v+mXvn4FcjaBKSxXZQ9A==}
+
+  '@tanstack/react-query@5.104.5':
+    resolution: {integrity: sha512-RORgFe052U+93weaNuqg7qHq7vNVNzXN/VrXqD4bbAuQCWUqOl2lV5Ui9flWk5CVvMyL/Bh27QWhzwH0aaOx9g==}
+    peerDependencies:
+      '@types/react': ^18 || ^19
+      react: ^18 || ^19
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   '@tiptap/core@3.13.0':
     resolution: {integrity: sha512-iUelgiTMgPVMpY5ZqASUpk8mC8HuR9FWKaDzK27w9oWip9tuB54Z8mePTxNcQaSPb6ErzEaC8x8egrRt7OsdGQ==}
@@ -2509,6 +2566,9 @@ packages:
 
   '@tybys/wasm-util@0.10.1':
     resolution: {integrity: sha512-9tTaPJLSiejZKx+Bmog4uSubteqTvFrVrURwkmHixBo0G4seD0zUxp98E1DzUBJxLQ3NPwXrGKDiVjwx/DpPsg==}
+
+  '@types/canvas-confetti@1.9.0':
+    resolution: {integrity: sha512-aBGj/dULrimR1XDZLtG9JwxX1b4HPRF6CX9Yfwh3NvstZEm1ZL7RBnel4keCPSqs1ANRu1u2Aoz9R+VmtjYuTg==}
 
   '@types/cors@2.8.19':
     resolution: {integrity: sha512-mFNylyeyqN93lfe/9CSxOGREz8cpzAhH+E93xJ4xWQf62V8sQ/24reV2nyzUWM6H6Xji+GGHpkbLe7pVoUEskg==}
@@ -2772,6 +2832,52 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@wagmi/connectors@8.2.2':
+    resolution: {integrity: sha512-lueq1h2hNQhBqTFjG3iT0dNpkt4+G5s7mJq6I1zavX1B8bv+lHx3wowlXCpvTuLBmtchjDQzQB85uad0pIw4aA==}
+    peerDependencies:
+      '@base-org/account': ^2.5.1
+      '@coinbase/wallet-sdk': ^4.3.6
+      '@metamask/connect-evm': ^2.1.0
+      '@safe-global/safe-apps-provider': ~0.18.6
+      '@safe-global/safe-apps-sdk': ^9.1.0
+      '@wagmi/core': 3.6.7
+      '@walletconnect/ethereum-provider': ^2.21.1
+      accounts: ~0.18
+      typescript: '>=5.9.3'
+      viem: 2.x
+    peerDependenciesMeta:
+      '@base-org/account':
+        optional: true
+      '@coinbase/wallet-sdk':
+        optional: true
+      '@metamask/connect-evm':
+        optional: true
+      '@safe-global/safe-apps-provider':
+        optional: true
+      '@safe-global/safe-apps-sdk':
+        optional: true
+      '@walletconnect/ethereum-provider':
+        optional: true
+      accounts:
+        optional: true
+      typescript:
+        optional: true
+
+  '@wagmi/core@3.6.7':
+    resolution: {integrity: sha512-ktXipTQanp+Xn1cefFXRe/AsuSjKgU3S2K5D2LUukOt6NvoroHx724CFfxDlyMfd+X/Qg32gXxungFWqPc6unA==}
+    peerDependencies:
+      '@tanstack/query-core': '>=5.0.0'
+      accounts: ~0.18
+      typescript: '>=5.9.3'
+      viem: 2.x
+    peerDependenciesMeta:
+      '@tanstack/query-core':
+        optional: true
+      accounts:
+        optional: true
+      typescript:
+        optional: true
+
   '@webassemblyjs/ast@1.14.1':
     resolution: {integrity: sha512-nuBEDgQfm1ccRp/8bCQrx1frohyufl4JlbMMZ4P1wpeOfDhF6FQkxZJ1b/e+PLwr6X1Nhw6OLme5usuBWYBvuQ==}
 
@@ -2822,6 +2928,17 @@ packages:
 
   '@xtuc/long@4.2.2':
     resolution: {integrity: sha512-NuHqBY1PB/D8xU6s/thBgOAiAP7HOYDQ32+BFZILJ8ivkUkAHQnWfn6WhL79Owj1qmUnoN/YPhktdIoucipkAQ==}
+
+  abitype@1.2.3:
+    resolution: {integrity: sha512-Ofer5QUnuUdTFsBRwARMoWKOH1ND5ehwYhJ3OJ/BQO+StkwQjHw0XyVh4vDttzHB7QOFhPHa/o413PJ82gU/Tg==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+      zod: ^3.22.0 || ^4.0.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+      zod:
+        optional: true
 
   accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
@@ -3081,6 +3198,9 @@ packages:
   caniuse-lite@1.0.30001782:
     resolution: {integrity: sha512-dZcaJLJeDMh4rELYFw1tvSn1bhZWYFOt468FcbHHxx/Z/dFidd1I6ciyFdi3iwfQCyOjqo9upF6lGQYtMiJWxw==}
 
+  canvas-confetti@1.9.4:
+    resolution: {integrity: sha512-yxQbJkAVrFXWNbTUjPqjF7G+g6pDotOUHGbkZq2NELZUMDpiJ85rIEazVb8GTaAptNW2miJAXbs1BtioA251Pw==}
+
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
 
@@ -3132,6 +3252,10 @@ packages:
 
   client-only@0.0.1:
     resolution: {integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==}
+
+  clsx@1.2.1:
+    resolution: {integrity: sha512-EcR6r5a8bj6pu3ycsa/E/cKVGuTgZJZdsyUYHOksG/UHIiKfjxzRxYJpyVBwYaQeOvghal9fcc4PidlgzugAQg==}
+    engines: {node: '>=6'}
 
   clsx@2.1.1:
     resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
@@ -3653,6 +3777,9 @@ packages:
   eventemitter3@4.0.7:
     resolution: {integrity: sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==}
 
+  eventemitter3@5.0.1:
+    resolution: {integrity: sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==}
+
   events@3.3.0:
     resolution: {integrity: sha512-mQw+2fkQbALzQ7V0MY0IqdnXNOeTtP4r0lN9z7AAawCXgqea7bDii20AYrIBrFd/Hx0M2Ocz6S111CaFkUcb0Q==}
     engines: {node: '>=0.8.x'}
@@ -4125,6 +4252,11 @@ packages:
     resolution: {integrity: sha512-+OUdGJlgjOBZDfxnDjYYG6zp487z0JGNQq3cYQYg5f5hKR+syHMsaztzGeml/4kGG55CSpKSpWTY+jYGgsHLgA==}
     engines: {node: '>=0.10.0'}
 
+  isows@1.0.7:
+    resolution: {integrity: sha512-I1fSfDCZL5P0v33sVqeTDSpcstAg/N+wF5HS033mogOVIp4B+oHC7oOCsA3axAbBSGTJ8QubbNmnIRN/h8U7hg==}
+    peerDependencies:
+      ws: '*'
+
   iterator.prototype@1.1.5:
     resolution: {integrity: sha512-H0dkQoCa3b2VEeKQBOxFph+JAbcrQdE7KC0UkqwpLmv2EC4P41QXP+rqo9wYodACiG5/WM5s9oDApTU8utwj9g==}
     engines: {node: '>= 0.4'}
@@ -4504,6 +4636,14 @@ packages:
     resolution: {integrity: sha512-tEBHqDnIoM/1rXME1zgka9g6Q2lcoCkxHLuc7ODJ5BxbP5d4c2Z5cGgtXAku59200Cx7diuHTOYfSBD8n6mm8A==}
     engines: {node: '>=16 || 14 >=14.17'}
 
+  mipd@0.0.7:
+    resolution: {integrity: sha512-aAPZPNDQ3uMTdKbuO2YmAw2TxLHO0moa4YKAyETM/DTj5FloZo+a+8tU+iv4GmW+sOxKLSRwcSFuczk+Cpt6fg==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   motion-dom@12.29.0:
     resolution: {integrity: sha512-3eiz9bb32yvY8Q6XNM4AwkSOBPgU//EIKTZwsSWgA9uzbPBhZJeScCVcBuwwYVqhfamewpv7ZNmVKTGp5qnzkA==}
 
@@ -4665,6 +4805,14 @@ packages:
     resolution: {integrity: sha512-qFOyK5PjiWZd+QQIh+1jhdb9LpxTF0qs7Pm8o5QHYZ0M3vKqSqzsZaEB6oWlxZ+q2sJBMI/Ktgd2N5ZwQoRHfg==}
     engines: {node: '>= 0.4'}
 
+  ox@0.14.57:
+    resolution: {integrity: sha512-CPF6aEFyAuqgL0x7VaFM0vI2/CUd5Qk8+BIL6OnViPw+gF07O/VAhqEPOPw5GYnYPwomIk8mD91gTcQ1RAtupA==}
+    peerDependencies:
+      typescript: '>=5.4.0'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   p-limit@3.1.0:
     resolution: {integrity: sha512-TYOanM3wGwNGsZN2cVTYPArw454xnXj5qmWF1bEoAc4+cU/ol7GVh7odevjp1FNHduHc3KZMcFduxU5Xc6uJRQ==}
     engines: {node: '>=10'}
@@ -4800,6 +4948,14 @@ packages:
   postcss@8.5.3:
     resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
     engines: {node: ^10 || ^12 || >=14}
+
+  preact@10.29.8:
+    resolution: {integrity: sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q==}
+    peerDependencies:
+      preact-render-to-string: '>=5'
+    peerDependenciesMeta:
+      preact-render-to-string:
+        optional: true
 
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
@@ -5629,6 +5785,11 @@ packages:
       '@types/react':
         optional: true
 
+  use-sync-external-store@1.4.0:
+    resolution: {integrity: sha512-9WXSPC5fMv61vaupRkCKCxsPxBocVnwakBEkMIHHpkTTg6icbJtg6jzgtLDm4bl3cSHAca52rYWih0k4K3PfHw==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
   use-sync-external-store@1.5.0:
     resolution: {integrity: sha512-Rb46I4cGGVBmjamjphe8L/UnvJD+uPPtTkNvX5mZgqdbavhI4EbgIWJiIHXJ8bc/i9EQGPRh4DwEURJ552Do0A==}
     peerDependencies:
@@ -5656,8 +5817,27 @@ packages:
   victory-vendor@36.9.2:
     resolution: {integrity: sha512-PnpQQMuxlwYdocC8fIJqVXvkeViHYzotI+NJrCuav0ZYFoq912ZHBk3mCeuj+5/VpodOjPe1z0Fk2ihgzlXqjQ==}
 
+  viem@2.57.11:
+    resolution: {integrity: sha512-kvcBGXzIGmZu3GqaA83ZOLzVC57YO7WCgQrGcUHNKqZ8Cjqc9vV//uGna4Nhv0NGHn2gekw1FNdSvQePNnYePQ==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   w3c-keyname@2.2.8:
     resolution: {integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==}
+
+  wagmi@3.7.9:
+    resolution: {integrity: sha512-WE+tdZsQrsHPPV6yEKgBELM1LpxPLxWtpvUv8hS9KlRZtCLA1lyJQHJtGdSZWfPy8QdjYV2xI3yIrm0XjceK5w==}
+    peerDependencies:
+      '@tanstack/react-query': '>=5.0.0'
+      react: '>=18'
+      typescript: '>=5.9.3'
+      viem: 2.x
+    peerDependenciesMeta:
+      typescript:
+        optional: true
 
   watchpack@2.5.1:
     resolution: {integrity: sha512-Zn5uXdcFNIA1+1Ei5McRd+iRzfhENPCe7LeABkJtNulSxjma+l7ltNx55BWZkRlwRnpOgHqxnjyaDgJnNXnqzg==}
@@ -5796,6 +5976,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.21.0:
+    resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
@@ -5815,10 +6007,30 @@ packages:
   zod@3.24.1:
     resolution: {integrity: sha512-muH7gBL9sI1nciMZV67X5fTKKBLtwpZ5VBp1vsOQzj1MhrBZ4wlVCm3gedKZWLp0Oyel8sIGfeiz54Su+OVT+A==}
 
+  zustand@5.0.0:
+    resolution: {integrity: sha512-LE+VcmbartOPM+auOjCCLQOsQ05zUTp8RkgwRzefUk+2jISdMMFnxvyTjA4YNWr5ZGXYbVsEMZosttuxUBkojQ==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
+
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
+
+  '@adraffy/ens-normalize@1.11.1': {}
 
   '@alloc/quick-lru@5.2.0': {}
 
@@ -6499,6 +6711,20 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
+  '@coinbase/wallet-sdk@4.4.0(typescript@5.0.2)(zod@3.24.1)':
+    dependencies:
+      '@noble/hashes': 1.8.0
+      clsx: 1.2.1
+      eventemitter3: 5.0.1
+      preact: 10.29.8
+      viem: 2.57.11(typescript@5.0.2)(zod@3.24.1)
+    transitivePeerDependencies:
+      - bufferutil
+      - preact-render-to-string
+      - typescript
+      - utf-8-validate
+      - zod
+
   '@ducanh2912/next-pwa@10.2.9(next@15.2.7(@babel/core@7.29.0)(@playwright/test@1.63.0)(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(webpack@5.105.2)':
     dependencies:
       fast-glob: 3.3.2
@@ -6955,6 +7181,14 @@ snapshots:
 
   '@next/swc-win32-x64-msvc@16.2.3':
     optional: true
+
+  '@noble/ciphers@1.3.0': {}
+
+  '@noble/curves@1.9.1':
+    dependencies:
+      '@noble/hashes': 1.8.0
+
+  '@noble/hashes@1.8.0': {}
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -7873,6 +8107,19 @@ snapshots:
 
   '@rushstack/eslint-patch@1.12.0': {}
 
+  '@scure/base@1.2.6': {}
+
+  '@scure/bip32@1.7.0':
+    dependencies:
+      '@noble/curves': 1.9.1
+      '@noble/hashes': 1.8.0
+      '@scure/base': 1.2.6
+
+  '@scure/bip39@1.6.0':
+    dependencies:
+      '@noble/hashes': 1.8.0
+      '@scure/base': 1.2.6
+
   '@selderee/plugin-htmlparser2@0.11.0':
     dependencies:
       domhandler: 5.0.3
@@ -7897,6 +8144,15 @@ snapshots:
     dependencies:
       postcss-selector-parser: 6.0.10
       tailwindcss: 3.4.17
+
+  '@tanstack/query-core@5.104.5': {}
+
+  '@tanstack/react-query@5.104.5(@types/react@19.0.0)(react@19.0.0)':
+    dependencies:
+      '@tanstack/query-core': 5.104.5
+      react: 19.0.0
+    optionalDependencies:
+      '@types/react': 19.0.0
 
   '@tiptap/core@3.13.0(@tiptap/pm@3.13.0)':
     dependencies:
@@ -8087,6 +8343,8 @@ snapshots:
     dependencies:
       tslib: 2.8.1
     optional: true
+
+  '@types/canvas-confetti@1.9.0': {}
 
   '@types/cors@2.8.19':
     dependencies:
@@ -8347,6 +8605,29 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
+  '@wagmi/connectors@8.2.2(@coinbase/wallet-sdk@4.4.0(typescript@5.0.2)(zod@3.24.1))(@wagmi/core@3.6.7(@tanstack/query-core@5.104.5)(@types/react@19.0.0)(react@19.0.0)(typescript@5.0.2)(use-sync-external-store@1.4.0(react@19.0.0))(viem@2.57.11(typescript@5.0.2)(zod@3.24.1)))(typescript@5.0.2)(viem@2.57.11(typescript@5.0.2)(zod@3.24.1))':
+    dependencies:
+      '@wagmi/core': 3.6.7(@tanstack/query-core@5.104.5)(@types/react@19.0.0)(react@19.0.0)(typescript@5.0.2)(use-sync-external-store@1.4.0(react@19.0.0))(viem@2.57.11(typescript@5.0.2)(zod@3.24.1))
+      viem: 2.57.11(typescript@5.0.2)(zod@3.24.1)
+    optionalDependencies:
+      '@coinbase/wallet-sdk': 4.4.0(typescript@5.0.2)(zod@3.24.1)
+      typescript: 5.0.2
+
+  '@wagmi/core@3.6.7(@tanstack/query-core@5.104.5)(@types/react@19.0.0)(react@19.0.0)(typescript@5.0.2)(use-sync-external-store@1.4.0(react@19.0.0))(viem@2.57.11(typescript@5.0.2)(zod@3.24.1))':
+    dependencies:
+      eventemitter3: 5.0.1
+      mipd: 0.0.7(typescript@5.0.2)
+      viem: 2.57.11(typescript@5.0.2)(zod@3.24.1)
+      zustand: 5.0.0(@types/react@19.0.0)(react@19.0.0)(use-sync-external-store@1.4.0(react@19.0.0))
+    optionalDependencies:
+      '@tanstack/query-core': 5.104.5
+      typescript: 5.0.2
+    transitivePeerDependencies:
+      - '@types/react'
+      - immer
+      - react
+      - use-sync-external-store
+
   '@webassemblyjs/ast@1.14.1':
     dependencies:
       '@webassemblyjs/helper-numbers': 1.13.2
@@ -8426,6 +8707,11 @@ snapshots:
   '@xtuc/ieee754@1.2.0': {}
 
   '@xtuc/long@4.2.2': {}
+
+  abitype@1.2.3(typescript@5.0.2)(zod@3.24.1):
+    optionalDependencies:
+      typescript: 5.0.2
+      zod: 3.24.1
 
   accepts@1.3.8:
     dependencies:
@@ -8705,6 +8991,8 @@ snapshots:
 
   caniuse-lite@1.0.30001782: {}
 
+  canvas-confetti@1.9.4: {}
+
   ccount@2.0.1: {}
 
   chalk@4.1.2:
@@ -8753,6 +9041,8 @@ snapshots:
   cli-spinners@2.9.2: {}
 
   client-only@0.0.1: {}
+
+  clsx@1.2.1: {}
 
   clsx@2.1.1: {}
 
@@ -9429,6 +9719,8 @@ snapshots:
 
   eventemitter3@4.0.7: {}
 
+  eventemitter3@5.0.1: {}
+
   events@3.3.0: {}
 
   extend@3.0.2: {}
@@ -9903,6 +10195,10 @@ snapshots:
   isobject@2.1.0:
     dependencies:
       isarray: 1.0.0
+
+  isows@1.0.7(ws@8.21.0):
+    dependencies:
+      ws: 8.21.0
 
   iterator.prototype@1.1.5:
     dependencies:
@@ -10468,6 +10764,10 @@ snapshots:
 
   minipass@7.1.3: {}
 
+  mipd@0.0.7(typescript@5.0.2):
+    optionalDependencies:
+      typescript: 5.0.2
+
   motion-dom@12.29.0:
     dependencies:
       motion-utils: 12.27.2
@@ -10645,6 +10945,21 @@ snapshots:
       object-keys: 1.1.1
       safe-push-apply: 1.0.0
 
+  ox@0.14.57(typescript@5.0.2)(zod@3.24.1):
+    dependencies:
+      '@adraffy/ens-normalize': 1.11.1
+      '@noble/ciphers': 1.3.0
+      '@noble/curves': 1.9.1
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      abitype: 1.2.3(typescript@5.0.2)(zod@3.24.1)
+      eventemitter3: 5.0.1
+    optionalDependencies:
+      typescript: 5.0.2
+    transitivePeerDependencies:
+      - zod
+
   p-limit@3.1.0:
     dependencies:
       yocto-queue: 0.1.0
@@ -10768,6 +11083,8 @@ snapshots:
       nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
+
+  preact@10.29.8: {}
 
   prelude-ls@1.2.1: {}
 
@@ -11848,6 +12165,10 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.0.0
 
+  use-sync-external-store@1.4.0(react@19.0.0):
+    dependencies:
+      react: 19.0.0
+
   use-sync-external-store@1.5.0(react@19.0.0):
     dependencies:
       react: 19.0.0
@@ -11892,7 +12213,46 @@ snapshots:
       d3-time: 3.1.0
       d3-timer: 3.0.1
 
+  viem@2.57.11(typescript@5.0.2)(zod@3.24.1):
+    dependencies:
+      '@noble/curves': 1.9.1
+      '@noble/hashes': 1.8.0
+      '@scure/bip32': 1.7.0
+      '@scure/bip39': 1.6.0
+      abitype: 1.2.3(typescript@5.0.2)(zod@3.24.1)
+      isows: 1.0.7(ws@8.21.0)
+      ox: 0.14.57(typescript@5.0.2)(zod@3.24.1)
+      ws: 8.21.0
+    optionalDependencies:
+      typescript: 5.0.2
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+      - zod
+
   w3c-keyname@2.2.8: {}
+
+  wagmi@3.7.9(@coinbase/wallet-sdk@4.4.0(typescript@5.0.2)(zod@3.24.1))(@tanstack/query-core@5.104.5)(@tanstack/react-query@5.104.5(@types/react@19.0.0)(react@19.0.0))(@types/react@19.0.0)(react@19.0.0)(typescript@5.0.2)(viem@2.57.11(typescript@5.0.2)(zod@3.24.1)):
+    dependencies:
+      '@tanstack/react-query': 5.104.5(@types/react@19.0.0)(react@19.0.0)
+      '@wagmi/connectors': 8.2.2(@coinbase/wallet-sdk@4.4.0(typescript@5.0.2)(zod@3.24.1))(@wagmi/core@3.6.7(@tanstack/query-core@5.104.5)(@types/react@19.0.0)(react@19.0.0)(typescript@5.0.2)(use-sync-external-store@1.4.0(react@19.0.0))(viem@2.57.11(typescript@5.0.2)(zod@3.24.1)))(typescript@5.0.2)(viem@2.57.11(typescript@5.0.2)(zod@3.24.1))
+      '@wagmi/core': 3.6.7(@tanstack/query-core@5.104.5)(@types/react@19.0.0)(react@19.0.0)(typescript@5.0.2)(use-sync-external-store@1.4.0(react@19.0.0))(viem@2.57.11(typescript@5.0.2)(zod@3.24.1))
+      react: 19.0.0
+      use-sync-external-store: 1.4.0(react@19.0.0)
+      viem: 2.57.11(typescript@5.0.2)(zod@3.24.1)
+    optionalDependencies:
+      typescript: 5.0.2
+    transitivePeerDependencies:
+      - '@base-org/account'
+      - '@coinbase/wallet-sdk'
+      - '@metamask/connect-evm'
+      - '@safe-global/safe-apps-provider'
+      - '@safe-global/safe-apps-sdk'
+      - '@tanstack/query-core'
+      - '@types/react'
+      - '@walletconnect/ethereum-provider'
+      - accounts
+      - immer
 
   watchpack@2.5.1:
     dependencies:
@@ -12179,6 +12539,8 @@ snapshots:
 
   ws@8.18.3: {}
 
+  ws@8.21.0: {}
+
   yallist@3.1.1: {}
 
   yaml@2.8.0: {}
@@ -12188,5 +12550,11 @@ snapshots:
   yoctocolors@2.1.2: {}
 
   zod@3.24.1: {}
+
+  zustand@5.0.0(@types/react@19.0.0)(react@19.0.0)(use-sync-external-store@1.4.0(react@19.0.0)):
+    optionalDependencies:
+      '@types/react': 19.0.0
+      react: 19.0.0
+      use-sync-external-store: 1.4.0(react@19.0.0)
 
   zwitch@2.0.4: {}

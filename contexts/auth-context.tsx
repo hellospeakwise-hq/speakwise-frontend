@@ -166,7 +166,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         setSessionCallbacks(
-            () => setShowExpiryWarning(true),
+            () => {}, // Silent refresh manages background tokens; IdleTimeoutModal manages idle detection
             () => {
                 setUser(null);
                 setIsAuthenticated(false);
@@ -179,7 +179,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const login = async (email: string, password: string) => {
         setLoading(true);
         try {
-            const response = await authApi.login({ email, password });
+            const response = await authApi.login({ email: email.trim().toLowerCase(), password });
             console.log('Login API Response:', response);
             setIsAuthenticated(true);
 

@@ -161,6 +161,42 @@ class FeedbackAPI {
             throw error;
         }
     }
+
+    /**
+     * Ask SpeakBot AI speaker coach for advice, talk comparisons, and insights.
+     */
+    async askSpeakBot(payload: SpeakBotQueryPayload = {}): Promise<SpeakBotResponse> {
+        const response = await apiClient.post<SpeakBotResponse>('/feedbacks/ai-coach/', payload);
+        return response.data;
+    }
+}
+
+// ─── SpeakBot AI Types ─────────────────────────────────────────────────────────
+
+export interface SpeakBotMessage {
+    role: 'user' | 'assistant';
+    content: string;
+}
+
+export interface SpeakBotQueryPayload {
+    query?: string;
+    experience?: string;
+    history?: SpeakBotMessage[];
+}
+
+export interface SpeakBotSummary {
+    total_feedbacks: number;
+    talks_analyzed: number;
+    avg_rating: number | null;
+    top_strength: string | null;
+    top_growth_area: string | null;
+}
+
+export interface SpeakBotResponse {
+    reply: string;
+    provider: 'gemini' | 'groq' | 'analytics_fallback';
+    model: string | null;
+    summary: SpeakBotSummary;
 }
 
 // ─── Typed errors for specific backend conditions ─────────────────────────────

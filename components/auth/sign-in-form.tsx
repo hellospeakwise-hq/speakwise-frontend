@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -17,14 +17,23 @@ export function SignInForm() {
   const { login } = useAuth()
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
   const [error, setError] = useState("")
 
-  // Always clear form state on mount (prevents name/email carryover)
+  /**
+   * SECURITY: The password field is intentionally uncontrolled (no `value` prop).
+   * Using a React-controlled `value={password}` on a password input causes the browser
+   * to reflect the live password string as a DOM attribute (`value="..."`) visible in
+   * DevTools and serialized HTML. Using a ref instead keeps the value only in the
+   * DOM element's internal property — never as an inspectable attribute.
+   */
+  const passwordRef = useRef<HTMLInputElement>(null)
+
+  // Clear all fields on mount to prevent browser-autofill carryover being reflected in state
   useEffect(() => {
     setEmail("")
-    setPassword("")
     setError("")
+    // Clear any pre-filled value the browser may have injected
+    if (passwordRef.current) passwordRef.current.value = ""
   }, [])
 
   const validateForm = () => {
@@ -34,7 +43,8 @@ export function SignInForm() {
       return false
     }
 
-    if (!password.trim()) {
+    const pw = passwordRef.current?.value ?? ""
+    if (!pw.trim()) {
       setError("Password is required")
       toast.error("Password is required")
       return false
@@ -54,23 +64,21 @@ export function SignInForm() {
     setIsLoading(true)
 
     try {
-      const redirectPath = await login(email, password)
+      const pw = passwordRef.current?.value ?? ""
+      const redirectPath = await login(email.trim().toLowerCase(), pw)
 
       toast.success("Welcome back! You've been signed in successfully.")
       router.push(redirectPath)
     } catch (error: any) {
       console.error("Login error:", error)
-      console.error("Login error message:", error?.message)
-      console.error("Login error response:", error?.response?.data)
 
       // Check if email verification is required
       const rawDetail = error?.response?.data?.detail;
       const detailStr = typeof rawDetail === 'string' ? rawDetail : Array.isArray(rawDetail) ? rawDetail.join(' ') : '';
       const rawMsg = typeof error?.message === 'string' ? error.message : '';
-      const combinedError = (rawMsg + ' ' + detailStr).toLowerCase();
+      const combinedError = (rawMsg + ' ' + detailStr).toLowerCase()
 
       if (combinedError.includes('verify') && combinedError.includes('email')) {
-        // Redirect to email verification page
         toast.error("Please verify your email address first")
         router.push(`/verify-email?email=${encodeURIComponent(email)}`)
         return
@@ -80,20 +88,15 @@ export function SignInForm() {
       let errorMessage = "Unable to sign in. Please try again."
 
       if (rawMsg) {
-        // Use the message from our improved auth API
         const msg = rawMsg.toLowerCase();
-
-        // Don't show raw "Network error" to user - be more helpful
         if (msg.includes('network') || msg.includes('fetch') || msg.includes('connection')) {
           errorMessage = "Unable to connect. Please check your internet connection and try again.";
         } else if (msg.includes('incorrect') || msg.includes('invalid') || msg.includes('credentials')) {
           errorMessage = "Incorrect email or password. Please try again.";
         } else {
-          // Use the actual error message from backend
           errorMessage = rawMsg;
         }
       } else if (error?.response?.data) {
-        // Parse the response data for user-friendly messages
         const data = error.response.data;
         if (data.detail) {
           errorMessage = typeof data.detail === 'string' ? data.detail : Array.isArray(data.detail) ? data.detail.join('. ') : String(data.detail);
@@ -104,7 +107,6 @@ export function SignInForm() {
         } else if (data.password && Array.isArray(data.password)) {
           errorMessage = data.password.join('. ');
         } else if (typeof data === 'object') {
-          // Try to extract any error messages from the response
           const messages: string[] = [];
           for (const [field, errors] of Object.entries(data)) {
             if (Array.isArray(errors)) {
@@ -159,13 +161,13 @@ export function SignInForm() {
                 Forgot password?
               </Link>
             </div>
+            {/* Uncontrolled input — password value lives only in the DOM property, never in a React state string or as an HTML attribute */}
             <Input
+              ref={passwordRef}
               id="password"
               type="password"
               autoComplete="current-password"
               disabled={isLoading}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required
             />
           </div>
