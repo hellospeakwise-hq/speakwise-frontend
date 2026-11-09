@@ -40,6 +40,7 @@ interface BadgeCardProps {
   onClaim?: (badgeId: number) => Promise<void>;
   isClaiming?: boolean;
   isOwner?: boolean;
+  speakerSlug?: string;
 }
 
 // Clean, restrained tier styling without flashy neon glows
@@ -95,6 +96,7 @@ export function BadgeCard({
   onClaim,
   isClaiming = false,
   isOwner = true,
+  speakerSlug,
 }: BadgeCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [copiedContract, setCopiedContract] = useState(false);
@@ -117,16 +119,18 @@ export function BadgeCard({
   const handleShareToTwitter = (e?: React.MouseEvent) => {
     e?.stopPropagation();
     const text = `I just earned the "${badge.name}" speaker badge on @SpeakWiseHQ!\n\nVerifiable proof of speaking impact.\n\nView my speaker credentials:`;
-    const url = typeof window !== 'undefined' ? window.location.href : 'https://speakwise.app';
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://speakwise.live';
+    const profilePath = speakerSlug ? `/speakers/${speakerSlug}?tab=badges` : (typeof window !== 'undefined' ? window.location.pathname + '?tab=badges' : '/speakers');
+    const url = `${origin}${profilePath}`;
     const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
     window.open(twitterUrl, '_blank', 'noopener,noreferrer');
   };
 
   const handleShareToLinkedIn = (e?: React.MouseEvent) => {
     e?.stopPropagation();
-    const certUrl = txHash 
-      ? `https://sepolia.basescan.org/tx/${txHash}` 
-      : (typeof window !== 'undefined' ? window.location.href : 'https://speakwise.app');
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://speakwise.live';
+    const profilePath = speakerSlug ? `/speakers/${speakerSlug}?tab=badges` : (typeof window !== 'undefined' ? window.location.pathname + '?tab=badges' : '/speakers');
+    const certUrl = `${origin}${profilePath}`;
     
     const orgId = "109397287";
     const orgName = "SpeakWise";

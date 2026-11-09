@@ -29,6 +29,7 @@ interface CredentialModalProps {
   onClose: () => void;
   txHash?: string;
   recipientAddress?: string | null;
+  speakerSlug?: string;
 }
 
 function XIcon({ className }: { className?: string }) {
@@ -53,6 +54,7 @@ export function CredentialModal({
   onClose,
   txHash,
   recipientAddress,
+  speakerSlug,
 }: CredentialModalProps) {
   const [copiedTx, setCopiedTx] = useState(false);
 
@@ -63,8 +65,11 @@ export function CredentialModal({
   const basescanUrl = txHash ? `https://sepolia.basescan.org/tx/${txHash}` : 'https://sepolia.basescan.org';
 
   const handleShareToTwitter = () => {
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://speakwise.live';
+    const profilePath = speakerSlug ? `/speakers/${speakerSlug}?tab=badges` : (typeof window !== 'undefined' ? window.location.pathname + '?tab=badges' : '/speakers');
+    const shareUrl = `${origin}${profilePath}`;
     const text = `🏆 Proud to earn the verified "${badge.name}" speaker badge on @SpeakWiseHQ!\n\nSoulbound on-chain proof of speaking impact on @base.\n\nVerify credential:`;
-    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(basescanUrl)}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`;
     window.open(twitterUrl, '_blank', 'noopener,noreferrer');
   };
 
@@ -72,9 +77,13 @@ export function CredentialModal({
     // LinkedIn maps company logos via organizationId (109397287 is SpeakWise on LinkedIn)
     const orgId = "109397287";
     const orgName = "SpeakWise";
+    const origin = typeof window !== 'undefined' ? window.location.origin : 'https://speakwise.live';
+    const profilePath = speakerSlug ? `/speakers/${speakerSlug}?tab=badges` : (typeof window !== 'undefined' ? window.location.pathname + '?tab=badges' : '/speakers');
+    const certUrl = `${origin}${profilePath}`;
+
     const linkedInUrl = `https://www.linkedin.com/profile/add?startTask=CERTIFICATION_NAME&name=${encodeURIComponent(
       badge.name + ' - Verified Speaker'
-    )}&organizationId=${orgId}&organizationName=${encodeURIComponent(orgName)}&certUrl=${encodeURIComponent(basescanUrl)}&certId=${encodeURIComponent(badge.code)}&issueYear=${currentYear}&issueMonth=${currentMonth}`;
+    )}&organizationId=${orgId}&organizationName=${encodeURIComponent(orgName)}&certUrl=${encodeURIComponent(certUrl)}&certId=${encodeURIComponent(badge.code)}&issueYear=${currentYear}&issueMonth=${currentMonth}`;
     window.open(linkedInUrl, '_blank', 'noopener,noreferrer');
   };
 

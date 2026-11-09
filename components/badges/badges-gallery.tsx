@@ -76,7 +76,7 @@ export function BadgesGallery({
   const [claimingId, setClaimingId] = useState<number | null>(null);
   const [celebrationBadge, setCelebrationBadge] = useState<BadgeDefinition | null>(null);
   const [celebrationTxHash, setCelebrationTxHash] = useState<string | undefined>(undefined);
-
+  const [resolvedSlug, setResolvedSlug] = useState<string | undefined>(speakerSlug);
 
   // Fetch real-time live speaker badge status from backend
   React.useEffect(() => {
@@ -91,6 +91,10 @@ export function BadgesGallery({
         } catch {
           targetSlug = 'ahenkan-kwaku';
         }
+      }
+
+      if (isMounted && targetSlug) {
+        setResolvedSlug(targetSlug);
       }
 
       if (!targetSlug) return;
@@ -350,6 +354,7 @@ export function BadgesGallery({
                 onClaim={handleClaimBadge}
                 isClaiming={claimingId === badge.id}
                 isOwner={isOwner}
+                speakerSlug={speakerSlug || resolvedSlug}
               />
             );
           })}
@@ -378,6 +383,7 @@ export function BadgesGallery({
         onClose={() => setCelebrationBadge(null)}
         txHash={celebrationTxHash}
         recipientAddress={activeWalletAddress}
+        speakerSlug={speakerSlug || resolvedSlug}
       />
     </div>
   );
