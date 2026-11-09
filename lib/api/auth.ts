@@ -217,22 +217,28 @@ export const authApi = {
    * Refresh access token
    */
   async refreshToken(): Promise<{ access_token: string }> {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = localStorage.getItem('refreshToken') || localStorage.getItem('refresh_token');
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
 
-    const response = await apiClient.post<{ access_token: string }>(
+    const response = await apiClient.post<{ access?: string; access_token?: string; refresh?: string }>(
       '/auth/refresh/',
-      { refresh_token: refreshToken }
+      { refresh: refreshToken, refresh_token: refreshToken }
     );
 
+    const access = response.data.access || response.data.access_token || '';
     // Update stored token
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('accessToken', response.data.access_token);
+    if (typeof window !== 'undefined' && access) {
+      localStorage.setItem('accessToken', access);
+      localStorage.setItem('access_token', access);
+      if (response.data.refresh) {
+        localStorage.setItem('refreshToken', response.data.refresh);
+        localStorage.setItem('refresh_token', response.data.refresh);
+      }
     }
 
-    return response.data;
+    return { access_token: access };
   },
 
   /**

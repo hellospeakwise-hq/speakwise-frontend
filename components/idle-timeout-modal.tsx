@@ -2,61 +2,35 @@
 
 import { useState, useEffect, useCallback, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
-import { LogOut, MousePointerClick } from "lucide-react"
+import { LogOut, ArrowRight, Loader2 } from "lucide-react"
 import { refreshTokenNow } from "@/lib/utils/tokenRefresh"
 
-const IDLE_TIMEOUT_MS = 10 * 60 * 1000   // 10 minutes of inactivity
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000   // 15 minutes of inactivity
 const COUNTDOWN_SECONDS = 60              // 60-second countdown before logout
 
 export function IdleTimeoutModal() {
   const { isAuthenticated, logout } = useAuth()
   const [showModal, setShowModal] = useState(false)
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const idleTimerRef = useRef<NodeJS.Timeout | null>(null)
   const countdownTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Reset the idle timer on user activity
   const resetIdleTimer = useCallback(() => {
-    // If modal is showing, don't reset (user must click the button)
+    // If modal is showing, don't reset until user confirms
     if (showModal) return
 
-    // Clear existing timer
     if (idleTimerRef.current) {
       clearTimeout(idleTimerRef.current)
     }
 
-    // Start new idle timer
     idleTimerRef.current = setTimeout(() => {
       setShowModal(true)
       setCountdown(COUNTDOWN_SECONDS)
     }, IDLE_TIMEOUT_MS)
   }, [showModal])
-
-  // Handle "I'm still here" click
-  const handleStayLoggedIn = useCallback(() => {
-    // Stop the countdown
-    if (countdownTimerRef.current) {
-      clearInterval(countdownTimerRef.current)
-      countdownTimerRef.current = null
-    }
-
-    setShowModal(false)
-    setCountdown(COUNTDOWN_SECONDS)
-
-    // Refresh the JWT so the token system doesn't expire the session.
-    // Fire-and-forget — if it fails, tokenRefresh.ts will handle expiry.
-    refreshTokenNow()
-
-    // Bypass resetIdleTimer's stale-closure guard (showModal is still true
-    // at this point because React state updates are async). Set the timer
-    // directly on the ref so the user gets a fresh 10-minute window.
-    if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
-    idleTimerRef.current = setTimeout(() => {
-      setShowModal(true)
-      setCountdown(COUNTDOWN_SECONDS)
-    }, IDLE_TIMEOUT_MS)
-  }, [])
 
   // Handle logout (manual or countdown expired)
   const handleLogout = useCallback(() => {
@@ -73,6 +47,41 @@ export function IdleTimeoutModal() {
     logout()
   }, [logout])
 
+  // Handle "Continue Session" click
+  const handleStayLoggedIn = useCallback(async () => {
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current)
+      countdownTimerRef.current = null
+    }
+
+    setIsRefreshing(true)
+    try {
+      const refreshed = await refreshTokenNow()
+
+      if (!refreshed) {
+        // Refresh failed — token is invalid, log the user out cleanly
+        setIsRefreshing(false)
+        handleLogout()
+        return
+      }
+
+      // Success — hide modal and restart the idle timer
+      setIsRefreshing(false)
+      setShowModal(false)
+      setCountdown(COUNTDOWN_SECONDS)
+
+      if (idleTimerRef.current) clearTimeout(idleTimerRef.current)
+      idleTimerRef.current = setTimeout(() => {
+        setShowModal(true)
+        setCountdown(COUNTDOWN_SECONDS)
+      }, IDLE_TIMEOUT_MS)
+    } catch {
+      // Unexpected error — also log out
+      setIsRefreshing(false)
+      handleLogout()
+    }
+  }, [handleLogout])
+
   // Start countdown when modal shows
   useEffect(() => {
     if (!showModal) return
@@ -80,7 +89,6 @@ export function IdleTimeoutModal() {
     countdownTimerRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
-          // Time's up — log out
           handleLogout()
           return 0
         }
@@ -106,10 +114,8 @@ export function IdleTimeoutModal() {
 
     const handleActivity = () => resetIdleTimer()
 
-    // Start idle timer
     resetIdleTimer()
 
-    // Listen for activity
     activityEvents.forEach((event) => {
       document.addEventListener(event, handleActivity, { passive: true })
     })
@@ -123,42 +129,38 @@ export function IdleTimeoutModal() {
     }
   }, [isAuthenticated, resetIdleTimer])
 
-  // Don't render anything if not authenticated or modal not showing
   if (!isAuthenticated || !showModal) return null
 
-  // Calculate progress for the circular countdown
   const progress = (countdown / COUNTDOWN_SECONDS) * 100
-  const circumference = 2 * Math.PI * 44 // radius = 44
+  const circumference = 2 * Math.PI * 40 // radius = 40
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm animate-in fade-in duration-200" />
+      {/* Dim backdrop */}
+      <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm animate-in fade-in duration-200" />
 
-      {/* Modal */}
+      {/* Modal Dialog */}
       <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
-        <div className="relative w-full max-w-sm rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900 to-slate-950 p-8 shadow-2xl shadow-black/40 animate-in zoom-in-95 fade-in duration-200">
-
-          {/* Glow */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-white/5 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Countdown circle */}
-          <div className="relative flex justify-center mb-6">
-            <div className="relative w-24 h-24">
-              {/* Background circle */}
-              <svg className="w-24 h-24 -rotate-90" viewBox="0 0 96 96">
+        <div className="relative w-full max-w-sm rounded-xl border border-slate-800 bg-slate-900 p-6 shadow-2xl text-slate-100 animate-in zoom-in-95 fade-in duration-200">
+          {/* Circular Countdown Progress */}
+          <div className="flex justify-center mb-5">
+            <div className="relative w-20 h-20">
+              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 96 96">
                 <circle
-                  cx="48" cy="48" r="44"
+                  cx="48"
+                  cy="48"
+                  r="40"
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="4"
-                  className="text-white/10"
+                  className="text-slate-800"
                 />
                 <circle
-                  cx="48" cy="48" r="44"
+                  cx="48"
+                  cy="48"
+                  r="40"
                   fill="none"
-                  stroke="white"
-                  strokeOpacity={countdown <= 10 ? 0.9 : 0.6}
+                  stroke={countdown <= 10 ? "#ef4444" : "#f97316"}
                   strokeWidth="4"
                   strokeLinecap="round"
                   strokeDasharray={circumference}
@@ -167,46 +169,54 @@ export function IdleTimeoutModal() {
                 />
               </svg>
 
-              {/* Countdown number */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`text-2xl font-bold tabular-nums ${
-                  countdown <= 10 ? 'text-red-400' : 'text-white'
-                }`}>
-                  {countdown}
+                <span className={`text-xl font-bold tabular-nums ${countdown <= 10 ? 'text-red-400' : 'text-slate-100'}`}>
+                  {countdown}s
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Text */}
-          <div className="text-center mb-8">
-            <h3 className="text-xl font-bold text-white mb-2">
+          {/* Heading & Notice */}
+          <div className="text-center mb-6">
+            <h3 className="text-lg font-semibold text-white mb-1.5">
               Are you still there?
             </h3>
-            <p className="text-sm text-slate-400 leading-relaxed">
-              You&apos;ve been inactive for a while. For your security, you&apos;ll be logged out in{" "}
-              <span className={`font-semibold ${countdown <= 10 ? 'text-red-400' : 'text-white'}`}>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              You have been inactive for a while. For your account security, this session will automatically close in{" "}
+              <span className={`font-semibold ${countdown <= 10 ? 'text-red-400' : 'text-slate-200'}`}>
                 {countdown} seconds
               </span>.
             </p>
           </div>
 
-          {/* Buttons */}
-          <div className="space-y-3">
+          {/* Actions */}
+          <div className="space-y-2">
             <button
               onClick={handleStayLoggedIn}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-white text-slate-900 py-3 px-6 text-sm font-semibold hover:bg-white/90 transition-all duration-200 active:scale-[0.98]"
+              disabled={isRefreshing}
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-orange-600 hover:bg-orange-500 text-white py-2.5 px-4 text-xs sm:text-sm font-semibold transition-colors disabled:opacity-60"
             >
-              <MousePointerClick className="h-4 w-4" />
-              Yes, I&apos;m still here
+              {isRefreshing ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Refreshing session…</span>
+                </>
+              ) : (
+                <>
+                  <span>Continue Session</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </button>
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-white/5 border border-white/10 py-3 px-6 text-sm font-medium text-slate-400 hover:text-white hover:bg-white/10 transition-all duration-200"
+              disabled={isRefreshing}
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white py-2.5 px-4 text-xs font-medium border border-slate-700/60 transition-colors"
             >
-              <LogOut className="h-4 w-4" />
-              Log out now
+              <LogOut className="h-3.5 w-3.5" />
+              <span>Log out</span>
             </button>
           </div>
         </div>

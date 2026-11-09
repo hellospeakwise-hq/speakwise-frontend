@@ -27,11 +27,18 @@ export const apiClient: AxiosInstance = axios.create({
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    // Add auth token if available
+    // Add auth token if available, but skip for public authentication endpoints
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const isPublicAuth =
+        config.url?.includes('auth/login') ||
+        config.url?.includes('auth/register') ||
+        config.url?.includes('password-reset');
+
+      if (!isPublicAuth) {
+        const token = localStorage.getItem('accessToken');
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
       }
     }
     return config;

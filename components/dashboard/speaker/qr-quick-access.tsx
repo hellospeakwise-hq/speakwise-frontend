@@ -205,79 +205,79 @@ export function QrQuickAccess() {
                 </Link>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2">
                 {recentExperiences.map((exp) => (
                   <div
                     key={exp.id}
-                    className="flex flex-col justify-between rounded-lg border border-border bg-background p-4 hover:border-border/80 transition-colors"
+                    className="flex flex-col justify-between rounded-xl border border-border/80 bg-background p-4 sm:p-5 hover:border-border transition-all shadow-2xs"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2">
-                        <h4 className="text-xs font-semibold text-foreground line-clamp-2 leading-snug">
+                        <h4 className="text-xs sm:text-sm font-bold text-foreground line-clamp-2 leading-snug">
                           {exp.topic}
                         </h4>
                         <Badge
                           variant="outline"
-                          className="text-[10px] shrink-0 border-border text-muted-foreground"
+                          className="text-[10px] shrink-0 border-border text-muted-foreground font-mono"
                         >
                           {exp.feedback_enabled !== false ? "Open" : "Paused"}
                         </Badge>
                       </div>
 
-                      <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                        <Calendar className="h-3 w-3 shrink-0" />
-                        <span className="truncate">{exp.event_name}</span>
+                      <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate font-medium">{exp.event_name}</span>
                         {exp.event_date && (
                           <>
                             <span>·</span>
-                            <span className="shrink-0">{formatDate(exp.event_date)}</span>
+                            <span className="shrink-0 font-mono text-[11px]">{formatDate(exp.event_date)}</span>
                           </>
                         )}
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-border flex items-center justify-between gap-1">
+                    <div className="mt-5 pt-3 border-t border-border/60 flex items-center justify-between gap-1.5 flex-wrap">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-[11px] gap-1 text-muted-foreground hover:text-foreground"
+                        className="h-7.5 px-2.5 text-xs gap-1.5 text-muted-foreground hover:text-foreground shrink-0 rounded-lg"
                         onClick={() => handleOpenPreview(exp)}
                         title="Preview QR Code"
                       >
-                        <Eye className="h-3 w-3" />
-                        Preview QR
+                        <Eye className="h-3.5 w-3.5" />
+                        <span>Preview</span>
                       </Button>
 
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 px-2 text-[11px] gap-1 text-muted-foreground hover:text-foreground"
+                          className="h-7.5 px-2.5 text-xs gap-1.5 text-muted-foreground hover:text-foreground shrink-0 rounded-lg shadow-2xs"
                           onClick={() => handleCopyLink(exp)}
                           title="Copy audience feedback URL"
                         >
                           {copiedSlug === exp.feedback_slug ? (
-                            <Check className="h-3 w-3 text-green-500" />
+                            <Check className="h-3.5 w-3.5 text-emerald-500" />
                           ) : (
-                            <Copy className="h-3 w-3" />
+                            <Copy className="h-3.5 w-3.5" />
                           )}
-                          {copiedSlug === exp.feedback_slug ? "Copied" : "Link"}
+                          <span>{copiedSlug === exp.feedback_slug ? "Copied" : "Copy Link"}</span>
                         </Button>
 
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 px-2.5 text-[11px] gap-1 hover:bg-accent"
+                          className="h-7.5 px-2.5 text-xs gap-1.5 hover:bg-accent shrink-0 rounded-lg shadow-2xs whitespace-nowrap"
                           disabled={qrLoadingId === exp.id}
                           onClick={() => handleDownloadQR(exp)}
                           title="Download QR code image for your presentation"
                         >
                           {qrLoadingId === exp.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
                           ) : (
-                            <Download className="h-3 w-3" />
+                            <Download className="h-3.5 w-3.5" />
                           )}
-                          QR PNG
+                          <span>Download</span>
                         </Button>
                       </div>
                     </div>

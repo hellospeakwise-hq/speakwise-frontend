@@ -1,71 +1,96 @@
 import axios from 'axios';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+// Sanitize the API Base URL to prevent any trailing slashes, spaces, or accidental inline comments
+function getCleanApiBaseUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+  return raw.trim().replace(/\/+$/, '').split(/\s+#/)[0].trim();
+}
 
-const TOKEN_LIFETIME_MS = 15 * 60 * 1000  // 15 minutes
-const WARNING_BEFORE_MS = 2 * 60 * 1000   // warn 2 min before expiry (at 13 min)
-const WARNING_AT_MS = TOKEN_LIFETIME_MS - WARNING_BEFORE_MS
+// Background silent refresh interval (every 12 minutes to stay safely ahead of JWT lifetime)
+const SILENT_REFRESH_INTERVAL_MS = 12 * 60 * 1000;
 
-let tokenRefreshTimer: NodeJS.Timeout | null = null
-let sessionWarningCallback: (() => void) | null = null
-let sessionExpireCallback: (() => void) | null = null
+let silentRefreshTimer: NodeJS.Timeout | null = null;
+let sessionExpireCallback: (() => void) | null = null;
 
 export const setSessionCallbacks = (
-  onWarning: () => void,
+  _onWarning: () => void,
   onExpire: () => void
 ) => {
-  sessionWarningCallback = onWarning
-  sessionExpireCallback = onExpire
-}
+  sessionExpireCallback = onExpire;
+};
 
+// Silently refreshes token in background while user is active
 export const scheduleTokenRefresh = () => {
-  if (tokenRefreshTimer) clearTimeout(tokenRefreshTimer)
+  if (silentRefreshTimer) clearTimeout(silentRefreshTimer);
 
-  // At 13 minutes: show warning dialog
-  tokenRefreshTimer = setTimeout(() => {
-    if (typeof window === 'undefined') return
-    if (sessionWarningCallback) sessionWarningCallback()
-  }, WARNING_AT_MS)
-}
+  silentRefreshTimer = setTimeout(async () => {
+    if (typeof window === 'undefined') return;
+    const ok = await refreshTokenNow();
+    if (ok) {
+      scheduleTokenRefresh();
+    }
+  }, SILENT_REFRESH_INTERVAL_MS);
+};
 
-// Called when user clicks "Stay logged in" in the warning dialog
+// Called when user clicks "Stay logged in" or during silent background refresh
 export const refreshTokenNow = async (): Promise<boolean> => {
-  if (typeof window === 'undefined') return false
+  if (typeof window === 'undefined') return false;
 
-  const refreshToken = localStorage.getItem('refreshToken')
-  if (!refreshToken) return false
+  const refreshToken =
+    localStorage.getItem('refreshToken') ||
+    localStorage.getItem('refresh_token');
+
+  if (!refreshToken) {
+    console.warn('[tokenRefresh] No refresh token found');
+    return false;
+  }
 
   try {
-    const response = await axios.post(`${API_BASE_URL}/api/auth/refresh/`, {
-      refresh: refreshToken
-    })
-    const { access } = response.data
-    localStorage.setItem('accessToken', access)
-    scheduleTokenRefresh()
-    return true
-  } catch {
-    return false
-  }
-}
+    const baseUrl = getCleanApiBaseUrl();
+    const response = await axios.post(`${baseUrl}/api/auth/refresh/`, {
+      refresh: refreshToken,
+    });
 
-// Called when countdown runs out or user clicks "Log out"
+    const access = response.data?.access || response.data?.access_token;
+    if (!access) return false;
+
+    localStorage.setItem('accessToken', access);
+    localStorage.setItem('access_token', access);
+
+    if (response.data?.refresh) {
+      localStorage.setItem('refreshToken', response.data.refresh);
+      localStorage.setItem('refresh_token', response.data.refresh);
+    }
+
+    scheduleTokenRefresh();
+    return true;
+  } catch (error) {
+    console.error('[tokenRefresh] Failed to refresh token:', error);
+    return false;
+  }
+};
+
 export const expireSession = () => {
-  cancelTokenRefresh()
-  localStorage.removeItem('accessToken')
-  localStorage.removeItem('refreshToken')
-  localStorage.removeItem('user')
-  if (sessionExpireCallback) sessionExpireCallback()
-}
+  cancelTokenRefresh();
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('user');
+  }
+  if (sessionExpireCallback) sessionExpireCallback();
+};
 
 export const cancelTokenRefresh = () => {
-  if (tokenRefreshTimer) {
-    clearTimeout(tokenRefreshTimer)
-    tokenRefreshTimer = null
+  if (silentRefreshTimer) {
+    clearTimeout(silentRefreshTimer);
+    silentRefreshTimer = null;
   }
-}
+};
 
 export const initializeTokenRefresh = () => {
-  if (typeof window === 'undefined') return
-  const accessToken = localStorage.getItem('accessToken')
-  if (accessToken) scheduleTokenRefresh()
-}
+  if (typeof window === 'undefined') return;
+  const token = localStorage.getItem('accessToken') || localStorage.getItem('access_token');
+  if (token) scheduleTokenRefresh();
+};

@@ -159,7 +159,8 @@ export default function RootLayout({
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           fontSans.variable,
-          fontHeading.variable
+          fontHeading.variable,
+          fontSans.className
         )}
         suppressHydrationWarning
       >
@@ -171,7 +172,7 @@ export default function RootLayout({
                 <Toaster />
                 <SponsorBanner />
                 <MainNav />
-                <main className="flex-1">{children}</main>
+                <main className="flex-1 min-w-0 w-full overflow-x-hidden">{children}</main>
                 <Footer />
               </div>
               <CookieConsent />

@@ -105,7 +105,7 @@ export function WalletConnectButton() {
   };
 
   const handleConnectDemo = () => {
-    const mockAddr = '0x71C2a8D9bB3e1F24c6eA847b2De60E1894C2b41E';
+    const mockAddr = '0x71c2a8d9BB3e1F24c6EA847B2de60E1894c2B41E';
     if (typeof window !== 'undefined') {
       localStorage.setItem('speakwise_demo_wallet', mockAddr);
       window.dispatchEvent(new Event('speakwise-wallet-changed'));
