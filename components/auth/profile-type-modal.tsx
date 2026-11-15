@@ -79,6 +79,8 @@ export function ProfileTypeModal({ open, onSpeakerChosen, onOrgChosen }: Profile
             const detailStr = typeof rawDetail === 'string' ? rawDetail : Array.isArray(rawDetail) ? rawDetail.join(' ') : ''
             if (typeof data.name?.[0] === 'string' && data.name[0].toLowerCase().includes("already exists")) {
                 toast.error("An organization with this name already exists. Please choose a different name.")
+            } else if (detailStr && detailStr.toLowerCase().includes("maximum number of organizations")) {
+                toast.error(detailStr)
             } else if (typeof data.owner?.[0] === 'string' && data.owner[0].toLowerCase().includes("already exists")) {
                 toast.error("You already have an organization profile.")
             } else {

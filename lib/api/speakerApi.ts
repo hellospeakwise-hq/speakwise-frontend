@@ -39,6 +39,21 @@ export interface SocialLink {
     link: string;
 }
 
+export interface CriterionSummary {
+    average: number;
+    distribution?: Record<string, number>;
+}
+
+export interface FeedbackSummary {
+    total_count: number;
+    overall_rating?: CriterionSummary;
+    engagement?: CriterionSummary;
+    clarity?: CriterionSummary;
+    content_depth?: CriterionSummary;
+    speaker_knowledge?: CriterionSummary;
+    practical_relevance?: CriterionSummary;
+}
+
 export interface Speaker {
     id: string;
     social_links: SocialLink[];
@@ -55,6 +70,13 @@ export interface Speaker {
     followers_count?: number;
     following_count?: number;  // How many speakers this speaker follows
     is_following?: boolean;
+    total_talks?: number;
+    total_reviews?: number;
+    badges_count?: number;
+    average_rating?: number | null;
+    reputation_score?: number;
+    rank_tier?: string;
+    feedback_summary?: FeedbackSummary;
 }
 
 export interface FollowStatus {
@@ -183,18 +205,19 @@ export const speakerApi = {
 
     // --- Speaker profile endpoints ---
 
-    // Get all speakers (cached for 5 minutes)
-    async getSpeakers(): Promise<Speaker[]> {
+    // Get all speakers (supports ordering/top params, stale-while-revalidate)
+    async getSpeakers(params?: { ordering?: string; top?: boolean }, options?: { forceRefresh?: boolean }): Promise<Speaker[]> {
+        const cacheKey = params ? `speakers_ranked_${JSON.stringify(params)}` : 'speakers_ranked_default';
         return cachedFetch(
-            'speakers_list',
+            cacheKey,
             async () => {
-                const response = await apiClient.get<any>('/speakers/');
+                const response = await apiClient.get<any>('/speakers/', { params });
                 const data = response.data;
                 if (Array.isArray(data)) return data;
                 if (data && Array.isArray(data.results)) return data.results;
                 return [];
             },
-            { ttl: CACHE_TTL.MEDIUM }
+            { ttl: CACHE_TTL.SHORT, forceRefresh: options?.forceRefresh }
         );
     },
 

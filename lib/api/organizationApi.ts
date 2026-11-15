@@ -81,6 +81,20 @@ export const organizationApi = {
         return resolveOrg(response.data);
     },
 
+    async getMyOrganizations(): Promise<OrganizationProfile[]> {
+        try {
+            const response = await apiClient.get<OrganizationProfile[]>('/organization/');
+            const data = response.data;
+            const list = Array.isArray(data) ? data : (data as any)?.results ?? [];
+            const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+            const user = userStr ? JSON.parse(userStr) : null;
+            if (!user?.id) return [];
+            return list.filter((o: OrganizationProfile) => String(o.owner) === String(user.id)).map(resolveOrg);
+        } catch {
+            return [];
+        }
+    },
+
     async getMyOrganization(): Promise<OrganizationProfile | null> {
         try {
             const response = await apiClient.get<OrganizationProfile[]>('/organization/');
@@ -88,10 +102,16 @@ export const organizationApi = {
             const list = Array.isArray(data) ? data : (data as any)?.results ?? [];
             const userStr = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
             const user = userStr ? JSON.parse(userStr) : null;
-            const found = user?.id
-                ? list.find((o: OrganizationProfile) => o.owner === user.id)
-                : list[0] ?? null;
-            return found ? resolveOrg(found) : null;
+            if (!user?.id) return list[0] ? resolveOrg(list[0]) : null;
+
+            const owned = list.filter((o: OrganizationProfile) => String(o.owner) === String(user.id));
+            if (owned.length === 0) return null;
+
+            // If a specific organization was previously selected, return that one
+            const currentOrgId = typeof window !== 'undefined' ? localStorage.getItem('current_organization_id') : null;
+            const found = currentOrgId ? owned.find((o: OrganizationProfile) => String(o.id) === String(currentOrgId)) : null;
+
+            return resolveOrg(found || owned[0]);
         } catch {
             return null;
         }

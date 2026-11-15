@@ -3,13 +3,21 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
-import { Loader2, Search } from "lucide-react"
+import { Loader2, Search, SlidersHorizontal } from "lucide-react"
 import { speakerApi, type Speaker } from "@/lib/api/speakerApi"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { SpeakersCarousel } from "./speakers-carousel"
 import { SpeakerPreviewModal } from "./speaker-preview-modal"
 
 export function SpeakersDirectory() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [sortBy, setSortBy] = useState("-reputation")
   const [speakers, setSpeakers] = useState<Speaker[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -20,7 +28,10 @@ export function SpeakersDirectory() {
     const fetchSpeakers = async () => {
       try {
         setLoading(true)
-        const data = await speakerApi.getSpeakers()
+        const data = await speakerApi.getSpeakers(
+          { ordering: sortBy },
+          { forceRefresh: true }
+        )
         setSpeakers(data)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch speakers')
@@ -31,7 +42,7 @@ export function SpeakersDirectory() {
     }
 
     fetchSpeakers()
-  }, [])
+  }, [sortBy])
 
   const handleSpeakerSelect = (speaker: Speaker) => {
     setSelectedSpeaker(speaker)
@@ -53,8 +64,8 @@ export function SpeakersDirectory() {
 
   return (
     <div className="space-y-6">
-      {/* Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-4">
+      {/* Search Bar & Sort Controls */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
@@ -64,6 +75,25 @@ export function SpeakersDirectory() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
+        </div>
+
+        {/* Sort Selector */}
+        <div className="w-full sm:w-[220px]">
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-full">
+              <div className="flex items-center gap-2">
+                <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+                <SelectValue placeholder="Sort by" />
+              </div>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="-reputation">🏆 Top Ranked (Reputation)</SelectItem>
+              <SelectItem value="-talks_count">🎙️ Most Talks Added</SelectItem>
+              <SelectItem value="-rating">⭐ Highest Rated</SelectItem>
+              <SelectItem value="-followers">👥 Most Followers</SelectItem>
+              <SelectItem value="-created_at">🕒 Newest Speakers</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

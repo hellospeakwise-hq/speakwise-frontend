@@ -21,6 +21,7 @@ export interface Event {
   start_date_time: string;
   end_date_time: string;
   is_active: boolean;
+  is_featured?: boolean;
   submitted_by: string | null;
   is_cfp_currently_open: boolean;
   // CFP configuration

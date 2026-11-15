@@ -14,8 +14,8 @@ import { useState, useEffect, Suspense } from "react"
 import { toast } from "sonner"
 import { userApi, UserProfileResponse } from "@/lib/api/userApi"
 import { speakerApi, SkillTag } from "@/lib/api/speakerApi"
-import { Upload, X, ArrowRight, Award, Sparkles, Loader2, Pencil, Check, Link2 } from "lucide-react"
-// import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
+import { Upload, X, ArrowRight, Award, Sparkles, Loader2, Pencil, Check, Link2, Building2, Plus, Clock, ExternalLink } from "lucide-react"
+import { CreateOrganizationDialog } from "@/components/organization/create-organization-dialog"
 import { organizationApi, type OrganizationProfile, type CreateOrganizationData } from "@/lib/api/organizationApi"
 import Link from "next/link"
 import { OnboardingTour } from "@/components/onboarding/onboarding-tour"
@@ -26,7 +26,7 @@ import { ProfileCompletionTracker } from "@/components/profile/profile-completio
 import { SkillsCombobox } from "@/components/profile/skills-combobox"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { useRouter, useSearchParams } from "next/navigation"
-import { getDefaultAvatar, getAvatarUrl } from "@/lib/utils"
+import { getDefaultAvatar, getAvatarUrl, cn } from "@/lib/utils"
 import { AvatarCropDialog } from "@/components/profile/avatar-crop-dialog"
 import { getApiErrorMessage, getApiFieldErrors } from "@/lib/utils/api-errors"
 
@@ -69,6 +69,8 @@ function ProfilePageContent() {
     const [profileSetupMode, setProfileSetupMode] = useState<"welcome" | "resume" | null>(null)
     const [isOrgUser, setIsOrgUser] = useState(false)
     const [orgProfile, setOrgProfile] = useState<OrganizationProfile | null>(null)
+    const [myOrganizations, setMyOrganizations] = useState<OrganizationProfile[]>([])
+    const [isLoadingMyOrgs, setIsLoadingMyOrgs] = useState(false)
     const [isLoadingOrg, setIsLoadingOrg] = useState(false)
     const [isSavingOrg, setIsSavingOrg] = useState(false)
     const [orgForm, setOrgForm] = useState({ name: "", description: "", website: "", contact_email: "" })
@@ -122,11 +124,10 @@ function ProfilePageContent() {
     useEffect(() => {
         if (mounted) {
             loadProfile()
-            // loadOrganizations()
+            loadUserOrganizations()
             const profileType = localStorage.getItem('profile_type')
             if (profileType === 'organization') {
                 setIsOrgUser(true)
-                loadOrgProfile()
             }
         }
     }, [mounted])
@@ -206,35 +207,70 @@ function ProfilePageContent() {
         }
     }
 
-    const loadOrgProfile = async () => {
-        try {
-            setIsLoadingOrg(true)
-            let org = await organizationApi.getMyOrganization()
+    const handleSelectOrg = (org: OrganizationProfile) => {
+        setOrgProfile(org)
+        setOrgForm({
+            name: org.name ?? "",
+            description: org.description ?? "",
+            website: org.website ?? "",
+            contact_email: org.contact_email ?? "",
+        })
+        setOrgBrandingPreview(org.branding || null)
+        setIsEditingOrg(false)
+        localStorage.setItem("current_organization_id", org.id.toString())
+    }
 
-            // Pending orgs won't appear in the public list yet — fall back to localStorage cache
-            if (!org) {
+    const handleOrgCreated = (newOrg: OrganizationProfile) => {
+        setMyOrganizations(prev => {
+            const exists = prev.some(o => o.id === newOrg.id)
+            return exists ? prev : [...prev, newOrg]
+        })
+        handleSelectOrg(newOrg)
+        localStorage.setItem("cached_org_profile", JSON.stringify(newOrg))
+        toast.success(`Organization "${newOrg.name}" created successfully!`)
+    }
+
+    const loadUserOrganizations = async () => {
+        try {
+            setIsLoadingMyOrgs(true)
+            const orgs = await organizationApi.getMyOrganizations()
+            setMyOrganizations(orgs)
+
+            if (orgs.length > 0) {
+                const currentOrgId = localStorage.getItem("current_organization_id")
+                const activeOrg = orgs.find(o => o.id.toString() === currentOrgId) || orgs[0]
+                setOrgProfile(activeOrg)
+                setOrgForm({
+                    name: activeOrg.name ?? "",
+                    description: activeOrg.description ?? "",
+                    website: activeOrg.website ?? "",
+                    contact_email: activeOrg.contact_email ?? "",
+                })
+                if (activeOrg.branding) setOrgBrandingPreview(activeOrg.branding)
+                localStorage.setItem("cached_org_profile", JSON.stringify(activeOrg))
+            } else {
                 const cached = localStorage.getItem("cached_org_profile")
                 if (cached) {
-                    try { org = JSON.parse(cached) } catch { /* ignore */ }
+                    try {
+                        const org = JSON.parse(cached)
+                        if (org?.id) {
+                            setOrgProfile(org)
+                            setMyOrganizations([org])
+                            setOrgForm({
+                                name: org.name ?? "",
+                                description: org.description ?? "",
+                                website: org.website ?? "",
+                                contact_email: org.contact_email ?? "",
+                            })
+                            if (org.branding) setOrgBrandingPreview(org.branding)
+                        }
+                    } catch { /* ignore */ }
                 }
             }
-
-            if (org) {
-                // Keep cache in sync with latest API data
-                localStorage.setItem("cached_org_profile", JSON.stringify(org))
-                setOrgProfile(org)
-                setOrgForm({
-                    name: org.name ?? "",
-                    description: org.description ?? "",
-                    website: org.website ?? "",
-                    contact_email: org.contact_email ?? "",
-                })
-                if (org.branding) setOrgBrandingPreview(org.branding)
-            }
-        } catch {
-            // silently ignore — org may not exist yet
+        } catch (error) {
+            console.error("Failed to load organizations:", error)
         } finally {
-            setIsLoadingOrg(false)
+            setIsLoadingMyOrgs(false)
         }
     }
 
@@ -250,11 +286,14 @@ function ProfilePageContent() {
                 branding: orgBrandingFile ?? undefined,
             })
             setOrgProfile(updated)
+            setMyOrganizations(prev => prev.map(o => o.id === updated.id ? updated : o))
+            localStorage.setItem("cached_org_profile", JSON.stringify(updated))
             setOrgBrandingFile(null)
             toast.success("Organization profile updated")
             setIsEditingOrg(false)
-        } catch {
-            toast.error("Failed to update organization profile")
+        } catch (err: any) {
+            const detail = err?.response?.data?.detail
+            toast.error(typeof detail === "string" ? detail : "Failed to update organization profile")
         } finally {
             setIsSavingOrg(false)
         }
@@ -458,13 +497,271 @@ function ProfilePageContent() {
         }
     }
 
-    // const handleCreateOrganization = () => {
-    //     setIsCreateOrgDialogOpen(true)
-    // }
+    const renderOrganizationsCard = () => (
+        <Card id="organizations" data-tour="organizations" className="overflow-hidden">
+            <CardHeader className="p-4 sm:p-6 pb-2 sm:pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                            <CardTitle className="text-xl sm:text-2xl font-bold">
+                                My Organizations
+                            </CardTitle>
+                            <Badge variant="outline" className="text-xs font-normal">
+                                {myOrganizations.length} / 3
+                            </Badge>
+                        </div>
+                        <CardDescription className="text-xs sm:text-sm">
+                            Manage your event organizations. You can own up to 3 organizations.
+                        </CardDescription>
+                    </div>
+                    {myOrganizations.length < 3 && (
+                        <div>
+                            <CreateOrganizationDialog
+                                onSuccess={handleOrgCreated}
+                                trigger={
+                                    <button
+                                        type="button"
+                                        className="inline-flex items-center justify-center gap-1.5 rounded-full bg-white px-4 py-2 text-xs font-semibold text-zinc-900 transition-opacity hover:opacity-90 cursor-pointer shadow-sm w-full sm:w-auto"
+                                    >
+                                        <Plus className="h-3.5 w-3.5" />
+                                        Create Organization
+                                    </button>
+                                }
+                            />
+                        </div>
+                    )}
+                </div>
+            </CardHeader>
+            <CardContent className="p-4 sm:p-6 pt-0 sm:pt-0">
+                {isLoadingMyOrgs && myOrganizations.length === 0 ? (
+                    <div className="flex items-center gap-3 text-muted-foreground py-6">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-sm">Loading organizations…</span>
+                    </div>
+                ) : myOrganizations.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 px-4 text-center border-2 border-dashed rounded-2xl border-white/10 bg-zinc-900/30">
+                        <div className="w-12 h-12 rounded-2xl bg-zinc-800 text-zinc-300 border border-white/10 flex items-center justify-center mb-3">
+                            <Building2 className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-medium text-base text-zinc-200">No organizations yet</h3>
+                        <p className="text-sm text-zinc-400 max-w-sm mt-1 mb-5">
+                            Create an organization to host events, review speakers, and collaborate with your team.
+                        </p>
+                        <CreateOrganizationDialog
+                            onSuccess={handleOrgCreated}
+                            trigger={
+                                <button
+                                    type="button"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-zinc-900 transition-opacity hover:opacity-90 cursor-pointer shadow-sm"
+                                >
+                                    <Plus className="w-4 h-4" />
+                                    Create Organization
+                                </button>
+                            }
+                        />
+                    </div>
+                ) : (
+                    <div className="space-y-4 sm:space-y-6 pt-2">
+                        {/* Multi-org switcher tabs if user owns > 1 */}
+                        {myOrganizations.length > 1 && (
+                            <div className="flex items-center gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1">
+                                {myOrganizations.map((org) => {
+                                    const isSelected = orgProfile?.id === org.id
+                                    return (
+                                        <button
+                                            key={org.id}
+                                            type="button"
+                                            onClick={() => handleSelectOrg(org)}
+                                            className={cn(
+                                                "inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer whitespace-nowrap flex-shrink-0",
+                                                isSelected
+                                                    ? "bg-white text-zinc-900 font-semibold shadow-sm"
+                                                    : "border border-white/10 bg-zinc-900 text-zinc-400 hover:border-white/20 hover:text-white"
+                                            )}
+                                        >
+                                            <span className="max-w-[150px] truncate">{org.name}</span>
+                                            {org.status !== 'active' && (
+                                                <span
+                                                    className={cn(
+                                                        "h-1.5 w-1.5 rounded-full flex-shrink-0",
+                                                        isSelected ? "bg-amber-600" : "bg-amber-400"
+                                                    )}
+                                                    title="Under Review"
+                                                />
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        )}
 
-    // const handleOrganizationSuccess = () => {
-    //     loadOrganizations()
-    // }
+                        {/* Active org banner & actions */}
+                        {orgProfile && (
+                            <div className="flex flex-col gap-3 p-3.5 sm:p-4 rounded-2xl bg-zinc-900/60 border border-white/10">
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-medium text-zinc-400">Status:</span>
+                                        {orgProfile.status === 'active' ? (
+                                            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-xs">
+                                                Active
+                                            </Badge>
+                                        ) : orgProfile.status === 'rejected' ? (
+                                            <Badge variant="destructive" className="text-xs">
+                                                Rejected
+                                            </Badge>
+                                        ) : (
+                                            <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/20 text-xs flex items-center gap-1">
+                                                <Clock className="w-3 h-3" /> Under Review
+                                            </Badge>
+                                        )}
+                                    </div>
+
+                                    {!isEditingOrg && (
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsEditingOrg(true)}
+                                            className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-zinc-800/60 px-3.5 py-1.5 text-xs font-medium text-zinc-300 transition-colors hover:border-white/20 hover:text-white cursor-pointer"
+                                        >
+                                            <Pencil className="h-3.5 w-3.5" />
+                                            Edit
+                                        </button>
+                                    )}
+                                </div>
+
+                                {!isEditingOrg ? (
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (orgProfile?.id) {
+                                                localStorage.setItem('current_organization_id', orgProfile.id.toString())
+                                                localStorage.setItem('profile_type', 'organization')
+                                                router.push('/dashboard/organizer')
+                                            }
+                                        }}
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-2.5 text-xs font-semibold text-zinc-900 transition-opacity hover:opacity-90 cursor-pointer shadow-sm w-full sm:w-auto self-stretch sm:self-start"
+                                    >
+                                        <span>Organizer Dashboard</span>
+                                        <ArrowRight className="w-3.5 h-3.5" />
+                                    </button>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-2 pt-1 sm:flex sm:justify-end">
+                                        <button
+                                            type="button"
+                                            onClick={() => setIsEditingOrg(false)}
+                                            disabled={isSavingOrg}
+                                            className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-zinc-800/60 px-4 py-2 text-xs font-medium text-zinc-300 transition-colors hover:border-white/20 hover:text-white disabled:opacity-50 cursor-pointer"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={handleSaveOrg}
+                                            disabled={isSavingOrg || !orgProfile?.id}
+                                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-semibold text-zinc-900 transition-opacity hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-sm"
+                                        >
+                                            {isSavingOrg ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                                            Save
+                                        </button>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Active org details form */}
+                        {orgProfile && (
+                            <div className="space-y-5">
+                                {/* Branding image */}
+                                <div className="space-y-2">
+                                    <Label>Logo / Branding Image</Label>
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-20 h-20 rounded-2xl overflow-hidden bg-zinc-800 border border-white/10 flex items-center justify-center flex-shrink-0">
+                                            {orgBrandingPreview ? (
+                                                <NextImage src={orgBrandingPreview} alt="Branding" width={80} height={80} unoptimized className="w-full h-full object-cover" />
+                                            ) : (
+                                                <span className="text-xl font-bold text-zinc-300">
+                                                    {(orgForm.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {isEditingOrg && (
+                                            <div>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    id="org-branding-upload"
+                                                    className="hidden"
+                                                    onChange={(e) => {
+                                                        const file = e.target.files?.[0]
+                                                        if (!file) return
+                                                        setOrgBrandingFile(file)
+                                                        setOrgBrandingPreview(URL.createObjectURL(file))
+                                                    }}
+                                                />
+                                                <label htmlFor="org-branding-upload">
+                                                    <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-4 py-2 text-xs font-medium text-zinc-400 transition-colors hover:border-white/20 hover:text-white cursor-pointer">
+                                                        <Upload className="h-3.5 w-3.5" />
+                                                        Upload Logo
+                                                    </span>
+                                                </label>
+                                                <p className="text-xs text-muted-foreground mt-1.5">PNG, JPG, WebP — max 5 MB</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="orgName">Organization Name</Label>
+                                    <Input
+                                        id="orgName"
+                                        value={orgForm.name}
+                                        onChange={(e) => setOrgForm(f => ({ ...f, name: e.target.value }))}
+                                        disabled={!isEditingOrg}
+                                        placeholder="Your organization's name"
+                                    />
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="orgDescription">About</Label>
+                                    <Textarea
+                                        id="orgDescription"
+                                        value={orgForm.description}
+                                        onChange={(e) => setOrgForm(f => ({ ...f, description: e.target.value }))}
+                                        disabled={!isEditingOrg}
+                                        placeholder="Describe your organization, mission, and the events you run…"
+                                        rows={4}
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="orgWebsite">Website</Label>
+                                        <Input
+                                            id="orgWebsite"
+                                            value={orgForm.website}
+                                            onChange={(e) => setOrgForm(f => ({ ...f, website: e.target.value }))}
+                                            disabled={!isEditingOrg}
+                                            placeholder="https://yourorg.com"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="orgContactEmail">Contact Email</Label>
+                                        <Input
+                                            id="orgContactEmail"
+                                            type="email"
+                                            value={orgForm.contact_email}
+                                            onChange={(e) => setOrgForm(f => ({ ...f, contact_email: e.target.value }))}
+                                            disabled={!isEditingOrg}
+                                            placeholder="contact@yourorg.com"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    )
 
     // Prevent hydration mismatch by not rendering until mounted
     if (!mounted || isLoadingProfile || !profileData) {
@@ -776,130 +1073,8 @@ function ProfilePageContent() {
                         </CardContent>
                     </Card>
 
-                    {/* Organization Profile — shown instead of speaker sections for org users */}
-                    {isOrgUser && (
-                        <Card>
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <div>
-                                        <CardTitle>Organization Profile</CardTitle>
-                                        <CardDescription>Your organization&apos;s public listing details</CardDescription>
-                                    </div>
-                                    {!isEditingOrg ? (
-                                        <Button size="sm" variant="outline" onClick={() => setIsEditingOrg(true)}>
-                                            <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                                            Edit
-                                        </Button>
-                                    ) : (
-                                        <div className="flex gap-2">
-                                            <Button size="sm" variant="outline" onClick={() => setIsEditingOrg(false)} disabled={isSavingOrg}>
-                                                Cancel
-                                            </Button>
-                                            <Button size="sm" onClick={handleSaveOrg} disabled={isSavingOrg || !orgProfile?.id}>
-                                                {isSavingOrg ? <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> : <Check className="h-3.5 w-3.5 mr-1.5" />}
-                                                Save
-                                            </Button>
-                                        </div>
-                                    )}
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                {isLoadingOrg ? (
-                                    <div className="flex items-center gap-3 text-muted-foreground py-6">
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        <span className="text-sm">Loading organization data…</span>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-5">
-                                        {/* Branding image */}
-                                        <div className="space-y-2">
-                                            <Label>Logo / Branding Image</Label>
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-20 h-20 rounded-2xl overflow-hidden bg-amber-500/10 border-2 border-amber-200/40 flex items-center justify-center flex-shrink-0">
-                                                    {orgBrandingPreview ? (
-                                                        <NextImage src={orgBrandingPreview} alt="Branding" width={80} height={80} unoptimized className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <span className="text-xl font-bold text-amber-600">
-                                                            {(orgForm.name || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase()}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {isEditingOrg && (
-                                                    <div>
-                                                        <input
-                                                            type="file"
-                                                            accept="image/*"
-                                                            id="org-branding-upload"
-                                                            className="hidden"
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0]
-                                                                if (!file) return
-                                                                setOrgBrandingFile(file)
-                                                                setOrgBrandingPreview(URL.createObjectURL(file))
-                                                            }}
-                                                        />
-                                                        <label htmlFor="org-branding-upload">
-                                                            <Button variant="outline" size="sm" asChild className="cursor-pointer">
-                                                                <span><Upload className="h-3.5 w-3.5 mr-1.5" />Upload Logo</span>
-                                                            </Button>
-                                                        </label>
-                                                        <p className="text-xs text-muted-foreground mt-1.5">PNG, JPG, WebP — max 5 MB</p>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="orgName">Organization Name</Label>
-                                            <Input
-                                                id="orgName"
-                                                value={orgForm.name}
-                                                onChange={(e) => setOrgForm(f => ({ ...f, name: e.target.value }))}
-                                                disabled={!isEditingOrg}
-                                                placeholder="Your organization's name"
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label htmlFor="orgDescription">About</Label>
-                                            <Textarea
-                                                id="orgDescription"
-                                                value={orgForm.description}
-                                                onChange={(e) => setOrgForm(f => ({ ...f, description: e.target.value }))}
-                                                disabled={!isEditingOrg}
-                                                placeholder="Describe your organization, mission, and the events you run…"
-                                                rows={4}
-                                            />
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div className="space-y-2">
-                                                <Label htmlFor="orgWebsite">Website</Label>
-                                                <Input
-                                                    id="orgWebsite"
-                                                    value={orgForm.website}
-                                                    onChange={(e) => setOrgForm(f => ({ ...f, website: e.target.value }))}
-                                                    disabled={!isEditingOrg}
-                                                    placeholder="https://yourorg.com"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label htmlFor="orgContactEmail">Contact Email</Label>
-                                                <Input
-                                                    id="orgContactEmail"
-                                                    type="email"
-                                                    value={orgForm.contact_email}
-                                                    onChange={(e) => setOrgForm(f => ({ ...f, contact_email: e.target.value }))}
-                                                    disabled={!isEditingOrg}
-                                                    placeholder="contact@yourorg.com"
-                                                />
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    )}
+                    {/* Organization Section — shown here for org users */}
+                    {isOrgUser && renderOrganizationsCard()}
 
                     {/* Speaker Profile — hidden for org users */}
                     {!isOrgUser && (
@@ -1078,10 +1253,8 @@ function ProfilePageContent() {
                         </Card>
                     )}
 
-                    {/* Organization Summary — temporarily hidden (speaker focus) */}
-                    {/* <Card data-tour="organizations">
-                        ...
-                    </Card> */}
+                    {/* Organizations Section — shown for speaker users */}
+                    {!isOrgUser && renderOrganizationsCard()}
 
                     {/* Edit Profile Button - At the bottom */}
                     <Card>

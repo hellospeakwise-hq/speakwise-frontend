@@ -5,7 +5,7 @@ import Image from "next/image"
 import { useState, useMemo, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { Menu, X, LogOut, User, ChevronDown, Bell } from "lucide-react"
+import { Menu, X, LogOut, User, ChevronDown, Bell, Building2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import { userApi } from "@/lib/api/userApi"
 import { speakerApi } from "@/lib/api/speakerApi"
@@ -215,6 +215,12 @@ export function MainNav() {
                     <Link href={dashboardHref} className="w-full">Dashboard</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">
+                    <Link href="/profile#organizations" className="w-full flex items-center justify-between">
+                      <span>My Organizations</span>
+                      {/* <Building2 className="h-3.5 w-3.5 opacity-60" /> */}
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem className="hover:bg-zinc-800 focus:bg-zinc-800">
                     <Link href="/profile" className="w-full">Settings</Link>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator className="bg-zinc-800" />
@@ -318,6 +324,14 @@ export function MainNav() {
             {mounted && isAuthenticated ? (
               <>
                 <p className="px-4 text-xs text-zinc-500">Signed in as <span className="text-zinc-300 font-medium">{displayName}</span></p>
+                <Link
+                  href="/profile#organizations"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex min-h-11 items-center justify-between rounded-xl border border-white/10 px-4 py-2.5 text-left text-sm font-medium text-zinc-300 transition-colors hover:text-white"
+                >
+                  <span>My Organizations</span>
+                  {/* <Building2 className="h-4 w-4 opacity-60" /> */}
+                </Link>
                 <Link
                   href="/profile"
                   onClick={() => setIsMenuOpen(false)}

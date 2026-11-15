@@ -122,7 +122,7 @@ export function SpeakerPreviewModal({ speaker, isOpen, onClose }: Readonly<Speak
                                     <div className="flex items-center gap-1">
                                         <Calendar className="h-3.5 w-3.5" />
                                         <span className="font-semibold text-foreground">
-                                            {(speaker as any).experiences?.length || 0}
+                                            {speaker.total_talks ?? (speaker as any).experiences?.length ?? 0}
                                         </span>
                                         <span>talks</span>
                                     </div>

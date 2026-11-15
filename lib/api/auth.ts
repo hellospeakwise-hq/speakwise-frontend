@@ -43,6 +43,7 @@ export interface OrganizationProfileData {
 export interface LoginProfiles {
   speaker_profile?: SpeakerProfileData;
   organization_profile?: OrganizationProfileData;
+  organization_profiles?: OrganizationProfileData[];
 }
 
 export interface AuthResponse {

@@ -32,7 +32,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   const [speaker, setSpeaker] = useState<Speaker | null>(initialData || null);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'talks' | 'badges' | 'contact' | 'followers' | 'following'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'talks' | 'badges' | 'reviews' | 'contact' | 'followers' | 'following'>('overview');
   const [totalTalks, setTotalTalks] = useState(0);
   const [isFollowing, setIsFollowing] = useState(false);
   const [followersCount, setFollowersCount] = useState(0);
@@ -44,7 +44,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get('tab');
-      if (tab && ['overview', 'talks', 'badges', 'contact', 'followers', 'following'].includes(tab)) {
+      if (tab && ['overview', 'talks', 'badges', 'reviews', 'contact', 'followers', 'following'].includes(tab)) {
         setActiveTab(tab as any);
       }
     }
@@ -603,55 +603,104 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
           >
 
             {/* Stats strip */}
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { icon: Users, label: 'Followers',          value: followersCount, onClick: () => showFollowList('followers') },
-                { icon: Mic,   label: 'Talk Presentations', value: totalTalks,     onClick: () => setActiveTab('talks') },
-                { icon: Star,  label: 'Rating',             value: '—',            onClick: undefined },
-              ].map(({ icon: Icon, label, value, onClick }) => (
-                <div
-                  key={label}
-                  onClick={onClick}
-                  className={`bg-card border border-border rounded-lg p-4 flex flex-col gap-1 ${onClick ? 'cursor-pointer hover:bg-muted/50 transition-colors' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                    {label}
-                  </div>
-                  <p className="text-2xl font-bold text-foreground">{value}</p>
+            {(() => {
+              const avgRating = speaker?.average_rating ?? speaker?.feedback_summary?.overall_rating?.average ?? null;
+              const reviewsCount = speaker?.total_reviews ?? speaker?.feedback_summary?.total_count ?? 0;
+
+              return (
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    {
+                      icon: Users,
+                      label: 'Followers',
+                      value: followersCount,
+                      subtitle: 'Community',
+                      onClick: () => showFollowList('followers'),
+                    },
+                    {
+                      icon: Mic,
+                      label: 'Talk Presentations',
+                      value: totalTalks,
+                      subtitle: 'Experiences',
+                      onClick: () => setActiveTab('talks'),
+                    },
+                    {
+                      icon: Star,
+                      label: 'Rating',
+                      value: avgRating !== null ? (
+                        <span className="flex items-baseline gap-1">
+                          <span className="text-yellow-500 text-xl leading-none">★</span>
+                          <span>{Number(avgRating).toFixed(1)}</span>
+                          <span className="text-xs text-muted-foreground font-normal">/10</span>
+                        </span>
+                      ) : (
+                        '—'
+                      ),
+                      subtitle: reviewsCount > 0 ? `${reviewsCount} verified review${reviewsCount !== 1 ? 's' : ''}` : 'No reviews yet',
+                      onClick: reviewsCount > 0 ? () => setActiveTab('reviews') : undefined,
+                    },
+                  ].map(({ icon: Icon, label, value, subtitle, onClick }) => (
+                    <div
+                      key={label}
+                      onClick={onClick}
+                      className={`bg-card border border-border rounded-lg p-4 flex flex-col justify-between gap-1 transition-all ${
+                        onClick ? 'cursor-pointer hover:border-foreground/30 hover:bg-muted/40 shadow-sm' : ''
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                        {label}
+                      </div>
+                      <div className="text-2xl font-bold text-foreground">{value}</div>
+                      <div className="text-[11px] text-muted-foreground truncate">{subtitle}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
 
             {/* Tab bar */}
             <div className="border-b border-border flex gap-0 overflow-x-auto">
-              {(['overview', 'talks', 'badges', 'contact'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 ${
-                    activeTab === tab
-                      ? 'border-foreground text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
-                  }`}
-                >
-                  {tab === 'overview' ? (
-                    'Overview'
-                  ) : tab === 'talks' ? (
-                    'Speaking History'
-                  ) : tab === 'badges' ? (
-                    <>
-                      <Award className="h-4 w-4 text-amber-500" />
-                      <span>Badges</span>
-                      <span className="text-[10px] bg-amber-500/15 text-amber-500 border border-amber-500/30 px-1.5 py-0.2 rounded-full font-bold ml-0.5">
-                        Web3
-                      </span>
-                    </>
-                  ) : (
-                    'Contact'
-                  )}
-                </button>
-              ))}
+              {(['overview', 'talks', 'badges', 'reviews', 'contact'] as const).map((tab) => {
+                const reviewsCount = speaker?.total_reviews ?? speaker?.feedback_summary?.total_count ?? 0;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 text-sm font-medium capitalize border-b-2 transition-all whitespace-nowrap flex items-center gap-1.5 ${
+                      activeTab === tab
+                        ? 'border-foreground text-foreground'
+                        : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground'
+                    }`}
+                  >
+                    {tab === 'overview' ? (
+                      'Overview'
+                    ) : tab === 'talks' ? (
+                      'Speaking History'
+                    ) : tab === 'badges' ? (
+                      <>
+                        <Award className="h-4 w-4 text-amber-500" />
+                        <span>Badges</span>
+                        <span className="text-[10px] bg-amber-500/15 text-amber-500 border border-amber-500/30 px-1.5 py-0.2 rounded-full font-bold ml-0.5">
+                          Web3
+                        </span>
+                      </>
+                    ) : tab === 'reviews' ? (
+                      <>
+                        <Star className="h-4 w-4 text-yellow-500" />
+                        <span>Reviews</span>
+                        {reviewsCount > 0 && (
+                          <span className="text-[10px] bg-yellow-500/15 text-yellow-500 border border-yellow-500/30 px-1.5 py-0.2 rounded-full font-bold ml-0.5">
+                            {reviewsCount}
+                          </span>
+                        )}
+                      </>
+                    ) : (
+                      'Contact'
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             {/* ── OVERVIEW TAB ────────────────────────────────────────────────── */}
@@ -719,37 +768,54 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                 )}
 
                 {/* Web3 Achievements & Badges Card */}
-                <div className="bg-card border border-primary/20 bg-gradient-to-r from-card via-card to-primary/5 rounded-xl p-5 shadow-sm">
-                  <div className="flex items-start justify-between flex-wrap gap-4">
-                    <div className="flex items-start gap-3 max-w-xl">
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 text-primary">
-                        <Award className="h-5 w-5" />
+                <div className="bg-card border border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 rounded-xl p-4 sm:p-5 shadow-xs space-y-3.5">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 text-primary mt-0.5">
+                      <Award className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </div>
+
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      {/* Title & Status Pill */}
+                      <div className="flex flex-wrap items-center justify-between gap-1.5 sm:gap-2">
+                        <h3 className="text-sm font-semibold text-foreground leading-tight">
+                          Web3 Badges &amp; On-Chain Reputation
+                        </h3>
+                        <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          Live on Base
+                        </span>
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-semibold text-foreground">
-                            Web3 Badges & On-Chain Reputation
-                          </h3>
-                          <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full font-medium">
-                            Live on Base
+
+                      <p className="text-xs text-muted-foreground leading-relaxed">
+                        Speakers earn permanent, non-transferable Soulbound tokens for stage milestones and audience reviews. Share your verified credentials directly to LinkedIn and X.
+                      </p>
+
+                      {/* Feature Pills */}
+                      <div className="flex flex-wrap gap-1.5 sm:gap-2 pt-1">
+                        {[
+                          { label: 'Soulbound Tokens', icon: '🏅' },
+                          { label: 'Base L2', icon: '⚡' },
+                          { label: 'Audience Proofs', icon: '⭐' },
+                          { label: 'LinkedIn Verifiable', icon: '🔗' },
+                        ].map((t) => (
+                          <span
+                            key={t.label}
+                            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground border border-border/80 bg-background/60 px-2.5 py-0.5 rounded-full whitespace-nowrap shadow-2xs"
+                          >
+                            <span>{t.icon}</span>
+                            <span>{t.label}</span>
                           </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                          Speakers earn permanent, non-transferable Soulbound tokens for stage milestones and audience reviews. Share your verified credentials directly to LinkedIn and X.
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {['🏅 Soulbound Tokens', '⚡ Base L2', '⭐ Audience Proofs', '🔗 LinkedIn Verifiable'].map((t) => (
-                            <span key={t} className="text-[10px] text-muted-foreground border border-border bg-muted/50 px-2 py-0.5 rounded-full">
-                              {t}
-                            </span>
-                          ))}
-                        </div>
+                        ))}
                       </div>
                     </div>
+                  </div>
+
+                  {/* Action Row */}
+                  <div className="flex items-center justify-end pt-2 border-t border-border/40">
                     <Button 
                       size="sm" 
                       onClick={() => setActiveTab('badges')}
-                      className="text-xs h-8 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30"
+                      className="w-full sm:w-auto text-xs h-8 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-medium"
                       variant="outline"
                     >
                       View Badges →
@@ -786,6 +852,130 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
                 />
               </div>
             )}
+
+            {/* ── REVIEWS TAB ────────────────────────────────────────────────── */}
+            {activeTab === 'reviews' && (() => {
+              const avgRating = speaker?.average_rating ?? speaker?.feedback_summary?.overall_rating?.average ?? null;
+              const reviewsCount = speaker?.total_reviews ?? speaker?.feedback_summary?.total_count ?? 0;
+
+              return (
+                <div className="space-y-5">
+                  <div className="bg-card border border-border rounded-lg p-5 sm:p-6 space-y-6">
+                    {/* Header */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-5">
+                      <div>
+                        <h3 className="text-base font-bold flex items-center gap-2 text-foreground">
+                          <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+                          Audience Ratings &amp; Feedback
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Verified ratings submitted via QR code during {speakerName.split(' ')[0]}&apos;s stage presentations.
+                        </p>
+                      </div>
+                      {avgRating !== null && (
+                        <div className="flex items-center gap-3 bg-muted/40 border border-border px-4 py-2 rounded-xl flex-shrink-0">
+                          <div className="text-2xl font-black text-foreground flex items-baseline gap-1">
+                            <span className="text-yellow-500">★</span>
+                            <span>{Number(avgRating).toFixed(1)}</span>
+                            <span className="text-xs text-muted-foreground font-normal">/10</span>
+                          </div>
+                          <div className="text-right text-xs text-muted-foreground">
+                            <p className="font-semibold text-foreground">{reviewsCount} Verified</p>
+                            <p>Audience Reviews</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {reviewsCount === 0 ? (
+                      <div className="text-center py-12 space-y-2">
+                        <Star className="h-10 w-10 text-muted-foreground mx-auto opacity-30" />
+                        <h4 className="text-sm font-semibold">No Audience Reviews Yet</h4>
+                        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                          When attendees scan QR codes during this speaker&apos;s talks, their verified ratings and insights will appear here.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {/* Criteria Breakdown Grid */}
+                        <div className="space-y-3">
+                          <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            Performance Criteria Breakdown (1 - 10)
+                          </h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                            {[
+                              {
+                                label: 'Speaker Knowledge',
+                                icon: '🧠',
+                                score: speaker?.feedback_summary?.speaker_knowledge?.average ?? avgRating,
+                              },
+                              {
+                                label: 'Content Depth',
+                                icon: '💡',
+                                score: speaker?.feedback_summary?.content_depth?.average ?? avgRating,
+                              },
+                              {
+                                label: 'Audience Engagement',
+                                icon: '🔥',
+                                score: speaker?.feedback_summary?.engagement?.average ?? avgRating,
+                              },
+                              {
+                                label: 'Practical Relevance',
+                                icon: '🎯',
+                                score: speaker?.feedback_summary?.practical_relevance?.average ?? avgRating,
+                              },
+                              {
+                                label: 'Clarity & Delivery',
+                                icon: '🗣️',
+                                score: speaker?.feedback_summary?.clarity?.average ?? avgRating,
+                              },
+                              {
+                                label: 'Overall Rating',
+                                icon: '⭐',
+                                score: avgRating,
+                              },
+                            ].map((item) => {
+                              const val = typeof item.score === 'number' ? Number(item.score.toFixed(1)) : 0;
+                              const pct = Math.min(Math.max((val / 10) * 100, 0), 100);
+                              return (
+                                <div
+                                  key={item.label}
+                                  className="bg-background border border-border rounded-lg p-3.5 space-y-2"
+                                >
+                                  <div className="flex items-center justify-between text-xs">
+                                    <span className="font-medium text-foreground flex items-center gap-1.5">
+                                      <span>{item.icon}</span>
+                                      {item.label}
+                                    </span>
+                                    <span className="font-bold text-foreground">
+                                      {val} <span className="text-muted-foreground font-normal">/ 10</span>
+                                    </span>
+                                  </div>
+                                  <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
+                                    <div
+                                      className="bg-primary h-2 rounded-full transition-all duration-500"
+                                      style={{ width: `${pct}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* Info footer banner */}
+                        <div className="bg-muted/30 border border-border/80 rounded-lg p-3.5 text-xs text-muted-foreground flex items-center gap-2">
+                          <span className="text-base">🛡️</span>
+                          <span>
+                            Ratings are cryptographically hashed and rate-limited to ensure authentic feedback from verified attendees.
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* ── CONTACT TAB ───────────────────────────────────────────────── */}
             {activeTab === 'contact' && (

@@ -66,6 +66,7 @@ export interface EventsParams {
   slug?: string;
   submitted_by?: string;
   is_active?: boolean;
+  is_featured?: boolean;
   is_free?: boolean;
   cfp_open?: boolean;
   cfp_open_date?: string;
