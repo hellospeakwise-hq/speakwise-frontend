@@ -82,6 +82,12 @@ export function BadgesGallery({
   React.useEffect(() => {
     let isMounted = true;
 
+    // If userBadges was provided with data from parent, reuse it without an extra network roundtrip
+    if (userBadges && Object.keys(userBadges).length > 0) {
+      setBadgesState(userBadges);
+      return;
+    }
+
     const loadBadges = async () => {
       let targetSlug = speakerSlug;
       if (!targetSlug) {
@@ -122,7 +128,7 @@ export function BadgesGallery({
     return () => {
       isMounted = false;
     };
-  }, [speakerSlug]);
+  }, [speakerSlug, userBadges]);
 
 
   const badgesList = Object.values(BADGE_DEFINITIONS);

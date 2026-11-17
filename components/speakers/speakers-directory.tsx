@@ -87,11 +87,11 @@ export function SpeakersDirectory() {
               </div>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="-reputation">🏆 Top Ranked (Reputation)</SelectItem>
-              <SelectItem value="-talks_count">🎙️ Most Talks Added</SelectItem>
-              <SelectItem value="-rating">⭐ Highest Rated</SelectItem>
-              <SelectItem value="-followers">👥 Most Followers</SelectItem>
-              <SelectItem value="-created_at">🕒 Newest Speakers</SelectItem>
+              <SelectItem value="-reputation">Top Ranked (Reputation)</SelectItem>
+              <SelectItem value="-talks_count">Most Talks Added</SelectItem>
+              <SelectItem value="-rating">Highest Rated</SelectItem>
+              <SelectItem value="-followers">Most Followers</SelectItem>
+              <SelectItem value="-created_at">Newest Speakers</SelectItem>
             </SelectContent>
           </Select>
         </div>

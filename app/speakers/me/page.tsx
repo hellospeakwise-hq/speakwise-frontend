@@ -11,7 +11,7 @@ import { SpeakerProfile } from '@/components/speakers/speaker-profile';
 
 export default function MySpeakerProfilePage() {
   const router = useRouter();
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
   const [speakerData, setSpeakerData] = useState<Speaker | null>(null);
   const [speakerId, setSpeakerId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -26,24 +26,19 @@ export default function MySpeakerProfilePage() {
 
       try {
         setLoading(true);
-        const [account, speaker] = await Promise.all([
-          userApi.refreshUserProfile(),
-          speakerApi.getProfile(),
-        ]);
-
-        const accountUser = account.user || account;
-        const skillTags = speaker.skill_tags || [];
-        const skills = await speakerApi.getSkills();
+        const speaker = await speakerApi.getProfile();
+        const accountUser = user || {};
 
         setSpeakerId(speaker.slug || speaker.id);
         setSpeakerData({
           ...speaker,
           speaker_name: speaker.speaker_name ||
             `${accountUser.first_name || ''} ${accountUser.last_name || ''}`.trim() ||
+            accountUser.username ||
             'Speaker',
           avatar: speaker.avatar || '',
-          username: accountUser.username,
-          skill_tags: skills.length ? skills : skillTags,
+          username: accountUser.username || speaker.username,
+          skill_tags: speaker.skill_tags || [],
           social_links: speaker.social_links || [],
         });
       } catch (err) {
@@ -62,7 +57,7 @@ export default function MySpeakerProfilePage() {
     if (!authLoading) {
       fetchMyProfile();
     }
-  }, [isAuthenticated, authLoading, router]);
+  }, [isAuthenticated, authLoading, router, user]);
 
   if (authLoading || loading) {
     return (

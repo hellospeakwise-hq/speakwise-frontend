@@ -33,11 +33,21 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'talks' | 'badges' | 'reviews' | 'contact' | 'followers' | 'following'>('overview');
-  const [totalTalks, setTotalTalks] = useState(0);
-  const [isFollowing, setIsFollowing] = useState(false);
-  const [followersCount, setFollowersCount] = useState(0);
-  const [followingCount, setFollowingCount] = useState(0);
+  const [totalTalks, setTotalTalks] = useState(initialData?.total_talks ?? 0);
+  const [isFollowing, setIsFollowing] = useState(Boolean(initialData?.is_following));
+  const [followersCount, setFollowersCount] = useState(initialData?.followers_count ?? 0);
+  const [followingCount, setFollowingCount] = useState(initialData?.following_count ?? 0);
   const [followLoading, setFollowLoading] = useState(false);
+
+  const isOwnProfile = useMemo(() => Boolean(
+    isAuthenticated &&
+      user &&
+      speaker &&
+      (speaker.user_account === user.id ||
+        String(speaker.user_account) === String(user.id) ||
+        (speaker.slug && (user as any).slug && speaker.slug === (user as any).slug) ||
+        (speaker.username && user.email && speaker.username.toLowerCase() === user.email.split('@')[0].toLowerCase()))
+  ), [isAuthenticated, user, speaker]);
 
   // Sync tab with URL query param if present
   useEffect(() => {
@@ -139,7 +149,16 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   const followListRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (initialData) return;
+    if (initialData) {
+      setSpeaker(initialData);
+      setFollowersCount(initialData.followers_count ?? 0);
+      setFollowingCount(initialData.following_count ?? 0);
+      setIsFollowing(Boolean(initialData.is_following));
+      if (initialData.total_talks !== undefined) {
+        setTotalTalks(initialData.total_talks);
+      }
+      return;
+    }
     const load = async () => {
       try {
         setLoading(true);
@@ -148,6 +167,10 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
         setSpeaker(data);
         setFollowersCount(data.followers_count ?? 0);
         setFollowingCount(data.following_count ?? 0);
+        setIsFollowing(Boolean(data.is_following));
+        if (data.total_talks !== undefined) {
+          setTotalTalks(data.total_talks);
+        }
       } catch {
         setError('Failed to load speaker profile');
       } finally {
@@ -159,9 +182,14 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
 
   useEffect(() => {
     if (!speaker) return;
-    const slug = speaker.slug || id;
     setFollowersCount(speaker.followers_count ?? 0);
-    if (!isAuthenticated) return;
+    setFollowingCount(speaker.following_count ?? 0);
+    if (speaker.is_following !== undefined) {
+      setIsFollowing(Boolean(speaker.is_following));
+      return;
+    }
+    if (!isAuthenticated || isOwnProfile) return;
+    const slug = speaker.slug || id;
     speakerApi.getFollowStatus(slug)
       .then((s) => {
         setIsFollowing(s.is_following);
@@ -169,16 +197,7 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
         setFollowingCount(s.following_count);
       })
       .catch(() => {});
-  }, [speaker, isAuthenticated, id]);
-
-  useEffect(() => {
-    const slug = speaker?.slug || id;
-    if (!slug) return;
-    experiencesApi
-      .getSpeakerExperiencesBySlug(slug)
-      .then((items) => setTotalTalks(items.length))
-      .catch(() => {});
-  }, [speaker?.slug, id]);
+  }, [speaker, isAuthenticated, isOwnProfile, id]);
 
   const handleFollow = useCallback(async () => {
     if (!speaker) return;
@@ -285,14 +304,6 @@ export function SpeakerProfile({ id, initialData }: SpeakerProfileProps) {
   }
 
   const speakerName = speaker.speaker_name || `Speaker ${speaker.id}`;
-  const isOwnProfile = Boolean(
-    isAuthenticated &&
-      user &&
-      (speaker.user_account === user.id ||
-        String(speaker.user_account) === String(user.id) ||
-        (speaker.slug && (user as any).slug && speaker.slug === (user as any).slug) ||
-        (speaker.username && user.email && speaker.username.toLowerCase() === user.email.split('@')[0].toLowerCase()))
-  );
   const twitter  = getSocial('twitter');
   const linkedin = getSocial('linkedin');
   const github   = getSocial('github');
