@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
-import { userApi } from '@/lib/api/userApi';
 import { speakerApi, Speaker } from '@/lib/api/speakerApi';
 import { SpeakerProfile } from '@/components/speakers/speaker-profile';
 
@@ -27,17 +26,20 @@ export default function MySpeakerProfilePage() {
       try {
         setLoading(true);
         const speaker = await speakerApi.getProfile();
-        const accountUser = user || {};
+
+        // Build display name from the speaker payload itself — no extra API call needed
+        const speakerName =
+          speaker.speaker_name ||
+          `${user?.first_name || ''} ${user?.last_name || ''}`.trim() ||
+          user?.username ||
+          'Speaker';
 
         setSpeakerId(speaker.slug || speaker.id);
         setSpeakerData({
           ...speaker,
-          speaker_name: speaker.speaker_name ||
-            `${accountUser.first_name || ''} ${accountUser.last_name || ''}`.trim() ||
-            accountUser.username ||
-            'Speaker',
+          speaker_name: speakerName,
           avatar: speaker.avatar || '',
-          username: accountUser.username || speaker.username,
+          username: user?.username || speaker.username,
           skill_tags: speaker.skill_tags || [],
           social_links: speaker.social_links || [],
         });
