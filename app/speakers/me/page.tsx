@@ -31,7 +31,7 @@ export default function MySpeakerProfilePage() {
         const speakerName =
           speaker.speaker_name ||
           `${user?.first_name || ''} ${user?.last_name || ''}`.trim() ||
-          user?.username ||
+          speaker.username ||
           'Speaker';
 
         setSpeakerId(speaker.slug || speaker.id);
@@ -39,7 +39,7 @@ export default function MySpeakerProfilePage() {
           ...speaker,
           speaker_name: speakerName,
           avatar: speaker.avatar || '',
-          username: user?.username || speaker.username,
+          username: speaker.username,
           skill_tags: speaker.skill_tags || [],
           social_links: speaker.social_links || [],
         });
