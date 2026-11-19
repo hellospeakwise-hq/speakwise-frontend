@@ -26,8 +26,8 @@ interface AcruHeroChartProps {
 }
 
 export function AcruHeroChart({
-  avgRating = 8.3,
-  totalFeedback = 20,
+  avgRating = null,
+  totalFeedback = 0,
   upcomingCount = 0,
 }: AcruHeroChartProps) {
   const router = useRouter()
@@ -62,10 +62,10 @@ export function AcruHeroChart({
         })
 
         const count = talkFeedback.length
-        const avgClarity = count > 0 ? talkFeedback.reduce((s, f) => s + f.clarity, 0) / count : 8.5
-        const avgEngagement = count > 0 ? talkFeedback.reduce((s, f) => s + f.engagement, 0) / count : 8.2
-        const avgContent = count > 0 ? talkFeedback.reduce((s, f) => s + f.content_depth, 0) / count : 8.6
-        const avgOverall = count > 0 ? talkFeedback.reduce((s, f) => s + f.overall_rating, 0) / count : 8.4
+        const avgClarity = count > 0 ? talkFeedback.reduce((s, f) => s + f.clarity, 0) / count : 0
+        const avgEngagement = count > 0 ? talkFeedback.reduce((s, f) => s + f.engagement, 0) / count : 0
+        const avgContent = count > 0 ? talkFeedback.reduce((s, f) => s + f.content_depth, 0) / count : 0
+        const avgOverall = count > 0 ? talkFeedback.reduce((s, f) => s + f.overall_rating, 0) / count : 0
 
         const label = exp.event_name ? exp.event_name.split(" ")[0].slice(0, 10) : "Talk"
         let formattedDate = ""
@@ -155,7 +155,7 @@ export function AcruHeroChart({
             <div>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground tabular-nums">
-                  {avgRating ? `${avgRating.toFixed(1)}` : "8.3"}
+                  {avgRating && avgRating > 0 ? `${avgRating.toFixed(1)}` : "0.0"}
                 </span>
                 <span className="text-sm font-medium text-muted-foreground font-mono">/ 10</span>
               </div>
@@ -396,10 +396,14 @@ export function AcruHeroChart({
                 {totalFeedback}
               </span>
             </div>
-            <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-              <ArrowUpRight className="h-3.5 w-3.5" />
-              <span>+5.1% from last month</span>
-            </div>
+            {totalFeedback > 0 ? (
+              <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <ArrowUpRight className="h-3.5 w-3.5" />
+                <span>Verified attendee evaluations</span>
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">No reviews collected yet</p>
+            )}
           </div>
 
           {/* Metric 2: Talk Rating */}
@@ -409,14 +413,18 @@ export function AcruHeroChart({
             </span>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground tabular-nums">
-                {avgRating ? `${avgRating.toFixed(1)}` : "8.3"}
+                {avgRating && avgRating > 0 ? `${avgRating.toFixed(1)}` : "0.0"}
               </span>
               <span className="text-xs text-muted-foreground font-mono">/ 10</span>
             </div>
-            <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-              <ArrowUpRight className="h-3.5 w-3.5" />
-              <span>+15.5% quality index</span>
-            </div>
+            {avgRating && avgRating > 0 ? (
+              <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <ArrowUpRight className="h-3.5 w-3.5" />
+                <span>Quality index active</span>
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">Awaiting first talk rating</p>
+            )}
           </div>
 
           {/* Metric 3: Audience Reached */}
@@ -426,14 +434,20 @@ export function AcruHeroChart({
             </span>
             <div className="flex items-baseline gap-2 mt-0.5">
               <span className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground tabular-nums">
-                88%
+                {totalFeedback > 0 ? `${Math.min(100, Math.round(((avgRating || 0) / 10) * 100))}%` : "0%"}
               </span>
-              <span className="text-xs text-muted-foreground font-mono">benchmark</span>
+              <span className="text-xs text-muted-foreground font-mono">
+                {totalFeedback > 0 ? "benchmark" : "benchmark"}
+              </span>
             </div>
-            <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
-              <ArrowUpRight className="h-3.5 w-3.5" />
-              <span>+20.7% retention</span>
-            </div>
+            {totalFeedback > 0 ? (
+              <div className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                <ArrowUpRight className="h-3.5 w-3.5" />
+                <span>Audience retention</span>
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">Deliver a talk to begin</p>
+            )}
           </div>
         </div>
       </div>

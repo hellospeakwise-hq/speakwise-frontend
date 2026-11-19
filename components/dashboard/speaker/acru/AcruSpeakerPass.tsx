@@ -125,8 +125,8 @@ interface AcruSpeakerPassProps {
 }
 
 export function AcruSpeakerPass({
-  speakerName = "Nana Acheampong",
-  headline = "Senior Cloud Architect & Speaker",
+  speakerName = "Speaker",
+  headline = "Verified Conference Speaker",
   onOpenQr,
 }: AcruSpeakerPassProps) {
   const [copied, setCopied] = useState(false)

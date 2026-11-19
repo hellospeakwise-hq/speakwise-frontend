@@ -28,6 +28,9 @@ import { BadgesGallery } from "@/components/badges/badges-gallery"
 
 import { feedbackAPI } from "@/lib/api/feedbackApi"
 import { useAuth } from "@/contexts/auth-context"
+import { userApi } from "@/lib/api/userApi"
+import { speakerApi } from "@/lib/api/speakerApi"
+import { calculateProfileCompletion } from "@/lib/utils/profile-completion"
 
 const MyTalksSection = dynamic(
   () => import("@/components/dashboard/speaker/my-talks-section").then((m) => m.MyTalksSection),
@@ -43,8 +46,9 @@ type MobileTab = "overview" | "upcoming" | "feedback" | "talks" | "badges"
 export function MobileSpeakerDashboard() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState<MobileTab>("overview")
-  const [avgRating, setAvgRating] = useState<number>(8.3)
-  const [totalFeedback, setTotalFeedback] = useState<number>(20)
+  const [avgRating, setAvgRating] = useState<number>(0)
+  const [totalFeedback, setTotalFeedback] = useState<number>(0)
+  const [profileCompletion, setProfileCompletion] = useState<number>(0)
 
   useEffect(() => {
     feedbackAPI
@@ -54,19 +58,37 @@ export function MobileSpeakerDashboard() {
           const avg = data.reduce((sum, f) => sum + f.overall_rating, 0) / data.length
           setAvgRating(avg)
           setTotalFeedback(data.length)
+        } else {
+          setAvgRating(0)
+          setTotalFeedback(0)
         }
       })
-      .catch((err) => console.error("Mobile feedback load error:", err))
+      .catch((err) => {
+        console.error("Mobile feedback load error:", err)
+        setAvgRating(0)
+        setTotalFeedback(0)
+      })
+
+    // Calculate real profile completion
+    Promise.allSettled([userApi.getProfile(), speakerApi.getProfile()]).then(([userRes, spkRes]) => {
+      const u = userRes.status === "fulfilled" ? userRes.value : null
+      const s = spkRes.status === "fulfilled" ? spkRes.value : null
+      const { percentage } = calculateProfileCompletion({
+        user: { first_name: u?.first_name, last_name: u?.last_name, username: u?.username },
+        speaker: s,
+      })
+      setProfileCompletion(percentage)
+    })
   }, [])
 
   const speakerName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.email?.split("@")[0] || "Speaker"
-    : "Nana Acheampong"
+    : "Speaker"
 
   // 10 vertical chiclet capsules for Card 1 (Rating)
-  const ratingCapsulesFilled = Math.min(10, Math.max(1, Math.round((avgRating / 10) * 10)))
+  const ratingCapsulesFilled = avgRating > 0 ? Math.min(10, Math.max(1, Math.round((avgRating / 10) * 10))) : 0
   // 10 vertical chiclet capsules for Card 2 (Feedback)
-  const feedbackCapsulesFilled = Math.min(10, Math.max(1, Math.round((totalFeedback / 50) * 10)))
+  const feedbackCapsulesFilled = totalFeedback > 0 ? Math.min(10, Math.max(1, Math.round((totalFeedback / 50) * 10))) : 0
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-24 px-4 pt-3 space-y-6 max-w-md mx-auto select-none">
@@ -195,13 +217,13 @@ export function MobileSpeakerDashboard() {
                   </span>
                 </div>
                 <span className="rounded-full bg-foreground text-background px-3 py-1 text-[11px] font-bold font-mono">
-                  {Math.round((avgRating / 10) * 100)}% Index
+                  {avgRating > 0 ? `${Math.round((avgRating / 10) * 100)}% Index` : "0% Index"}
                 </span>
               </div>
 
               <div className="flex items-baseline gap-1.5 pt-1">
                 <span className="text-4xl font-extrabold tracking-tight text-foreground font-mono">
-                  {avgRating.toFixed(1)}
+                  {avgRating > 0 ? avgRating.toFixed(1) : "0.0"}
                 </span>
                 <span className="text-sm font-semibold text-muted-foreground font-mono">
                   / 10
@@ -281,7 +303,7 @@ export function MobileSpeakerDashboard() {
           <AcruHeroChart avgRating={avgRating} totalFeedback={totalFeedback} />
 
           {/* ── 4. Speaking Readiness & Quick Tips (Chiclet Bricks) ────────────── */}
-          <AcruMiddleRow completionPercentage={85} />
+          <AcruMiddleRow completionPercentage={profileCompletion} />
 
           {/* ── 5. Dimension Analysis + 180° Arch Semicircle Gauge + Goals ─────── */}
           <AcruBottomRow />

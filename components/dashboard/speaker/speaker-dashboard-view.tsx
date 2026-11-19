@@ -34,6 +34,9 @@ import { Notifications } from "@/components/dashboard/speaker/notifications"
 import { BadgesGallery } from "@/components/badges/badges-gallery"
 import { feedbackAPI } from "@/lib/api/feedbackApi"
 import { useAuth } from "@/contexts/auth-context"
+import { userApi } from "@/lib/api/userApi"
+import { speakerApi } from "@/lib/api/speakerApi"
+import { calculateProfileCompletion } from "@/lib/utils/profile-completion"
 import { MobileSpeakerDashboard } from "@/components/dashboard/speaker/mobile/MobileSpeakerDashboard"
 
 const MyTalksSection = dynamic(
@@ -51,8 +54,9 @@ const TAB_CLASS =
 export function SpeakerDashboardView() {
   const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("overview")
-  const [avgRating, setAvgRating] = useState<number | null>(8.3)
-  const [totalFeedback, setTotalFeedback] = useState<number>(20)
+  const [avgRating, setAvgRating] = useState<number | null>(null)
+  const [totalFeedback, setTotalFeedback] = useState<number>(0)
+  const [profileCompletion, setProfileCompletion] = useState<number>(0)
   const prefersReduced = useReducedMotion()
 
   useEffect(() => {
@@ -63,9 +67,27 @@ export function SpeakerDashboardView() {
           const avg = data.reduce((sum, f) => sum + f.overall_rating, 0) / data.length
           setAvgRating(avg)
           setTotalFeedback(data.length)
+        } else {
+          setAvgRating(null)
+          setTotalFeedback(0)
         }
       })
-      .catch((err) => console.error("Error loading feedback in ACRU dashboard:", err))
+      .catch((err) => {
+        console.error("Error loading feedback in ACRU dashboard:", err)
+        setAvgRating(null)
+        setTotalFeedback(0)
+      })
+
+    // Calculate real profile completion
+    Promise.allSettled([userApi.getProfile(), speakerApi.getProfile()]).then(([userRes, spkRes]) => {
+      const u = userRes.status === "fulfilled" ? userRes.value : null
+      const s = spkRes.status === "fulfilled" ? spkRes.value : null
+      const { percentage } = calculateProfileCompletion({
+        user: { first_name: u?.first_name, last_name: u?.last_name, username: u?.username },
+        speaker: s,
+      })
+      setProfileCompletion(percentage)
+    })
   }, [])
 
   const fadeUp = (delay = 0) => ({
@@ -76,7 +98,7 @@ export function SpeakerDashboardView() {
 
   const speakerDisplayName = user
     ? `${user.first_name || ""} ${user.last_name || ""}`.trim() || user.email?.split("@")[0] || "Speaker"
-    : "Nana Acheampong"
+    : "Speaker"
 
   return (
     <>
@@ -192,7 +214,7 @@ export function SpeakerDashboardView() {
 
               {/* 2. Middle Row: Chiclet Progress & Delivery Insights */}
               <motion.div {...fadeUp(0.08)}>
-                <AcruMiddleRow completionPercentage={85} />
+                <AcruMiddleRow completionPercentage={profileCompletion} />
               </motion.div>
 
               {/* 3. Bottom Row: Dimension Chiclets, 180° Arch Semicircle Gauge & Goals */}
