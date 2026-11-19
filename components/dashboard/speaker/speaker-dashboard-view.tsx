@@ -34,7 +34,6 @@ import { Notifications } from "@/components/dashboard/speaker/notifications"
 import { BadgesGallery } from "@/components/badges/badges-gallery"
 import { feedbackAPI } from "@/lib/api/feedbackApi"
 import { useAuth } from "@/contexts/auth-context"
-import { userApi } from "@/lib/api/userApi"
 import { speakerApi } from "@/lib/api/speakerApi"
 import { calculateProfileCompletion } from "@/lib/utils/profile-completion"
 import { MobileSpeakerDashboard } from "@/components/dashboard/speaker/mobile/MobileSpeakerDashboard"
@@ -79,16 +78,21 @@ export function SpeakerDashboardView() {
       })
 
     // Calculate real profile completion
-    Promise.allSettled([userApi.getProfile(), speakerApi.getProfile()]).then(([userRes, spkRes]) => {
-      const u = userRes.status === "fulfilled" ? userRes.value : null
-      const s = spkRes.status === "fulfilled" ? spkRes.value : null
-      const { percentage } = calculateProfileCompletion({
-        user: { first_name: u?.first_name, last_name: u?.last_name, username: u?.username },
-        speaker: s,
+    speakerApi
+      .getProfile()
+      .then((s) => {
+        if (s) {
+          const { percentage } = calculateProfileCompletion({
+            user: { first_name: user?.first_name, last_name: user?.last_name, username: (user as any)?.username },
+            speaker: s,
+          })
+          setProfileCompletion(percentage)
+        }
       })
-      setProfileCompletion(percentage)
-    })
-  }, [])
+      .catch(() => {
+        setProfileCompletion(0)
+      })
+  }, [user])
 
   const fadeUp = (delay = 0) => ({
     initial: prefersReduced ? {} : { opacity: 0, y: 8 },
